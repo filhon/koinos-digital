@@ -114,6 +114,7 @@ $$;
 
 DROP POLICY IF EXISTS "members_update_leadership" ON members;
 DROP POLICY IF EXISTS "members_update_self" ON members;
+DROP POLICY IF EXISTS "members_update" ON members;
 
 CREATE POLICY "members_update"
   ON members FOR UPDATE

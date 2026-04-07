@@ -2,6 +2,7 @@
 
 import { Sun, Moon, ChevronDown, LogOut, Settings, User } from "lucide-react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { useTheme } from "./ThemeProvider";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -23,6 +24,7 @@ interface HeaderProps {
 
 export function Header({ userEmail, userName, userAvatar }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
+  const router = useRouter();
   const initials = userName
     ? userName
         .split(" ")
@@ -120,7 +122,10 @@ export function Header({ userEmail, userName, userAvatar }: HeaderProps) {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2 cursor-pointer">
+            <DropdownMenuItem
+              className="gap-2 cursor-pointer"
+              onSelect={() => router.push("/perfil")}
+            >
               <User className="size-4" aria-hidden="true" />
               Meu perfil
             </DropdownMenuItem>
