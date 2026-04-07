@@ -49,9 +49,7 @@ export default function InviteEmail({
               Aceitar convite
             </Button>
           </Section>
-          <Text style={note}>
-            O link de convite expira em 7 dias.
-          </Text>
+          <Text style={note}>O link de convite expira em 7 dias.</Text>
           <Hr style={hr} />
           <Text style={footer}>
             Koinos — Gestão para igrejas evangélicas brasileiras.

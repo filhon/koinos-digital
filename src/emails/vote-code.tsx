@@ -47,8 +47,8 @@ export default function VoteCodeEmail({
             <strong>{expiresAt}</strong>.
           </Text>
           <Text style={note}>
-            Nunca compartilhe este código com ninguém. A liderança da
-            igreja jamais solicitará seu código de votação.
+            Nunca compartilhe este código com ninguém. A liderança da igreja
+            jamais solicitará seu código de votação.
           </Text>
           <Hr style={hr} />
           <Text style={footer}>

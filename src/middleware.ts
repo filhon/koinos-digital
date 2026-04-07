@@ -78,9 +78,12 @@ export async function middleware(request: NextRequest) {
     }
 
     // Verifica AAL2 para rotas sensíveis
-    const requiresAal2 = AAL2_ROUTES.some((route) => pathname.startsWith(route));
+    const requiresAal2 = AAL2_ROUTES.some((route) =>
+      pathname.startsWith(route)
+    );
     if (requiresAal2) {
-      const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      const { data: aalData } =
+        await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
       const hasActiveMfa = aalData?.nextLevel === "aal2";
       const isAal2 = aalData?.currentLevel === "aal2";
 

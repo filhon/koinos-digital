@@ -41,7 +41,10 @@ export async function signIn(formData: FormData): Promise<ActionResult> {
   // Turnstile
   const turnstileToken = formData.get("cf-turnstile-response") as string;
   if (!(await verifyTurnstile(turnstileToken))) {
-    return { success: false, error: "Verificação de segurança falhou. Tente novamente." };
+    return {
+      success: false,
+      error: "Verificação de segurança falhou. Tente novamente.",
+    };
   }
 
   const raw = {
@@ -76,14 +79,18 @@ export async function signUp(formData: FormData): Promise<ActionResult> {
   if (!rl.success) {
     return {
       success: false,
-      error: "Muitas criações de conta a partir deste endereço. Tente mais tarde.",
+      error:
+        "Muitas criações de conta a partir deste endereço. Tente mais tarde.",
     };
   }
 
   // Turnstile
   const turnstileToken = formData.get("cf-turnstile-response") as string;
   if (!(await verifyTurnstile(turnstileToken))) {
-    return { success: false, error: "Verificação de segurança falhou. Tente novamente." };
+    return {
+      success: false,
+      error: "Verificação de segurança falhou. Tente novamente.",
+    };
   }
 
   const raw = {

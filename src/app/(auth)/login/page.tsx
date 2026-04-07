@@ -162,7 +162,10 @@ export default function LoginPage() {
           {/* Turnstile */}
           <motion.div variants={fadeUp}>
             <Turnstile
-              siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "1x00000000000000000000AA"}
+              siteKey={
+                process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ??
+                "1x00000000000000000000AA"
+              }
               options={{ theme: "light", appearance: "interaction-only" }}
               onSuccess={(token) => {
                 turnstileToken.current = token;

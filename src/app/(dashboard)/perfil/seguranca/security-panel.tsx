@@ -70,8 +70,13 @@ export default function SecurityPanel({ activeFactor }: Props) {
 
     // Reautentica com senha antes de desativar
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user?.email) { setError("Sessão inválida."); return; }
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user?.email) {
+      setError("Sessão inválida.");
+      return;
+    }
 
     startTransition(async () => {
       const { error: reauthErr } = await supabase.auth.signInWithPassword({
@@ -143,7 +148,10 @@ export default function SecurityPanel({ activeFactor }: Props) {
                 Confirmar desativação
               </button>
               <button
-                onClick={() => { setShowDisableForm(false); setError(null); }}
+                onClick={() => {
+                  setShowDisableForm(false);
+                  setError(null);
+                }}
                 className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
               >
                 Cancelar
@@ -227,13 +235,20 @@ export default function SecurityPanel({ activeFactor }: Props) {
                 className="text-gray-400 hover:text-gray-600 transition-colors"
                 aria-label={showSecret ? "Ocultar" : "Mostrar"}
               >
-                {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showSecret ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </button>
             </div>
           </div>
 
           <button
-            onClick={() => { setStep("confirm"); setError(null); }}
+            onClick={() => {
+              setStep("confirm");
+              setError(null);
+            }}
             className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90"
             style={{ background: "oklch(0.205 0 0)" }}
           >
@@ -249,7 +264,8 @@ export default function SecurityPanel({ activeFactor }: Props) {
             2. Digite o código gerado pelo aplicativo
           </p>
           <p className="text-sm text-gray-500">
-            Insira o código de 6 dígitos exibido no seu app para confirmar a ativação.
+            Insira o código de 6 dígitos exibido no seu app para confirmar a
+            ativação.
           </p>
           <input
             type="text"
@@ -292,7 +308,9 @@ export default function SecurityPanel({ activeFactor }: Props) {
           <div className="flex items-center gap-3">
             <CheckCircle2 className="h-6 w-6 text-green-600" />
             <div>
-              <p className="font-semibold text-green-900">2FA ativado com sucesso!</p>
+              <p className="font-semibold text-green-900">
+                2FA ativado com sucesso!
+              </p>
               <p className="text-sm text-green-700">
                 Sua conta agora exige verificação a cada login.
               </p>

@@ -12,7 +12,9 @@ export async function enrollTotp(): Promise<
   | { success: false; error: string }
 > {
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp" });
+  const { data, error } = await supabase.auth.mfa.enroll({
+    factorType: "totp",
+  });
 
   if (error || !data) {
     return { success: false, error: "Erro ao iniciar configuração do 2FA." };
@@ -86,7 +88,8 @@ export async function listMfaFactors(): Promise<
 /** Verifica o código TOTP para elevar AAL1 → AAL2 na sessão. */
 export async function verifyMfaChallenge(code: string): Promise<MfaResult> {
   const supabase = await createClient();
-  const { data: factors, error: listErr } = await supabase.auth.mfa.listFactors();
+  const { data: factors, error: listErr } =
+    await supabase.auth.mfa.listFactors();
 
   if (listErr || !factors?.totp?.length) {
     return { success: false, error: "Nenhum factor 2FA encontrado." };
