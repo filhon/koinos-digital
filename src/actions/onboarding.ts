@@ -15,7 +15,11 @@ import { requireAuth } from "@/lib/auth/session";
 
 export type ActionResult =
   | { success: true; message?: string; redirectTo?: string }
-  | { success: false; error: string; existingChurch?: { id: string; name: string } };
+  | {
+      success: false;
+      error: string;
+      existingChurch?: { id: string; name: string };
+    };
 
 // ─── Slug helper ──────────────────────────────────────────────────────────────
 
@@ -31,8 +35,11 @@ function slugify(text: string): string {
     .slice(0, 80);
 }
 
-async function uniqueSlug(supabase: ReturnType<typeof createAdminClient>, base: string): Promise<string> {
-  let slug = slugify(base);
+async function uniqueSlug(
+  supabase: ReturnType<typeof createAdminClient>,
+  base: string
+): Promise<string> {
+  const slug = slugify(base);
   let attempt = 0;
   while (true) {
     const candidate = attempt === 0 ? slug : `${slug}-${attempt}`;
@@ -59,7 +66,9 @@ function randomCode(length = 12): string {
 
 // ─── Server Action ────────────────────────────────────────────────────────────
 
-export async function createChurch(data: CreateChurchInput): Promise<ActionResult> {
+export async function createChurch(
+  data: CreateChurchInput
+): Promise<ActionResult> {
   // 1. Validate payload
   const parsed = createChurchSchema.safeParse(data);
   if (!parsed.success) {
@@ -69,7 +78,8 @@ export async function createChurch(data: CreateChurchInput): Promise<ActionResul
   const { personal, consents, church } = parsed.data;
 
   const headerStore = await headers();
-  const ip = headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const ip =
+    headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
 
   // Auth client (anon key, manages session cookies)
   const supabase = await createClient();
@@ -97,14 +107,19 @@ export async function createChurch(data: CreateChurchInput): Promise<ActionResul
       password: personal.password,
     });
     if (signInError) {
-      return { success: false, error: "E-mail já cadastrado com senha diferente. Faça login primeiro." };
+      return {
+        success: false,
+        error: "E-mail já cadastrado com senha diferente. Faça login primeiro.",
+      };
     }
   } else if (authError) {
     return { success: false, error: "Erro ao criar conta. Tente novamente." };
   }
 
   // Re-fetch user after sign-up/sign-in
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
     return { success: false, error: "Sessão inválida. Tente novamente." };
   }
@@ -162,7 +177,10 @@ export async function createChurch(data: CreateChurchInput): Promise<ActionResul
 
   if (tenantError || !tenant) {
     console.error("[onboarding] Erro ao criar tenant:", tenantError);
-    return { success: false, error: "Erro ao criar a igreja. Tente novamente." };
+    return {
+      success: false,
+      error: "Erro ao criar a igreja. Tente novamente.",
+    };
   }
 
   const churchId = tenant.id;
@@ -188,7 +206,10 @@ export async function createChurch(data: CreateChurchInput): Promise<ActionResul
   if (memberError || !member) {
     console.error("[onboarding] Erro ao criar member:", memberError);
     await admin.from("tenants").delete().eq("id", churchId);
-    return { success: false, error: "Erro ao criar o perfil. Tente novamente." };
+    return {
+      success: false,
+      error: "Erro ao criar o perfil. Tente novamente.",
+    };
   }
 
   // 6. Create general invite link via admin
@@ -211,13 +232,15 @@ export async function createChurch(data: CreateChurchInput): Promise<ActionResul
   });
 
   // 7. Register LGPD consents via admin
-  const consentInserts = Object.entries(consents.consents).map(([purpose, consented]) => ({
-    member_id: member.id,
-    purpose,
-    consented,
-    ip,
-    terms_version: consents.termsVersion,
-  }));
+  const consentInserts = Object.entries(consents.consents).map(
+    ([purpose, consented]) => ({
+      member_id: member.id,
+      purpose,
+      consented,
+      ip,
+      terms_version: consents.termsVersion,
+    })
+  );
 
   await admin.from("consent_records").insert(consentInserts);
 
@@ -258,16 +281,28 @@ export async function createChurch(data: CreateChurchInput): Promise<ActionResul
 
 // ─── Server Action: registerMember (via invite link) ─────────────────────────
 
-export async function registerMember(data: RegisterMemberInput): Promise<ActionResult> {
+export async function registerMember(
+  data: RegisterMemberInput
+): Promise<ActionResult> {
   const parsed = registerMemberSchema.safeParse(data);
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0].message };
   }
 
-  const { name, cpf, email, password, phone, inviteCode, consents, termsVersion } = parsed.data;
+  const {
+    name,
+    cpf,
+    email,
+    password,
+    phone,
+    inviteCode,
+    consents,
+    termsVersion,
+  } = parsed.data;
 
   const headerStore = await headers();
-  const ip = headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const ip =
+    headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
 
   const supabase = await createClient();
   const admin = createAdminClient();
@@ -297,16 +332,25 @@ export async function registerMember(data: RegisterMemberInput): Promise<ActionR
     !authError && authData.user && authData.user.identities?.length === 0;
 
   if (authError?.code === "user_already_exists" || isConfirmedDuplicate) {
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
     if (signInError) {
-      return { success: false, error: "E-mail já cadastrado com senha diferente. Faça login primeiro." };
+      return {
+        success: false,
+        error: "E-mail já cadastrado com senha diferente. Faça login primeiro.",
+      };
     }
   } else if (authError) {
     return { success: false, error: "Erro ao criar conta. Tente novamente." };
   }
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: "Sessão inválida. Tente novamente." };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user)
+    return { success: false, error: "Sessão inválida. Tente novamente." };
 
   const userId = user.id;
   const rawCpf = cpf.replace(/\D/g, "");
@@ -382,8 +426,14 @@ export async function registerMember(data: RegisterMemberInput): Promise<ActionR
       .single();
 
     if (memberError || !newMember) {
-      console.error("[onboarding] Erro ao criar member via convite:", memberError);
-      return { success: false, error: "Erro ao criar o perfil. Tente novamente." };
+      console.error(
+        "[onboarding] Erro ao criar member via convite:",
+        memberError
+      );
+      return {
+        success: false,
+        error: "Erro ao criar o perfil. Tente novamente.",
+      };
     }
 
     memberId = newMember.id as string;
@@ -391,13 +441,15 @@ export async function registerMember(data: RegisterMemberInput): Promise<ActionR
   }
 
   // 4. LGPD consents
-  const consentInserts = Object.entries(consents).map(([purpose, consented]) => ({
-    member_id: memberId,
-    purpose,
-    consented,
-    ip,
-    terms_version: termsVersion,
-  }));
+  const consentInserts = Object.entries(consents).map(
+    ([purpose, consented]) => ({
+      member_id: memberId,
+      purpose,
+      consented,
+      ip,
+      terms_version: termsVersion,
+    })
+  );
   await admin.from("consent_records").insert(consentInserts);
 
   // 5. JWT custom claims
@@ -454,7 +506,7 @@ export async function getInviteLinks(): Promise<GetInviteLinksResult> {
 
   const links = (data ?? []).map((row: Record<string, unknown>) => {
     const memberName = row.members
-      ? (row.members as { name?: string }).name ?? null
+      ? ((row.members as { name?: string }).name ?? null)
       : null;
     return {
       id: row.id as string,
@@ -478,19 +530,31 @@ export type GenerateInviteResult =
  * personal = true → link pessoal do membro logado (member_id preenchido)
  * personal = false → link geral da igreja (member_id = null), apenas liderança
  */
-export async function generateInviteLink(personal: boolean): Promise<GenerateInviteResult> {
+export async function generateInviteLink(
+  personal: boolean
+): Promise<GenerateInviteResult> {
   const user = await requireAuth();
 
   // Link geral exige liderança (pastor/presbítero/diácono/líder)
   if (!personal) {
-    const leadershipRoles = ["pastor", "presbítero", "diácono", "líder", "admin"];
+    const leadershipRoles = [
+      "pastor",
+      "presbítero",
+      "diácono",
+      "líder",
+      "admin",
+    ];
     if (!leadershipRoles.includes(user.role)) {
-      return { success: false, error: "Apenas liderança pode gerar links gerais." };
+      return {
+        success: false,
+        error: "Apenas liderança pode gerar links gerais.",
+      };
     }
   }
 
   const headerStore = await headers();
-  const ip = headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const ip =
+    headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
 
   const admin = createAdminClient();
 
@@ -542,11 +606,14 @@ export type RevokeInviteResult =
   | { success: true }
   | { success: false; error: string };
 
-export async function revokeInviteLink(inviteLinkId: string): Promise<RevokeInviteResult> {
+export async function revokeInviteLink(
+  inviteLinkId: string
+): Promise<RevokeInviteResult> {
   const user = await requireAuth();
 
   const headerStore = await headers();
-  const ip = headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const ip =
+    headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
 
   const admin = createAdminClient();
 
@@ -573,7 +640,10 @@ export async function revokeInviteLink(inviteLinkId: string): Promise<RevokeInvi
       .maybeSingle();
 
     if (!member || link.member_id !== member.id) {
-      return { success: false, error: "Você só pode revogar seus próprios links." };
+      return {
+        success: false,
+        error: "Você só pode revogar seus próprios links.",
+      };
     }
   }
 

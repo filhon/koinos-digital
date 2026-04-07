@@ -41,7 +41,9 @@ export const personalDataSchema = z.object({
   password: z
     .string()
     .min(8, { message: "Senha deve ter no mínimo 8 caracteres" })
-    .regex(/[A-Z]/, { message: "Senha deve conter ao menos uma letra maiúscula" })
+    .regex(/[A-Z]/, {
+      message: "Senha deve conter ao menos uma letra maiúscula",
+    })
     .regex(/[0-9]/, { message: "Senha deve conter ao menos um número" }),
 });
 
@@ -57,7 +59,10 @@ export const LGPD_PURPOSES = [
 
 export type LgpdPurpose = (typeof LGPD_PURPOSES)[number];
 
-export const LGPD_LABELS: Record<LgpdPurpose, { title: string; description: string }> = {
+export const LGPD_LABELS: Record<
+  LgpdPurpose,
+  { title: string; description: string }
+> = {
   cadastro: {
     title: "Cadastro e identificação",
     description:
@@ -88,54 +93,49 @@ export const LGPD_LABELS: Record<LgpdPurpose, { title: string; description: stri
 export const consentSchema = z.object({
   consents: z
     .record(z.enum(LGPD_PURPOSES), z.boolean())
-    .refine(
-      (c) => c.cadastro === true,
-      { message: "O consentimento de cadastro é obrigatório para usar o sistema." }
-    ),
+    .refine((c) => c.cadastro === true, {
+      message: "O consentimento de cadastro é obrigatório para usar o sistema.",
+    }),
   termsVersion: z.string(),
 });
 
 // ─── Step 3: Dados da igreja ──────────────────────────────────────────────────
 
-export const churchDataSchema = z
-  .object({
-    churchName: z
+export const churchDataSchema = z.object({
+  churchName: z
+    .string()
+    .min(3, { message: "Nome da igreja deve ter no mínimo 3 caracteres" })
+    .max(150, { message: "Nome muito longo" }),
+  cnpj: z
+    .string()
+    .optional()
+    .transform((v) => (v ? stripNonDigits(v) : undefined))
+    .refine((v) => !v || isValidCNPJ(v), { message: "CNPJ inválido" }),
+  denomination: z
+    .string()
+    .max(100, { message: "Denominação muito longa" })
+    .optional(),
+  phone: z
+    .string()
+    .min(10, { message: "Telefone deve ter no mínimo 10 dígitos" })
+    .max(15, { message: "Telefone muito longo" })
+    .transform(stripNonDigits),
+  address: z.object({
+    street: z.string().min(3, { message: "Rua é obrigatória" }),
+    number: z.string().min(1, { message: "Número é obrigatório" }),
+    complement: z.string().optional(),
+    neighborhood: z.string().min(2, { message: "Bairro é obrigatório" }),
+    city: z.string().min(2, { message: "Cidade é obrigatória" }),
+    state: z
       .string()
-      .min(3, { message: "Nome da igreja deve ter no mínimo 3 caracteres" })
-      .max(150, { message: "Nome muito longo" }),
-    cnpj: z
+      .length(2, { message: "Use a sigla do estado (ex: SP)" })
+      .transform((v) => v.toUpperCase()),
+    zip: z
       .string()
-      .optional()
-      .transform((v) => (v ? stripNonDigits(v) : undefined))
-      .refine(
-        (v) => !v || isValidCNPJ(v),
-        { message: "CNPJ inválido" }
-      ),
-    denomination: z
-      .string()
-      .max(100, { message: "Denominação muito longa" })
-      .optional(),
-    phone: z
-      .string()
-      .min(10, { message: "Telefone deve ter no mínimo 10 dígitos" })
-      .max(15, { message: "Telefone muito longo" })
-      .transform(stripNonDigits),
-    address: z.object({
-      street: z.string().min(3, { message: "Rua é obrigatória" }),
-      number: z.string().min(1, { message: "Número é obrigatório" }),
-      complement: z.string().optional(),
-      neighborhood: z.string().min(2, { message: "Bairro é obrigatório" }),
-      city: z.string().min(2, { message: "Cidade é obrigatória" }),
-      state: z
-        .string()
-        .length(2, { message: "Use a sigla do estado (ex: SP)" })
-        .transform((v) => v.toUpperCase()),
-      zip: z
-        .string()
-        .transform(stripNonDigits)
-        .refine((v) => v.length === 8, { message: "CEP inválido" }),
-    }),
-  });
+      .transform(stripNonDigits)
+      .refine((v) => v.length === 8, { message: "CEP inválido" }),
+  }),
+});
 
 // ─── Payload completo (Server Action) ────────────────────────────────────────
 
@@ -165,7 +165,9 @@ export const registerMemberSchema = z.object({
   password: z
     .string()
     .min(8, { message: "Senha deve ter no mínimo 8 caracteres" })
-    .regex(/[A-Z]/, { message: "Senha deve conter ao menos uma letra maiúscula" })
+    .regex(/[A-Z]/, {
+      message: "Senha deve conter ao menos uma letra maiúscula",
+    })
     .regex(/[0-9]/, { message: "Senha deve conter ao menos um número" }),
   phone: z.string().optional(),
   inviteCode: z.string().min(1),

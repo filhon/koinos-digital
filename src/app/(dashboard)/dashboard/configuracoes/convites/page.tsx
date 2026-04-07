@@ -7,9 +7,13 @@ export default async function ConvitesPage() {
   const result = await getInviteLinks();
 
   const links = result.success ? result.data : [];
-  const isLeadership = ["pastor", "presbítero", "diácono", "líder", "admin"].includes(
-    user.role
-  );
+  const isLeadership = [
+    "pastor",
+    "presbítero",
+    "diácono",
+    "líder",
+    "admin",
+  ].includes(user.role);
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">

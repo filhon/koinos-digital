@@ -5,11 +5,19 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, ArrowRight, ArrowLeft, Loader2, Eye, EyeOff, Check, Church } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowRight,
+  ArrowLeft,
+  Loader2,
+  Eye,
+  EyeOff,
+  Check,
+  Church,
+} from "lucide-react";
 
 import {
   personalDataSchema,
-  consentSchema,
   churchDataSchema,
   LGPD_PURPOSES,
   LGPD_LABELS,
@@ -72,9 +80,16 @@ function StepPersonal({
 
   return (
     <form onSubmit={handleSubmit(onNext)} noValidate>
-      <motion.div variants={staggerContainer} initial="hidden" animate="show" className="space-y-5">
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        animate="show"
+        className="space-y-5"
+      >
         <motion.div variants={staggerItem}>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700">Nome completo</label>
+          <label className="mb-1.5 block text-sm font-medium text-gray-700">
+            Nome completo
+          </label>
           <input
             type="text"
             autoComplete="name"
@@ -86,7 +101,9 @@ function StepPersonal({
         </motion.div>
 
         <motion.div variants={staggerItem}>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700">CPF</label>
+          <label className="mb-1.5 block text-sm font-medium text-gray-700">
+            CPF
+          </label>
           <input
             type="text"
             inputMode="numeric"
@@ -105,7 +122,9 @@ function StepPersonal({
         </motion.div>
 
         <motion.div variants={staggerItem}>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700">E-mail</label>
+          <label className="mb-1.5 block text-sm font-medium text-gray-700">
+            E-mail
+          </label>
           <input
             type="email"
             autoComplete="email"
@@ -117,7 +136,9 @@ function StepPersonal({
         </motion.div>
 
         <motion.div variants={staggerItem}>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700">Senha</label>
+          <label className="mb-1.5 block text-sm font-medium text-gray-700">
+            Senha
+          </label>
           <div className="relative">
             <input
               type={showPw ? "text" : "password"}
@@ -132,14 +153,21 @@ function StepPersonal({
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
               aria-label={showPw ? "Ocultar senha" : "Mostrar senha"}
             >
-              {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {showPw ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
             </button>
           </div>
           <FieldError message={errors.password?.message} />
         </motion.div>
 
         <motion.div variants={staggerItem} className="pt-1">
-          <button type="submit" className="btn-primary flex w-full items-center justify-center gap-2">
+          <button
+            type="submit"
+            className="btn-primary flex w-full items-center justify-center gap-2"
+          >
             Continuar
             <ArrowRight className="h-4 w-4" />
           </button>
@@ -170,22 +198,31 @@ function StepConsent({
 
   function handleNext() {
     if (!consents.cadastro) {
-      setError("O consentimento de cadastro é obrigatório para usar o sistema.");
+      setError(
+        "O consentimento de cadastro é obrigatório para usar o sistema."
+      );
       return;
     }
     onNext({
-      consents: consents as Record<typeof LGPD_PURPOSES[number], boolean>,
+      consents: consents as Record<(typeof LGPD_PURPOSES)[number], boolean>,
       termsVersion: TERMS_VERSION,
     });
   }
 
   return (
-    <motion.div variants={staggerContainer} initial="hidden" animate="show" className="space-y-6">
+    <motion.div
+      variants={staggerContainer}
+      initial="hidden"
+      animate="show"
+      className="space-y-6"
+    >
       <motion.div variants={staggerItem}>
         <p className="text-sm text-gray-600 leading-relaxed">
-          Para usar o Koinos, precisamos do seu consentimento sobre como usamos seus dados,
-          conforme a <strong>Lei Geral de Proteção de Dados (LGPD)</strong>. Você pode revogar
-          qualquer consentimento a qualquer momento nas configurações de privacidade.
+          Para usar o Koinos, precisamos do seu consentimento sobre como usamos
+          seus dados, conforme a{" "}
+          <strong>Lei Geral de Proteção de Dados (LGPD)</strong>. Você pode
+          revogar qualquer consentimento a qualquer momento nas configurações de
+          privacidade.
         </p>
       </motion.div>
 
@@ -201,7 +238,9 @@ function StepConsent({
               variants={staggerItem}
               htmlFor={`consent-${purpose}`}
               className={`flex cursor-pointer gap-4 rounded-xl border p-4 transition-colors ${
-                checked ? "border-gray-900 bg-gray-50" : "border-gray-200 bg-white hover:border-gray-300"
+                checked
+                  ? "border-gray-900 bg-gray-50"
+                  : "border-gray-200 bg-white hover:border-gray-300"
               }`}
             >
               <div className="mt-0.5 shrink-0">
@@ -210,7 +249,9 @@ function StepConsent({
                     checked ? "border-gray-900 bg-gray-900" : "border-gray-300"
                   }`}
                 >
-                  {checked && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
+                  {checked && (
+                    <Check className="h-3 w-3 text-white" strokeWidth={3} />
+                  )}
                 </div>
                 <input
                   id={`consent-${purpose}`}
@@ -229,7 +270,9 @@ function StepConsent({
                     </span>
                   )}
                 </p>
-                <p className="mt-0.5 text-xs text-gray-500 leading-relaxed">{description}</p>
+                <p className="mt-0.5 text-xs text-gray-500 leading-relaxed">
+                  {description}
+                </p>
               </div>
             </motion.label>
           );
@@ -244,11 +287,19 @@ function StepConsent({
       )}
 
       <div className="flex gap-3 pt-1">
-        <button type="button" onClick={onBack} className="btn-secondary flex items-center gap-2">
+        <button
+          type="button"
+          onClick={onBack}
+          className="btn-secondary flex items-center gap-2"
+        >
           <ArrowLeft className="h-4 w-4" />
           Voltar
         </button>
-        <button type="button" onClick={handleNext} className="btn-primary flex flex-1 items-center justify-center gap-2">
+        <button
+          type="button"
+          onClick={handleNext}
+          className="btn-primary flex flex-1 items-center justify-center gap-2"
+        >
           Continuar
           <ArrowRight className="h-4 w-4" />
         </button>
@@ -264,7 +315,8 @@ function formatCNPJ(value: string): string {
   if (n.length <= 2) return n;
   if (n.length <= 5) return `${n.slice(0, 2)}.${n.slice(2)}`;
   if (n.length <= 8) return `${n.slice(0, 2)}.${n.slice(2, 5)}.${n.slice(5)}`;
-  if (n.length <= 12) return `${n.slice(0, 2)}.${n.slice(2, 5)}.${n.slice(5, 8)}/${n.slice(8)}`;
+  if (n.length <= 12)
+    return `${n.slice(0, 2)}.${n.slice(2, 5)}.${n.slice(5, 8)}/${n.slice(8)}`;
   return `${n.slice(0, 2)}.${n.slice(2, 5)}.${n.slice(5, 8)}/${n.slice(8, 12)}-${n.slice(12)}`;
 }
 
@@ -272,7 +324,8 @@ function formatPhone(value: string): string {
   const n = value.replace(/\D/g, "").slice(0, 11);
   if (n.length <= 2) return n.length ? `(${n}` : "";
   if (n.length <= 6) return `(${n.slice(0, 2)}) ${n.slice(2)}`;
-  if (n.length <= 10) return `(${n.slice(0, 2)}) ${n.slice(2, 6)}-${n.slice(6)}`;
+  if (n.length <= 10)
+    return `(${n.slice(0, 2)}) ${n.slice(2, 6)}-${n.slice(6)}`;
   return `(${n.slice(0, 2)}) ${n.slice(2, 7)}-${n.slice(7)}`;
 }
 
@@ -300,9 +353,16 @@ function StepChurch({
 
   return (
     <form onSubmit={handleSubmit(onNext)} noValidate>
-      <motion.div variants={staggerContainer} initial="hidden" animate="show" className="space-y-5">
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        animate="show"
+        className="space-y-5"
+      >
         <motion.div variants={staggerItem}>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700">Nome da igreja <span className="text-red-500">*</span></label>
+          <label className="mb-1.5 block text-sm font-medium text-gray-700">
+            Nome da igreja <span className="text-red-500">*</span>
+          </label>
           <input
             type="text"
             placeholder="Igreja Batista Central"
@@ -314,7 +374,9 @@ function StepChurch({
 
         <div className="grid grid-cols-2 gap-4">
           <motion.div variants={staggerItem}>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">CNPJ <span className="text-gray-400 text-xs">(opcional)</span></label>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">
+              CNPJ <span className="text-gray-400 text-xs">(opcional)</span>
+            </label>
             <input
               type="text"
               inputMode="numeric"
@@ -332,7 +394,9 @@ function StepChurch({
           </motion.div>
 
           <motion.div variants={staggerItem}>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">Denominação</label>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">
+              Denominação
+            </label>
             <input
               type="text"
               placeholder="Batista, Assembleia…"
@@ -344,7 +408,9 @@ function StepChurch({
         </div>
 
         <motion.div variants={staggerItem}>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700">Telefone <span className="text-red-500">*</span></label>
+          <label className="mb-1.5 block text-sm font-medium text-gray-700">
+            Telefone <span className="text-red-500">*</span>
+          </label>
           <input
             type="tel"
             inputMode="numeric"
@@ -449,11 +515,18 @@ function StepChurch({
         </motion.div>
 
         <motion.div variants={staggerItem} className="flex gap-3 pt-1">
-          <button type="button" onClick={onBack} className="btn-secondary flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onBack}
+            className="btn-secondary flex items-center gap-2"
+          >
             <ArrowLeft className="h-4 w-4" />
             Voltar
           </button>
-          <button type="submit" className="btn-primary flex flex-1 items-center justify-center gap-2">
+          <button
+            type="submit"
+            className="btn-primary flex flex-1 items-center justify-center gap-2"
+          >
             Revisar
             <ArrowRight className="h-4 w-4" />
           </button>
@@ -487,20 +560,37 @@ function StepConfirm({
     .map(([k]) => LGPD_LABELS[k as keyof typeof LGPD_LABELS]?.title ?? k);
 
   return (
-    <motion.div variants={staggerContainer} initial="hidden" animate="show" className="space-y-5">
+    <motion.div
+      variants={staggerContainer}
+      initial="hidden"
+      animate="show"
+      className="space-y-5"
+    >
       {/* Dados pessoais */}
-      <motion.div variants={staggerItem} className="rounded-xl border border-gray-200 p-4 space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Sua conta</p>
+      <motion.div
+        variants={staggerItem}
+        className="rounded-xl border border-gray-200 p-4 space-y-2"
+      >
+        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+          Sua conta
+        </p>
         <p className="text-sm text-gray-900 font-medium">{personal.name}</p>
         <p className="text-sm text-gray-600">{personal.email}</p>
       </motion.div>
 
       {/* Dados da igreja */}
-      <motion.div variants={staggerItem} className="rounded-xl border border-gray-200 p-4 space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Igreja</p>
+      <motion.div
+        variants={staggerItem}
+        className="rounded-xl border border-gray-200 p-4 space-y-2"
+      >
+        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+          Igreja
+        </p>
         <div className="flex items-center gap-2">
           <Church className="h-4 w-4 text-gray-500" />
-          <p className="text-sm text-gray-900 font-medium">{church.churchName}</p>
+          <p className="text-sm text-gray-900 font-medium">
+            {church.churchName}
+          </p>
         </div>
         {church.denomination && (
           <p className="text-sm text-gray-600">{church.denomination}</p>
@@ -510,14 +600,21 @@ function StepConfirm({
         )}
         <p className="text-sm text-gray-600">
           {church.address.street}, {church.address.number}
-          {church.address.complement ? ` — ${church.address.complement}` : ""} ·{" "}
-          {church.address.neighborhood} · {church.address.city}/{church.address.state}
+          {church.address.complement
+            ? ` — ${church.address.complement}`
+            : ""} · {church.address.neighborhood} · {church.address.city}/
+          {church.address.state}
         </p>
       </motion.div>
 
       {/* Consentimentos */}
-      <motion.div variants={staggerItem} className="rounded-xl border border-gray-200 p-4 space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Consentimentos LGPD</p>
+      <motion.div
+        variants={staggerItem}
+        className="rounded-xl border border-gray-200 p-4 space-y-2"
+      >
+        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+          Consentimentos LGPD
+        </p>
         <div className="flex flex-wrap gap-1.5">
           {consentedPurposes.map((p) => (
             <span
@@ -529,7 +626,9 @@ function StepConfirm({
             </span>
           ))}
         </div>
-        <p className="text-xs text-gray-400">Termos versão {consent.termsVersion}</p>
+        <p className="text-xs text-gray-400">
+          Termos versão {consent.termsVersion}
+        </p>
       </motion.div>
 
       {serverError && (
@@ -544,7 +643,12 @@ function StepConfirm({
       )}
 
       <motion.div variants={staggerItem} className="flex gap-3 pt-1">
-        <button type="button" onClick={onBack} disabled={isPending} className="btn-secondary flex items-center gap-2">
+        <button
+          type="button"
+          onClick={onBack}
+          disabled={isPending}
+          className="btn-secondary flex items-center gap-2"
+        >
           <ArrowLeft className="h-4 w-4" />
           Voltar
         </button>
@@ -584,11 +688,15 @@ function StepIndicator({ current }: { current: number }) {
                   done
                     ? "border-gray-900 bg-gray-900 text-white"
                     : active
-                    ? "border-gray-900 bg-white text-gray-900"
-                    : "border-gray-200 bg-white text-gray-400"
+                      ? "border-gray-900 bg-white text-gray-900"
+                      : "border-gray-200 bg-white text-gray-400"
                 }`}
               >
-                {done ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : i + 1}
+                {done ? (
+                  <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                ) : (
+                  i + 1
+                )}
               </div>
               <span
                 className={`mt-1 hidden text-[10px] font-medium sm:block ${
@@ -656,9 +764,18 @@ export default function SignupIgrejaPage() {
   }
 
   const headings = [
-    { title: "Crie sua conta", subtitle: "Você será o pastor fundador da sua igreja." },
-    { title: "Sua privacidade", subtitle: "Escolha como usamos seus dados. Você decide." },
-    { title: "Dados da igreja", subtitle: "Vamos encontrar ou criar sua comunidade." },
+    {
+      title: "Crie sua conta",
+      subtitle: "Você será o pastor fundador da sua igreja.",
+    },
+    {
+      title: "Sua privacidade",
+      subtitle: "Escolha como usamos seus dados. Você decide.",
+    },
+    {
+      title: "Dados da igreja",
+      subtitle: "Vamos encontrar ou criar sua comunidade.",
+    },
     { title: "Tudo certo?", subtitle: "Revise antes de finalizar." },
   ];
 

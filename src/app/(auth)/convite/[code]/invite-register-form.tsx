@@ -5,7 +5,14 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import { AlertCircle, ArrowRight, Check, Eye, EyeOff, Loader2 } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowRight,
+  Check,
+  Eye,
+  EyeOff,
+  Loader2,
+} from "lucide-react";
 
 import {
   registerMemberSchema,
@@ -42,7 +49,7 @@ interface Props {
   churchName: string;
 }
 
-export function InviteRegisterForm({ inviteCode, churchName: _ }: Props) {
+export function InviteRegisterForm({ inviteCode }: Props) {
   const router = useRouter();
   const [showPw, setShowPw] = useState(false);
   const [consents, setConsents] = useState<Record<string, boolean>>(
@@ -66,20 +73,16 @@ export function InviteRegisterForm({ inviteCode, churchName: _ }: Props) {
       email: "",
       password: "",
       phone: "",
-      consents: Object.fromEntries(LGPD_PURPOSES.map((p) => [p, false])) as Record<
-        typeof LGPD_PURPOSES[number],
-        boolean
-      >,
+      consents: Object.fromEntries(
+        LGPD_PURPOSES.map((p) => [p, false])
+      ) as Record<(typeof LGPD_PURPOSES)[number], boolean>,
     },
   });
 
   function toggleConsent(purpose: string) {
     const next = !consents[purpose];
     setConsents((prev) => ({ ...prev, [purpose]: next }));
-    setValue(
-      `consents.${purpose as typeof LGPD_PURPOSES[number]}`,
-      next
-    );
+    setValue(`consents.${purpose as (typeof LGPD_PURPOSES)[number]}`, next);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -125,7 +128,9 @@ export function InviteRegisterForm({ inviteCode, churchName: _ }: Props) {
 
         {/* CPF */}
         <motion.div variants={staggerItem}>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700">CPF</label>
+          <label className="mb-1.5 block text-sm font-medium text-gray-700">
+            CPF
+          </label>
           <input
             type="text"
             inputMode="numeric"
@@ -145,7 +150,9 @@ export function InviteRegisterForm({ inviteCode, churchName: _ }: Props) {
 
         {/* Email */}
         <motion.div variants={staggerItem}>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700">E-mail</label>
+          <label className="mb-1.5 block text-sm font-medium text-gray-700">
+            E-mail
+          </label>
           <input
             type="email"
             autoComplete="email"
@@ -158,7 +165,9 @@ export function InviteRegisterForm({ inviteCode, churchName: _ }: Props) {
 
         {/* Senha */}
         <motion.div variants={staggerItem}>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700">Senha</label>
+          <label className="mb-1.5 block text-sm font-medium text-gray-700">
+            Senha
+          </label>
           <div className="relative">
             <input
               type={showPw ? "text" : "password"}
@@ -173,7 +182,11 @@ export function InviteRegisterForm({ inviteCode, churchName: _ }: Props) {
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
               aria-label={showPw ? "Ocultar senha" : "Mostrar senha"}
             >
-              {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {showPw ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
             </button>
           </div>
           <FieldError message={errors.password?.message} />
@@ -182,8 +195,7 @@ export function InviteRegisterForm({ inviteCode, churchName: _ }: Props) {
         {/* Telefone */}
         <motion.div variants={staggerItem}>
           <label className="mb-1.5 block text-sm font-medium text-gray-700">
-            Telefone{" "}
-            <span className="text-gray-400 text-xs">(opcional)</span>
+            Telefone <span className="text-gray-400 text-xs">(opcional)</span>
           </label>
           <input
             type="tel"
@@ -203,7 +215,9 @@ export function InviteRegisterForm({ inviteCode, churchName: _ }: Props) {
 
         {/* Consentimentos LGPD */}
         <motion.div variants={staggerItem} className="space-y-3">
-          <p className="text-sm font-medium text-gray-700">Consentimentos LGPD</p>
+          <p className="text-sm font-medium text-gray-700">
+            Consentimentos LGPD
+          </p>
           {LGPD_PURPOSES.map((purpose) => {
             const { title, description } = LGPD_LABELS[purpose];
             const isRequired = purpose === "cadastro";
@@ -222,10 +236,14 @@ export function InviteRegisterForm({ inviteCode, churchName: _ }: Props) {
                 <div className="mt-0.5 shrink-0">
                   <div
                     className={`flex h-5 w-5 items-center justify-center rounded border-2 transition-colors ${
-                      checked ? "border-gray-900 bg-gray-900" : "border-gray-300"
+                      checked
+                        ? "border-gray-900 bg-gray-900"
+                        : "border-gray-300"
                     }`}
                   >
-                    {checked && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
+                    {checked && (
+                      <Check className="h-3 w-3 text-white" strokeWidth={3} />
+                    )}
                   </div>
                   <input
                     id={`consent-${purpose}`}

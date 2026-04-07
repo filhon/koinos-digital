@@ -12,7 +12,9 @@ export default async function ConvitePage({ params }: Props) {
 
   const { data: invite } = await admin
     .from("invite_links")
-    .select("id, active, church_id, member_id, tenants(name, slug), members(name)")
+    .select(
+      "id, active, church_id, member_id, tenants(name, slug), members(name)"
+    )
     .eq("code", code)
     .maybeSingle();
 
@@ -25,8 +27,8 @@ export default async function ConvitePage({ params }: Props) {
             Link inválido
           </h1>
           <p className="mt-2 text-sm text-gray-500 leading-relaxed">
-            Este link de convite não existe ou foi revogado. Peça ao líder da sua
-            comunidade um novo link.
+            Este link de convite não existe ou foi revogado. Peça ao líder da
+            sua comunidade um novo link.
           </p>
         </div>
         <Link
@@ -39,8 +41,10 @@ export default async function ConvitePage({ params }: Props) {
     );
   }
 
-  const churchName = (invite.tenants as { name?: string } | null)?.name ?? "sua igreja";
-  const inviterName = (invite.members as { name?: string } | null)?.name ?? null;
+  const churchName =
+    (invite.tenants as { name?: string } | null)?.name ?? "sua igreja";
+  const inviterName =
+    (invite.members as { name?: string } | null)?.name ?? null;
 
   return (
     <div className="w-full">

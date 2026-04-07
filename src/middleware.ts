@@ -2,36 +2,6 @@ import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 import { createServerClient } from "@supabase/ssr";
 
-const PUBLIC_PATHS = [
-  "/",
-  "/login",
-  "/signup",
-  "/signup/igreja",
-  "/esqueci-senha",
-  "/redefinir-senha",
-];
-
-function isPublicPath(pathname: string): boolean {
-  if (PUBLIC_PATHS.includes(pathname)) return true;
-  if (pathname.startsWith("/convite/")) return true;
-  // /[slug] → landing pages públicas de tenants
-  // Heurística: single-segment paths que não são rotas conhecidas do app
-  const segments = pathname.split("/").filter(Boolean);
-  if (
-    segments.length === 1 &&
-    ![
-      "login",
-      "signup",
-      "esqueci-senha",
-      "redefinir-senha",
-      "dashboard",
-    ].includes(segments[0])
-  ) {
-    return true;
-  }
-  return false;
-}
-
 export async function middleware(request: NextRequest) {
   // Refresh automático do token (obrigatório — não remover)
   const response = await updateSession(request);

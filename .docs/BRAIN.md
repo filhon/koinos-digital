@@ -252,25 +252,30 @@ admin (SaaS) → acesso global, sem dados sensíveis de tenants
 > Registre aqui decisões não-óbvias que afetam o schema, RLS ou segurança. Evita regressão em sessões futuras.
 
 ### search_path fixo em funções SQL/plpgsql
+
 **Decisão:** Todas as funções devem usar `SET search_path = public` na definição.
 **Motivo:** Sem isso, um usuário mal-intencionado com permissão de criar objetos no schema `public` pode fazer schema hijacking substituindo funções do sistema. Exigência do Supabase Security Advisor.
 **Aplica-se a:** qualquer nova função criada via migration.
 
 ### pg_trgm no schema extensions
+
 **Decisão:** A extensão `pg_trgm` fica no schema `extensions`, não em `public`.
 **Motivo:** Extensões em `public` expõem funções/operadores de sistema misturados com código de aplicação. Recomendação do Supabase Security Advisor.
 **Impacto:** O índice GIN em `members.name` usa `gin_trgm_ops`. O `SET search_path = public, extensions` é necessário na sessão em que o índice é criado.
 
 ### Policy UPDATE de members unificada
+
 **Decisão:** Uma única policy `members_update` substitui `members_update_leadership` + `members_update_self`.
 **Motivo:** Múltiplas permissive policies para o mesmo role+action fazem o Postgres avaliar ambas em cada query. Impacto O(2n) desnecessário.
 **Lógica:** `is_leadership() OR id = (SELECT auth.uid())` — liderança edita qualquer membro do tenant; membro edita apenas o próprio registro. A restrição de quais colunas cada role pode editar é aplicada na Server Action, não no RLS.
 
 ### auth.uid() envolvido em SELECT nas policies
+
 **Decisão:** Usar `(SELECT auth.uid())` em vez de `auth.uid()` direto nas policies RLS.
 **Motivo:** Sem o SELECT, o Postgres reavalia a função para cada row. Com o SELECT, é avaliada uma vez e cached como init-plan. Recomendação do Supabase Performance Advisor.
 
 ### Leaked Password Protection
+
 **Pendente (configuração manual):** Ativar no Supabase Dashboard em Authentication → Settings → Password Security → "Enable leaked password protection". Integra com HaveIBeenPwned.org. Não é configurável via SQL/migration.
 
 ---

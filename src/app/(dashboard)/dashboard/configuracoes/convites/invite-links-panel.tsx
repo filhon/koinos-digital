@@ -29,7 +29,7 @@ function buildInviteUrl(code: string): string {
   const base =
     typeof window !== "undefined"
       ? window.location.origin
-      : process.env.NEXT_PUBLIC_APP_URL ?? "";
+      : (process.env.NEXT_PUBLIC_APP_URL ?? "");
   return `${base}/convite/${code}`;
 }
 
@@ -132,7 +132,9 @@ export function InviteLinksPanel({ initialLinks, isLeadership }: Props) {
         <div className="rounded-xl border border-dashed border-gray-200 py-12 text-center">
           <Link2 className="mx-auto mb-3 h-8 w-8 text-gray-300" />
           <p className="text-sm text-gray-500">Nenhum link ativo ainda.</p>
-          <p className="text-xs text-gray-400">Gere um link para compartilhar.</p>
+          <p className="text-xs text-gray-400">
+            Gere um link para compartilhar.
+          </p>
         </div>
       ) : (
         <motion.ul
