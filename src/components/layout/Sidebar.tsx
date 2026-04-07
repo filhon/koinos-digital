@@ -152,68 +152,68 @@ export function Sidebar() {
           if (visibleItems.length === 0) return null;
 
           return (
-          <div key={group.group} className="mb-4">
-            <AnimatePresence mode="popLayout" initial={false}>
-              {!collapsed && (
-                <motion.p
-                  key={`label-${group.group}`}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.12 }}
-                  className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/50"
-                >
-                  {group.group}
-                </motion.p>
-              )}
-            </AnimatePresence>
+            <div key={group.group} className="mb-4">
+              <AnimatePresence mode="popLayout" initial={false}>
+                {!collapsed && (
+                  <motion.p
+                    key={`label-${group.group}`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.12 }}
+                    className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/50"
+                  >
+                    {group.group}
+                  </motion.p>
+                )}
+              </AnimatePresence>
 
-            {visibleItems.map((item) => {
-              const Icon = item.icon;
-              const isActive =
-                item.href === "/dashboard"
-                  ? pathname === "/dashboard"
-                  : pathname.startsWith(item.href);
+              {visibleItems.map((item) => {
+                const Icon = item.icon;
+                const isActive =
+                  item.href === "/dashboard"
+                    ? pathname === "/dashboard"
+                    : pathname.startsWith(item.href);
 
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-label={collapsed ? item.label : undefined}
-                  aria-current={isActive ? "page" : undefined}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-2 py-2 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-1",
-                    isActive
-                      ? "bg-sidebar-accent text-sidebar-primary"
-                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
-                  )}
-                  title={collapsed ? item.label : undefined}
-                >
-                  <Icon
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    aria-label={collapsed ? item.label : undefined}
+                    aria-current={isActive ? "page" : undefined}
                     className={cn(
-                      "size-4 shrink-0",
-                      isActive && "text-sidebar-primary"
+                      "flex items-center gap-3 rounded-lg px-2 py-2 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-1",
+                      isActive
+                        ? "bg-sidebar-accent text-sidebar-primary"
+                        : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
                     )}
-                    aria-hidden="true"
-                  />
-                  <AnimatePresence mode="popLayout" initial={false}>
-                    {!collapsed && (
-                      <motion.span
-                        key={`label-${item.href}`}
-                        initial={{ opacity: 0, x: -4 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -4 }}
-                        transition={{ duration: 0.12 }}
-                        className="truncate"
-                      >
-                        {item.label}
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                </Link>
-              );
-            })}
-          </div>
+                    title={collapsed ? item.label : undefined}
+                  >
+                    <Icon
+                      className={cn(
+                        "size-4 shrink-0",
+                        isActive && "text-sidebar-primary"
+                      )}
+                      aria-hidden="true"
+                    />
+                    <AnimatePresence mode="popLayout" initial={false}>
+                      {!collapsed && (
+                        <motion.span
+                          key={`label-${item.href}`}
+                          initial={{ opacity: 0, x: -4 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -4 }}
+                          transition={{ duration: 0.12 }}
+                          className="truncate"
+                        >
+                          {item.label}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </Link>
+                );
+              })}
+            </div>
           );
         })}
       </nav>

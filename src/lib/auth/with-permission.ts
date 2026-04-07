@@ -11,10 +11,10 @@ export interface PermissionDeniedResult {
 const ROLE_HIERARCHY: Record<MemberRole, number> = {
   admin: 8,
   pastor: 7,
-  "presbítero": 6,
-  "diácono": 5,
+  presbítero: 6,
+  diácono: 5,
   tesoureiro: 4,
-  "líder": 3,
+  líder: 3,
   membro: 2,
   visitante: 1,
 };

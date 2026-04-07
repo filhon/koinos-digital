@@ -36,9 +36,13 @@ export default function ForbiddenPage() {
         >
           Acesso negado
         </h1>
-        <p className="text-sm leading-relaxed" style={{ color: "var(--muted-foreground)" }}>
-          Você não tem permissão para acessar esta página.
-          Entre em contato com o pastor ou administrador da sua igreja caso acredite que isso é um erro.
+        <p
+          className="text-sm leading-relaxed"
+          style={{ color: "var(--muted-foreground)" }}
+        >
+          Você não tem permissão para acessar esta página. Entre em contato com
+          o pastor ou administrador da sua igreja caso acredite que isso é um
+          erro.
         </p>
       </div>
 
