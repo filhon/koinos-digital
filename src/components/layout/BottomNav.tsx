@@ -10,17 +10,36 @@ import {
   User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { usePermissions } from "@/hooks/usePermissions";
+import type { MemberRole } from "@/lib/auth/session";
 
-const navItems = [
+interface BottomNavItem {
+  label: string;
+  href: string;
+  icon: React.ElementType;
+  roles?: MemberRole[];
+}
+
+const navItems: BottomNavItem[] = [
   { label: "Início", href: "/dashboard", icon: LayoutDashboard },
   { label: "Agenda", href: "/agenda", icon: CalendarDays },
   { label: "Mural", href: "/mural", icon: MessageSquare },
-  { label: "Mais", href: "/configuracoes", icon: MoreHorizontal },
+  {
+    label: "Mais",
+    href: "/configuracoes",
+    icon: MoreHorizontal,
+    roles: ["admin", "pastor"],
+  },
   { label: "Perfil", href: "/perfil", icon: User },
 ];
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { role } = usePermissions();
+
+  const visibleItems = navItems.filter(
+    (item) => !item.roles || item.roles.includes(role)
+  );
 
   return (
     <nav
@@ -34,7 +53,7 @@ export function BottomNav() {
       aria-label="Navegação inferior"
     >
       <div className="flex items-center justify-around h-14 px-1">
-        {navItems.map((item) => {
+        {visibleItems.map((item) => {
           const Icon = item.icon;
           const isActive =
             item.href === "/dashboard"

@@ -2,7 +2,7 @@
 
 **Última atualização:** 2026-04-07
 **Fase atual:** 1 — Onboarding + RBAC
-**Sessão atual:** 1.3
+**Sessão atual:** 1.4
 
 ---
 
@@ -231,6 +231,7 @@ admin (SaaS) → acesso global, sem dados sensíveis de tenants
 | 1.1 | 2026-04-07 | Wizard multi-step de criação de igreja (4 steps: dados pessoais, consentimentos LGPD, dados da igreja, confirmação), Server Action createChurch com validação Zod + unicidade CNPJ/nome + associação como visitante + INSERT tenant+member+invite_link + consentimento LGPD + JWT custom claims via admin client + audit_log, schema Zod onboarding, admin client Supabase, /signup/igreja adicionada às rotas públicas do middleware | src/lib/validators/onboarding.ts, src/actions/onboarding.ts, src/lib/supabase/admin.ts, src/app/(auth)/signup/igreja/page.tsx, src/middleware.ts |
 | 1.2 | 2026-04-07 | Fluxo completo de convite: página /convite/[code] (valida código, exibe form ou erro amigável), Server Action registerMember com CPF matching (associa existente / atualiza email / cria visitante), registro de invited_by, consentimentos LGPD, JWT claims; Server Actions generateInviteLink (pessoal/geral com RBAC), revokeInviteLink, getInviteLinks; painel /dashboard/configuracoes/convites com listagem, geração e revogação de links + clipboard API; formatPhone adicionado ao utils/cpf; schema registerMemberSchema adicionado aos validators; correção de erros TS pré-existentes em signup/igreja (useForm sem generic explícito) | src/lib/validators/onboarding.ts, src/actions/onboarding.ts, src/lib/utils/cpf.ts, src/app/(auth)/convite/[code]/page.tsx, src/app/(auth)/convite/[code]/invite-register-form.tsx, src/app/(dashboard)/configuracoes/convites/page.tsx, src/app/(dashboard)/configuracoes/convites/invite-links-panel.tsx, src/app/(auth)/signup/igreja/page.tsx |
 | Extra | 2026-04-07 | Auditoria do banco via Supabase MCP Advisors + migration de correções de segurança e performance: search_path fixo nas 5 funções SQL/plpgsql, pg_trgm movido para schema extensions, policy members_update unificada (eliminou múltiplas permissive policies + fix auth.uid() por row), 10 índices criados em FKs sem cobertura | supabase/migrations/20260407130000_security_performance_fixes.sql |
+| 1.3 | 2026-04-07 | RBAC end-to-end: middleware refinado com guards de role por rota (/financeiro → tesoureiro+, /configuracoes e /assembleia → pastor); decorator withPermission para Server Actions com log de tentativas negadas; Sidebar e BottomNav filtram itens por role (Financeiro/Assembleia/Configurações ocultos para membro/visitante); página /403 com mensagem amigável | src/middleware.ts, src/lib/auth/with-permission.ts, src/components/layout/Sidebar.tsx, src/components/layout/BottomNav.tsx, src/app/403/page.tsx |
 
 ---
 

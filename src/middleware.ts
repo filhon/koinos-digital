@@ -1,6 +1,30 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 import { createServerClient } from "@supabase/ssr";
+import type { MemberRole } from "@/lib/auth/session";
+
+// Rotas que exigem roles específicos além de estar autenticado.
+// A ordem importa: mais específico primeiro.
+const ROUTE_GUARDS: Array<{
+  test: (pathname: string) => boolean;
+  roles: MemberRole[];
+}> = [
+  {
+    // Financeiro: tesoureiro, diácono, presbítero, pastor, admin
+    test: (p) => p.startsWith("/dashboard/financeiro"),
+    roles: ["admin", "pastor", "presbítero", "diácono", "tesoureiro"],
+  },
+  {
+    // Configurações: apenas pastor/admin (configurações avançadas do tenant)
+    test: (p) => p.startsWith("/dashboard/configuracoes"),
+    roles: ["admin", "pastor"],
+  },
+  {
+    // Assembléia: apenas pastor/admin (criação e gestão de assembleias)
+    test: (p) => p.startsWith("/dashboard/assembleia"),
+    roles: ["admin", "pastor"],
+  },
+];
 
 export async function middleware(request: NextRequest) {
   // Refresh automático do token (obrigatório — não remover)
@@ -32,6 +56,18 @@ export async function middleware(request: NextRequest) {
       loginUrl.pathname = "/login";
       loginUrl.searchParams.set("next", pathname);
       return NextResponse.redirect(loginUrl);
+    }
+
+    // Verifica guards de role para rotas específicas
+    const role = ((user.app_metadata as Record<string, unknown>)?.role ??
+      "visitante") as MemberRole;
+
+    for (const guard of ROUTE_GUARDS) {
+      if (guard.test(pathname) && !guard.roles.includes(role)) {
+        const forbiddenUrl = request.nextUrl.clone();
+        forbiddenUrl.pathname = "/403";
+        return NextResponse.redirect(forbiddenUrl);
+      }
     }
   }
 

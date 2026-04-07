@@ -21,11 +21,15 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { sidebarSpring } from "@/lib/motion";
+import { usePermissions } from "@/hooks/usePermissions";
+import type { MemberRole } from "@/lib/auth/session";
 
 interface NavItem {
   label: string;
   href: string;
   icon: React.ElementType;
+  /** Se definido, apenas esses roles veem o item. */
+  roles?: MemberRole[];
 }
 
 interface NavGroup {
@@ -62,10 +66,25 @@ const navigation: NavGroup[] = [
   {
     group: "Administração",
     items: [
-      { label: "Financeiro", href: "/financeiro", icon: Banknote },
+      {
+        label: "Financeiro",
+        href: "/financeiro",
+        icon: Banknote,
+        roles: ["admin", "pastor", "presbítero", "diácono", "tesoureiro"],
+      },
       { label: "Gamificação", href: "/gamificacao", icon: Trophy },
-      { label: "Assembléia", href: "/assembleia", icon: Vote },
-      { label: "Configurações", href: "/configuracoes", icon: Cog },
+      {
+        label: "Assembléia",
+        href: "/assembleia",
+        icon: Vote,
+        roles: ["admin", "pastor"],
+      },
+      {
+        label: "Configurações",
+        href: "/configuracoes",
+        icon: Cog,
+        roles: ["admin", "pastor"],
+      },
     ],
   },
 ];
@@ -73,6 +92,7 @@ const navigation: NavGroup[] = [
 export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const { role } = usePermissions();
 
   return (
     <motion.aside
@@ -125,7 +145,13 @@ export function Sidebar() {
         className="flex-1 overflow-y-auto py-4 px-2"
         aria-label="Menu do sistema"
       >
-        {navigation.map((group) => (
+        {navigation.map((group) => {
+          const visibleItems = group.items.filter(
+            (item) => !item.roles || item.roles.includes(role)
+          );
+          if (visibleItems.length === 0) return null;
+
+          return (
           <div key={group.group} className="mb-4">
             <AnimatePresence mode="popLayout" initial={false}>
               {!collapsed && (
@@ -142,7 +168,7 @@ export function Sidebar() {
               )}
             </AnimatePresence>
 
-            {group.items.map((item) => {
+            {visibleItems.map((item) => {
               const Icon = item.icon;
               const isActive =
                 item.href === "/dashboard"
@@ -188,7 +214,8 @@ export function Sidebar() {
               );
             })}
           </div>
-        ))}
+          );
+        })}
       </nav>
 
       {/* Collapse toggle */}
