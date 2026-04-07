@@ -18,7 +18,7 @@ export async function createClient() {
               cookieStore.set(name, value, options)
             );
           } catch {
-            // Server Component — cookies só podem ser setados em middleware/route handlers
+            // Server Component — ignorado; o middleware trata o refresh
           }
         },
       },

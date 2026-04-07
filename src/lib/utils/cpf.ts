@@ -22,6 +22,15 @@ export function validateCPF(value: string): boolean {
   return calc(9) === parseInt(cpf[9]) && calc(10) === parseInt(cpf[10]);
 }
 
+/** Formata telefone para exibição: (11) 99999-9999 */
+export function formatPhone(value: string): string {
+  const n = value.replace(/\D/g, "").slice(0, 11);
+  if (n.length <= 2) return n.length ? `(${n}` : "";
+  if (n.length <= 6) return `(${n.slice(0, 2)}) ${n.slice(2)}`;
+  if (n.length <= 10) return `(${n.slice(0, 2)}) ${n.slice(2, 6)}-${n.slice(6)}`;
+  return `(${n.slice(0, 2)}) ${n.slice(2, 7)}-${n.slice(7)}`;
+}
+
 /** Formata CPF para exibição: 000.000.000-00 */
 export function formatCPF(value: string): string {
   const cpf = digits(value).slice(0, 11);

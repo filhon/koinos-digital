@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+// redirect é usado pelo signOut apenas
 import {
   loginSchema,
   signupSchema,
@@ -10,7 +11,7 @@ import {
 } from "@/lib/validators/auth";
 
 export type ActionResult =
-  | { success: true; message?: string }
+  | { success: true; message?: string; redirectTo?: string }
   | { success: false; error: string };
 
 export async function signIn(formData: FormData): Promise<ActionResult> {
@@ -31,7 +32,7 @@ export async function signIn(formData: FormData): Promise<ActionResult> {
     return { success: false, error: "E-mail ou senha incorretos." };
   }
 
-  redirect("/dashboard");
+  return { success: true, redirectTo: "/dashboard" };
 }
 
 export async function signUp(formData: FormData): Promise<ActionResult> {
@@ -67,7 +68,7 @@ export async function signUp(formData: FormData): Promise<ActionResult> {
     return { success: false, error: "Erro ao criar conta. Tente novamente." };
   }
 
-  redirect("/dashboard");
+  return { success: true, redirectTo: "/dashboard" };
 }
 
 export async function signOut(): Promise<void> {
@@ -127,5 +128,5 @@ export async function updatePassword(
     };
   }
 
-  redirect("/dashboard");
+  return { success: true, redirectTo: "/dashboard" };
 }

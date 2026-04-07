@@ -5,12 +5,15 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, AlertCircle, ArrowRight, Loader2 } from "lucide-react";
 import { loginSchema, type LoginInput } from "@/lib/validators/auth";
 import { signIn } from "@/actions/auth";
 import { staggerContainer, fadeUp } from "@/lib/motion";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -30,9 +33,13 @@ export default function LoginPage() {
       formData.set("email", data.email);
       formData.set("password", data.password);
       const result = await signIn(formData);
-      if (result && !result.success) {
+      if (!result.success) {
         setServerError(result.error);
+        return;
       }
+      const next = searchParams.get("next") ?? "/dashboard";
+      router.push(next);
+      router.refresh();
     });
   }
 

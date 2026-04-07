@@ -2,7 +2,7 @@
 
 **Última atualização:** 2026-04-07
 **Fase atual:** 1 — Onboarding + RBAC
-**Sessão atual:** 1.1
+**Sessão atual:** 1.3
 
 ---
 
@@ -228,6 +228,9 @@ admin (SaaS) → acesso global, sem dados sensíveis de tenants
 | 0.5 | 2026-04-07 | Design system completo: globals.css com paleta OKLCH "warm editorial" (azul-petróleo/âmbar-cobre/semânticas/superfícies), tipografia Instrument Serif + DM Sans, shadow tokens com matiz, dark mode via classe .dark + cookie SSR + hook useTheme, ThemeProvider client, motion.ts reescrito com fadeIn/slideUp/scaleIn/stagger/pageTransition/sidebarSpring, 13 componentes shadcn instalados e customizados (Button/Input/Card/Skeleton/+), layout AppShell + Sidebar colapsável + BottomNav mobile + Header glass + PageHeader, dashboard layout atualizado com AppShell | src/styles/globals.css, src/app/layout.tsx, src/lib/theme.ts, src/lib/motion.ts, src/components/layout/ThemeProvider.tsx, src/components/layout/AppShell.tsx, src/components/layout/Sidebar.tsx, src/components/layout/BottomNav.tsx, src/components/layout/Header.tsx, src/components/layout/PageHeader.tsx, src/components/layout/index.ts, src/components/ui/button.tsx, src/components/ui/input.tsx, src/components/ui/card.tsx, src/components/ui/skeleton.tsx, src/components/ui/{input,label,dialog,sheet,sonner,dropdown-menu,avatar,badge,separator,tabs}.tsx, src/app/(dashboard)/layout.tsx |
 | 0.6 | 2026-04-07 | Helpers de encryption (AES-256-GCM), formatters (currency/date/phone pt-BR), Server Action logAudit, matriz de permissões RBAC (PERMISSIONS_MATRIX + checkPermission + isLeadershipRole), hook usePermissions, componente PermissionGate | src/lib/encryption/aes.ts, src/lib/utils/formatters.ts, src/actions/audit.ts, src/lib/auth/permissions.ts, src/hooks/usePermissions.ts, src/components/ui/permission-gate.tsx |
 | 0.7 | 2026-04-07 | Security headers (CSP/HSTS/X-Frame/nosniff/Referrer/Permissions-Policy) no next.config.mjs, dependabot.yml (npm semanal + actions mensal), CI com jobs sequenciais type-check→lint→build + npm audit, vercel.json com região gru1 | next.config.mjs, .github/dependabot.yml, .github/workflows/ci.yml, vercel.json |
+| 1.1 | 2026-04-07 | Wizard multi-step de criação de igreja (4 steps: dados pessoais, consentimentos LGPD, dados da igreja, confirmação), Server Action createChurch com validação Zod + unicidade CNPJ/nome + associação como visitante + INSERT tenant+member+invite_link + consentimento LGPD + JWT custom claims via admin client + audit_log, schema Zod onboarding, admin client Supabase, /signup/igreja adicionada às rotas públicas do middleware | src/lib/validators/onboarding.ts, src/actions/onboarding.ts, src/lib/supabase/admin.ts, src/app/(auth)/signup/igreja/page.tsx, src/middleware.ts |
+| 1.2 | 2026-04-07 | Fluxo completo de convite: página /convite/[code] (valida código, exibe form ou erro amigável), Server Action registerMember com CPF matching (associa existente / atualiza email / cria visitante), registro de invited_by, consentimentos LGPD, JWT claims; Server Actions generateInviteLink (pessoal/geral com RBAC), revokeInviteLink, getInviteLinks; painel /dashboard/configuracoes/convites com listagem, geração e revogação de links + clipboard API; formatPhone adicionado ao utils/cpf; schema registerMemberSchema adicionado aos validators; correção de erros TS pré-existentes em signup/igreja (useForm sem generic explícito) | src/lib/validators/onboarding.ts, src/actions/onboarding.ts, src/lib/utils/cpf.ts, src/app/(auth)/convite/[code]/page.tsx, src/app/(auth)/convite/[code]/invite-register-form.tsx, src/app/(dashboard)/configuracoes/convites/page.tsx, src/app/(dashboard)/configuracoes/convites/invite-links-panel.tsx, src/app/(auth)/signup/igreja/page.tsx |
+| Extra | 2026-04-07 | Auditoria do banco via Supabase MCP Advisors + migration de correções de segurança e performance: search_path fixo nas 5 funções SQL/plpgsql, pg_trgm movido para schema extensions, policy members_update unificada (eliminou múltiplas permissive policies + fix auth.uid() por row), 10 índices criados em FKs sem cobertura | supabase/migrations/20260407130000_security_performance_fixes.sql |
 
 ---
 
@@ -244,7 +247,35 @@ admin (SaaS) → acesso global, sem dados sensíveis de tenants
 
 ---
 
-## 9. Como usar este documento
+## 9. Decisões de banco e segurança (registro de ADRs)
+
+> Registre aqui decisões não-óbvias que afetam o schema, RLS ou segurança. Evita regressão em sessões futuras.
+
+### search_path fixo em funções SQL/plpgsql
+**Decisão:** Todas as funções devem usar `SET search_path = public` na definição.
+**Motivo:** Sem isso, um usuário mal-intencionado com permissão de criar objetos no schema `public` pode fazer schema hijacking substituindo funções do sistema. Exigência do Supabase Security Advisor.
+**Aplica-se a:** qualquer nova função criada via migration.
+
+### pg_trgm no schema extensions
+**Decisão:** A extensão `pg_trgm` fica no schema `extensions`, não em `public`.
+**Motivo:** Extensões em `public` expõem funções/operadores de sistema misturados com código de aplicação. Recomendação do Supabase Security Advisor.
+**Impacto:** O índice GIN em `members.name` usa `gin_trgm_ops`. O `SET search_path = public, extensions` é necessário na sessão em que o índice é criado.
+
+### Policy UPDATE de members unificada
+**Decisão:** Uma única policy `members_update` substitui `members_update_leadership` + `members_update_self`.
+**Motivo:** Múltiplas permissive policies para o mesmo role+action fazem o Postgres avaliar ambas em cada query. Impacto O(2n) desnecessário.
+**Lógica:** `is_leadership() OR id = (SELECT auth.uid())` — liderança edita qualquer membro do tenant; membro edita apenas o próprio registro. A restrição de quais colunas cada role pode editar é aplicada na Server Action, não no RLS.
+
+### auth.uid() envolvido em SELECT nas policies
+**Decisão:** Usar `(SELECT auth.uid())` em vez de `auth.uid()` direto nas policies RLS.
+**Motivo:** Sem o SELECT, o Postgres reavalia a função para cada row. Com o SELECT, é avaliada uma vez e cached como init-plan. Recomendação do Supabase Performance Advisor.
+
+### Leaked Password Protection
+**Pendente (configuração manual):** Ativar no Supabase Dashboard em Authentication → Settings → Password Security → "Enable leaked password protection". Integra com HaveIBeenPwned.org. Não é configurável via SQL/migration.
+
+---
+
+## 10. Como usar este documento
 
 ### Para o dev (Filipe):
 

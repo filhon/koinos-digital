@@ -6,6 +6,7 @@ const PUBLIC_PATHS = [
   "/",
   "/login",
   "/signup",
+  "/signup/igreja",
   "/esqueci-senha",
   "/redefinir-senha",
 ];
