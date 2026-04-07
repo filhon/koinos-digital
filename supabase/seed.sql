@@ -1,0 +1,60 @@
+-- 1. Criar o Tenant (Igreja Teste)
+INSERT INTO public.tenants (id, name, slug, shared_finances, plan)
+VALUES ('11111111-1111-1111-1111-111111111111', 'Igreja Teste', 'teste', true, 'gratis')
+ON CONFLICT (id) DO NOTHING;
+
+-- 2. Inserir usuários no Supabase Auth (senha: Senha123) e suas identidades
+INSERT INTO auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, is_super_admin)
+VALUES
+('22222222-2222-2222-2222-222222222222', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'pastor@teste.com', crypt('Senha123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"church_id":"11111111-1111-1111-1111-111111111111","role":"pastor"}', now(), now(), false),
+('33333333-3333-3333-3333-333333333333', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'presbitero@teste.com', crypt('Senha123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"church_id":"11111111-1111-1111-1111-111111111111","role":"presbítero"}', now(), now(), false),
+('44444444-4444-4444-4444-444444444444', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'diacono@teste.com', crypt('Senha123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"church_id":"11111111-1111-1111-1111-111111111111","role":"diácono"}', now(), now(), false),
+('55555555-5555-5555-5555-555555555555', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'tesoureiro@teste.com', crypt('Senha123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"church_id":"11111111-1111-1111-1111-111111111111","role":"tesoureiro"}', now(), now(), false),
+('66666666-6666-6666-6666-666666666666', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'lider@teste.com', crypt('Senha123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"church_id":"11111111-1111-1111-1111-111111111111","role":"líder"}', now(), now(), false),
+('77777777-7777-7777-7777-777777777777', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'membro@teste.com', crypt('Senha123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"church_id":"11111111-1111-1111-1111-111111111111","role":"membro"}', now(), now(), false),
+('88888888-8888-8888-8888-888888888888', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'visitante1@teste.com', crypt('Senha123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"church_id":"11111111-1111-1111-1111-111111111111","role":"visitante"}', now(), now(), false),
+('99999999-9999-9999-9999-999999999999', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'visitante2@teste.com', crypt('Senha123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"church_id":"11111111-1111-1111-1111-111111111111","role":"visitante"}', now(), now(), false)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO auth.identities (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+VALUES
+(gen_random_uuid(), '22222222-2222-2222-2222-222222222222', '22222222-2222-2222-2222-222222222222', '{"sub":"22222222-2222-2222-2222-222222222222","email":"pastor@teste.com"}', 'email', now(), now(), now()),
+(gen_random_uuid(), '33333333-3333-3333-3333-333333333333', '33333333-3333-3333-3333-333333333333', '{"sub":"33333333-3333-3333-3333-333333333333","email":"presbitero@teste.com"}', 'email', now(), now(), now()),
+(gen_random_uuid(), '44444444-4444-4444-4444-444444444444', '44444444-4444-4444-4444-444444444444', '{"sub":"44444444-4444-4444-4444-444444444444","email":"diacono@teste.com"}', 'email', now(), now(), now()),
+(gen_random_uuid(), '55555555-5555-5555-5555-555555555555', '55555555-5555-5555-5555-555555555555', '{"sub":"55555555-5555-5555-5555-555555555555","email":"tesoureiro@teste.com"}', 'email', now(), now(), now()),
+(gen_random_uuid(), '66666666-6666-6666-6666-666666666666', '66666666-6666-6666-6666-666666666666', '{"sub":"66666666-6666-6666-6666-666666666666","email":"lider@teste.com"}', 'email', now(), now(), now()),
+(gen_random_uuid(), '77777777-7777-7777-7777-777777777777', '77777777-7777-7777-7777-777777777777', '{"sub":"77777777-7777-7777-7777-777777777777","email":"membro@teste.com"}', 'email', now(), now(), now()),
+(gen_random_uuid(), '88888888-8888-8888-8888-888888888888', '88888888-8888-8888-8888-888888888888', '{"sub":"88888888-8888-8888-8888-888888888888","email":"visitante1@teste.com"}', 'email', now(), now(), now()),
+(gen_random_uuid(), '99999999-9999-9999-9999-999999999999', '99999999-9999-9999-9999-999999999999', '{"sub":"99999999-9999-9999-9999-999999999999","email":"visitante2@teste.com"}', 'email', now(), now(), now());
+
+-- 3. Inserir Membros (Mock para o CPF com string "criptografada" mockada válida para AES [32:32:32])
+INSERT INTO public.members (id, church_id, name, cpf, email, birth_date, role, is_active, phone)
+VALUES
+('22222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', 'Pastor Fundador', '00000000000000000000000000000000:00000000000000000000000000000000:00000000000000000000000000000000', 'pastor@teste.com', '1980-01-01', 'pastor', true, '(11) 99999-0001'),
+('33333333-3333-3333-3333-333333333333', '11111111-1111-1111-1111-111111111111', 'Presbítero João', '00000000000000000000000000000000:00000000000000000000000000000000:11111111111111111111111111111111', 'presbitero@teste.com', '1982-02-02', 'presbítero', true, '(11) 99999-0002'),
+('44444444-4444-4444-4444-444444444444', '11111111-1111-1111-1111-111111111111', 'Diácono Pedro', '00000000000000000000000000000000:00000000000000000000000000000000:22222222222222222222222222222222', 'diacono@teste.com', '1985-03-03', 'diácono', true, '(11) 99999-0003'),
+('55555555-5555-5555-5555-555555555555', '11111111-1111-1111-1111-111111111111', 'Tesoureira Maria', '00000000000000000000000000000000:00000000000000000000000000000000:33333333333333333333333333333333', 'tesoureiro@teste.com', '1990-04-04', 'tesoureiro', true, '(11) 99999-0004'),
+('66666666-6666-6666-6666-666666666666', '11111111-1111-1111-1111-111111111111', 'Líder Lucas', '00000000000000000000000000000000:00000000000000000000000000000000:44444444444444444444444444444444', 'lider@teste.com', '1995-05-05', 'líder', true, '(11) 99999-0005'),
+('77777777-7777-7777-7777-777777777777', '11111111-1111-1111-1111-111111111111', 'Membro Ana', '00000000000000000000000000000000:00000000000000000000000000000000:55555555555555555555555555555555', 'membro@teste.com', '1998-06-06', 'membro', true, '(11) 99999-0006'),
+('88888888-8888-8888-8888-888888888888', '11111111-1111-1111-1111-111111111111', 'Visitante Carlos', '00000000000000000000000000000000:00000000000000000000000000000000:66666666666666666666666666666666', 'visitante1@teste.com', '2000-07-07', 'visitante', true, '(11) 99999-0007'),
+('99999999-9999-9999-9999-999999999999', '11111111-1111-1111-1111-111111111111', 'Visitante Beatriz', '00000000000000000000000000000000:00000000000000000000000000000000:77777777777777777777777777777777', 'visitante2@teste.com', '2002-08-08', 'visitante', true, '(11) 99999-0008')
+ON CONFLICT (id) DO NOTHING;
+
+-- 4. Vínculos Familiares (A trigger criada fará a contraparte bidirecional automaticamente)
+INSERT INTO public.family_links (id, church_id, member_id, related_member_id, relationship)
+VALUES
+(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', '55555555-5555-5555-5555-555555555555', 'cônjuge'),
+(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', '66666666-6666-6666-6666-666666666666', 'pai'),
+(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '33333333-3333-3333-3333-333333333333', '77777777-7777-7777-7777-777777777777', 'pai');
+
+-- 5. Links de Convite (1 Geral e 1 Pessoal)
+INSERT INTO public.invite_links (id, church_id, member_id, code, active)
+VALUES
+(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', NULL, 'IGREJATESTE2026', true),
+(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', 'PASTORINVITE', true);
+
+-- 6. Registros de Consentimento (Para todos os membros no seed)
+INSERT INTO public.consent_records (id, member_id, purpose, consented, ip, terms_version)
+SELECT gen_random_uuid(), id, 'termos_gerais', true, '127.0.0.1', '1.0.0'
+FROM public.members
+WHERE church_id = '11111111-1111-1111-1111-111111111111';

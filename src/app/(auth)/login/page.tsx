@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useRef, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, AlertCircle, ArrowRight, Loader2 } from "lucide-react";
+import { Turnstile } from "@marsidev/react-turnstile";
 import { loginSchema, type LoginInput } from "@/lib/validators/auth";
 import { signIn } from "@/actions/auth";
 import { staggerContainer, fadeUp } from "@/lib/motion";
@@ -17,6 +18,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const turnstileToken = useRef<string>("");
 
   const {
     register,
@@ -32,6 +34,7 @@ export default function LoginPage() {
       const formData = new FormData();
       formData.set("email", data.email);
       formData.set("password", data.password);
+      formData.set("cf-turnstile-response", turnstileToken.current);
       const result = await signIn(formData);
       if (!result.success) {
         setServerError(result.error);
@@ -154,6 +157,17 @@ export default function LoginPage() {
                 {errors.password.message}
               </p>
             )}
+          </motion.div>
+
+          {/* Turnstile */}
+          <motion.div variants={fadeUp}>
+            <Turnstile
+              siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "1x00000000000000000000AA"}
+              options={{ theme: "light", appearance: "interaction-only" }}
+              onSuccess={(token) => {
+                turnstileToken.current = token;
+              }}
+            />
           </motion.div>
 
           {/* Submit */}

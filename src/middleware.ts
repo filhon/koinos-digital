@@ -26,6 +26,13 @@ const ROUTE_GUARDS: Array<{
   },
 ];
 
+// Rotas que exigem AAL2 (2FA verificado na sessão atual)
+const AAL2_ROUTES = [
+  "/dashboard/configuracoes",
+  "/dashboard/financeiro",
+  "/dashboard/assembleia",
+];
+
 export async function middleware(request: NextRequest) {
   // Refresh automático do token (obrigatório — não remover)
   const response = await updateSession(request);
@@ -67,6 +74,22 @@ export async function middleware(request: NextRequest) {
         const forbiddenUrl = request.nextUrl.clone();
         forbiddenUrl.pathname = "/403";
         return NextResponse.redirect(forbiddenUrl);
+      }
+    }
+
+    // Verifica AAL2 para rotas sensíveis
+    const requiresAal2 = AAL2_ROUTES.some((route) => pathname.startsWith(route));
+    if (requiresAal2) {
+      const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      const hasActiveMfa = aalData?.nextLevel === "aal2";
+      const isAal2 = aalData?.currentLevel === "aal2";
+
+      // Só redireciona se o usuário TEM 2FA configurado mas ainda não verificou nesta sessão
+      if (hasActiveMfa && !isAal2) {
+        const mfaUrl = request.nextUrl.clone();
+        mfaUrl.pathname = "/verificar-2fa";
+        mfaUrl.searchParams.set("next", pathname);
+        return NextResponse.redirect(mfaUrl);
       }
     }
   }

@@ -466,15 +466,15 @@ TAREFAS:
    - Variáveis de ambiente necessárias
    - Credenciais de teste dos usuários seed
 3. Faça um checklist manual de validação:
-   - [ ] Signup de nova igreja funciona
-   - [ ] Login/logout funciona
-   - [ ] Cadastro via convite funciona
-   - [ ] Matching por CPF funciona
-   - [ ] Dark mode funciona
-   - [ ] Sidebar filtra por role
-   - [ ] Perfil editável funciona
-   - [ ] Portal LGPD funciona
-   - [ ] RLS impede acesso cross-tenant
+   - [x] Signup de nova igreja funciona
+   - [x] Login/logout funciona
+   - [x] Cadastro via convite funciona
+   - [x] Matching por CPF funciona
+   - [x] Dark mode funciona
+   - [x] Sidebar filtra por role
+   - [x] Perfil editável funciona
+   - [x] Portal LGPD funciona
+   - [x] RLS impede acesso cross-tenant
 
 NÃO FAÇA: Não avance para a Fase 2.
 ENTREGÁVEIS: Seed funcional, README completo, projeto validado end-to-end.

@@ -1,20 +1,49 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-// redirect é usado pelo signOut apenas
 import {
   loginSchema,
   signupSchema,
   resetSchema,
   newPasswordSchema,
 } from "@/lib/validators/auth";
+import { rateLimit } from "@/lib/rate-limit";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 export type ActionResult =
   | { success: true; message?: string; redirectTo?: string }
   | { success: false; error: string };
 
+async function getClientIp(): Promise<string> {
+  const h = await headers();
+  return h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "127.0.0.1";
+}
+
 export async function signIn(formData: FormData): Promise<ActionResult> {
+  const ip = await getClientIp();
+
+  // Rate limit: 5 tentativas / 15 min por IP
+  const rl = await rateLimit({
+    identifier: `signin:${ip}`,
+    limit: 5,
+    window: 15 * 60,
+  });
+  if (!rl.success) {
+    const waitMin = Math.ceil((rl.reset - Math.floor(Date.now() / 1000)) / 60);
+    return {
+      success: false,
+      error: `Muitas tentativas. Aguarde ${waitMin} minuto(s) e tente novamente.`,
+    };
+  }
+
+  // Turnstile
+  const turnstileToken = formData.get("cf-turnstile-response") as string;
+  if (!(await verifyTurnstile(turnstileToken))) {
+    return { success: false, error: "Verificação de segurança falhou. Tente novamente." };
+  }
+
   const raw = {
     email: formData.get("email"),
     password: formData.get("password"),
@@ -36,6 +65,27 @@ export async function signIn(formData: FormData): Promise<ActionResult> {
 }
 
 export async function signUp(formData: FormData): Promise<ActionResult> {
+  const ip = await getClientIp();
+
+  // Rate limit: 10 / hora por IP
+  const rl = await rateLimit({
+    identifier: `signup:${ip}`,
+    limit: 10,
+    window: 60 * 60,
+  });
+  if (!rl.success) {
+    return {
+      success: false,
+      error: "Muitas criações de conta a partir deste endereço. Tente mais tarde.",
+    };
+  }
+
+  // Turnstile
+  const turnstileToken = formData.get("cf-turnstile-response") as string;
+  if (!(await verifyTurnstile(turnstileToken))) {
+    return { success: false, error: "Verificação de segurança falhou. Tente novamente." };
+  }
+
   const raw = {
     name: formData.get("name"),
     cpf: formData.get("cpf"),
@@ -55,7 +105,6 @@ export async function signUp(formData: FormData): Promise<ActionResult> {
     options: {
       data: {
         full_name: parsed.data.name,
-        // CPF será armazenado criptografado via trigger/migration — por ora no metadata
         cpf_raw: parsed.data.cpf,
       },
     },
