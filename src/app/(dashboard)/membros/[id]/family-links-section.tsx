@@ -1,14 +1,21 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Plus, Trash2, Loader2 } from "lucide-react";
+import { Plus, Trash2, Loader2, Search } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { removeFamilyLink, addFamilyLink } from "@/actions/members";
 import type { MemberWithLinks } from "@/actions/members";
+
+interface MemberSuggestion {
+  id: string;
+  name: string;
+  role: string;
+  avatar_url: string | null;
+}
 
 const RELATIONSHIP_LABELS: Record<string, string> = {
   cônjuge: "Cônjuge",
@@ -88,21 +95,81 @@ interface AddLinkFormProps {
 
 function AddLinkForm({ memberId, onSuccess }: AddLinkFormProps) {
   const router = useRouter();
-  const [relatedId, setRelatedId] = useState("");
   const [relationship, setRelationship] = useState("cônjuge");
   const [isPending, startTransition] = useTransition();
 
+  // Search state
+  const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<MemberSuggestion[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selected, setSelected] = useState<MemberSuggestion | null>(null);
+  const [open, setOpen] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const search = useCallback(
+    async (q: string) => {
+      setIsSearching(true);
+      try {
+        const params = new URLSearchParams({ q, exclude: memberId });
+        const res = await fetch(`/api/members/search?${params}`);
+        const json = await res.json();
+        setSuggestions(json.members ?? []);
+        setOpen(true);
+      } catch {
+        setSuggestions([]);
+      } finally {
+        setIsSearching(false);
+      }
+    },
+    [memberId]
+  );
+
+  const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setQuery(val);
+    setSelected(null);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (val.trim().length === 0) {
+      setSuggestions([]);
+      setOpen(false);
+      return;
+    }
+    debounceRef.current = setTimeout(() => search(val), 300);
+  };
+
+  const handleSelect = (m: MemberSuggestion) => {
+    setSelected(m);
+    setQuery(m.name);
+    setOpen(false);
+    setSuggestions([]);
+  };
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!relatedId.trim()) {
-      toast.error("Informe o ID do membro relacionado");
+    if (!selected) {
+      toast.error("Selecione um membro da lista");
       return;
     }
 
     startTransition(async () => {
       const result = await addFamilyLink({
         memberId,
-        relatedMemberId: relatedId.trim(),
+        relatedMemberId: selected.id,
         relationship: relationship as "cônjuge",
       });
 
@@ -114,7 +181,8 @@ function AddLinkForm({ memberId, onSuccess }: AddLinkFormProps) {
       }
 
       toast.success("Vínculo adicionado");
-      setRelatedId("");
+      setSelected(null);
+      setQuery("");
       onSuccess();
       router.refresh();
     });
@@ -147,24 +215,69 @@ function AddLinkForm({ memberId, onSuccess }: AddLinkFormProps) {
           </select>
         </div>
 
-        <div className="space-y-1">
-          <label className="text-xs text-muted-foreground">ID do membro</label>
-          <input
-            type="text"
-            value={relatedId}
-            onChange={(e) => setRelatedId(e.target.value)}
-            placeholder="UUID do membro..."
-            className="w-full h-8 px-2 text-sm bg-background border border-input rounded-lg placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50"
-          />
+        <div className="space-y-1" ref={containerRef}>
+          <label className="text-xs text-muted-foreground">Membro</label>
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
+            <input
+              type="text"
+              value={query}
+              onChange={handleQueryChange}
+              onFocus={() => query.trim() && setOpen(true)}
+              placeholder="Buscar por nome..."
+              autoComplete="off"
+              className="w-full h-8 pl-7 pr-2 text-sm bg-background border border-input rounded-lg placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50"
+            />
+            {isSearching && (
+              <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 size-3.5 animate-spin text-muted-foreground" />
+            )}
+            {open && suggestions.length > 0 && (
+              <ul className="absolute z-10 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-md overflow-hidden">
+                {suggestions.map((m) => (
+                  <li key={m.id}>
+                    <button
+                      type="button"
+                      onMouseDown={() => handleSelect(m)}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors text-left"
+                    >
+                      <Avatar size="sm">
+                        {m.avatar_url && (
+                          <AvatarImage src={m.avatar_url} alt={m.name} />
+                        )}
+                        <AvatarFallback className="text-[10px] font-medium bg-primary-50 text-primary-700">
+                          {m.name
+                            .split(" ")
+                            .filter(Boolean)
+                            .slice(0, 2)
+                            .map((n) => n[0].toUpperCase())
+                            .join("")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <p className="font-medium truncate">{m.name}</p>
+                        <p className="text-[11px] text-muted-foreground capitalize">
+                          {m.role}
+                        </p>
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {open &&
+              !isSearching &&
+              query.trim() &&
+              suggestions.length === 0 && (
+                <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-md px-3 py-2 text-sm text-muted-foreground">
+                  Nenhum membro encontrado.
+                </div>
+              )}
+          </div>
         </div>
       </div>
 
       <div className="flex items-center gap-2">
-        <Button
-          type="submit"
-          size="sm"
-          disabled={isPending || !relatedId.trim()}
-        >
+        <Button type="submit" size="sm" disabled={isPending || !selected}>
           {isPending && <Loader2 className="size-3.5 animate-spin" />}
           Adicionar
         </Button>
@@ -178,11 +291,6 @@ function AddLinkForm({ memberId, onSuccess }: AddLinkFormProps) {
           Cancelar
         </Button>
       </div>
-
-      <p className="text-[11px] text-muted-foreground">
-        Cole o UUID do membro relacionado. Você pode encontrá-lo na URL da
-        página do membro.
-      </p>
     </form>
   );
 }

@@ -49,6 +49,7 @@ export default async function MembroPage({ params }: PageProps) {
           isLeadership ? (
             <Button
               render={<Link href={`/membros/${id}/editar`} />}
+              nativeButton={false}
               size="sm"
               variant="outline"
             >
