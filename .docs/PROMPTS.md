@@ -135,6 +135,8 @@ ENTREGÁVEIS: RLS ativo, helpers testáveis via chamada direta.
 
 ## Sessão 0.4 — Autenticação (signup, login, logout, reset)
 
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
+
 ```
 CONTEXTO: RLS e helpers prontos. Agora as telas de auth.
 REFERÊNCIA: PRD seções 6.1, 9.1, 9.2
@@ -176,6 +178,8 @@ ENTREGÁVEIS: Fluxo completo de auth funcionando com design memorável. Usuário
 ---
 
 ## Sessão 0.5 — Design system + componentes base
+
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
 
 ```
 CONTEXTO: Auth funcionando. Agora a identidade visual.
@@ -257,6 +261,8 @@ ENTREGÁVEIS: Dashboard com shell responsivo, dark mode funcional, motion system
 
 ## Sessão 0.6 — Helpers utilitários + encryption + audit log
 
+> **UI:** Use `/frontend-design` para implementar o componente `PermissionGate` desta sessão.
+
 ```
 CONTEXTO: Design system pronto. Últimos fundamentos antes do onboarding.
 REFERÊNCIA: PRD seções 5.3, 6.1, 11.1
@@ -327,6 +333,8 @@ ENTREGÁVEIS: Headers de segurança ativos (verificar via securityheaders.com), 
 
 ## Sessão 1.1 — Fluxo de criação de tenant (nova igreja)
 
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
+
 ```
 CONTEXTO: Fundação completa. Agora o primeiro fluxo real do produto.
 REFERÊNCIA: PRD seção 9.1 (fluxo passo a passo), TASK-ONB-01
@@ -360,6 +368,8 @@ ENTREGÁVEIS: Fluxo completo de criar igreja. Pastor logado vê dashboard vazio.
 
 ## Sessão 1.2 — Links de convite + cadastro via convite
 
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
+
 ```
 CONTEXTO: Criação de tenant funcionando. Agora permitir que membros entrem.
 REFERÊNCIA: PRD seções 9.2, 9.3, TASK-ONB-02, TASK-ONB-03
@@ -390,6 +400,8 @@ ENTREGÁVEIS: Fluxo completo de convite. Membro acessa link, se cadastra, aparec
 
 ## Sessão 1.3 — Middleware de autorização + PermissionGate
 
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
+
 ```
 CONTEXTO: Onboarding funcionando. Agora proteger tudo.
 REFERÊNCIA: PRD seção 8, TASK-RBAC-01, TASK-RBAC-03
@@ -417,6 +429,8 @@ ENTREGÁVEIS: RBAC funcional end-to-end. Rotas protegidas, navegação filtrada.
 ---
 
 ## Sessão 1.4 — Consentimentos LGPD + perfil do membro
+
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
 
 ```
 CONTEXTO: Auth + RBAC prontos. Agora compliance e perfil.
@@ -484,6 +498,8 @@ ENTREGÁVEIS: Seed funcional, README completo, projeto validado end-to-end.
 
 ## Sessão 1.6 — Segurança adicional: Turnstile + 2FA + templates de e-mail
 
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
+
 ```
 CONTEXTO: Onboarding funcional. Agora adicionar camadas de segurança pendentes que foram adiadas.
 REFERÊNCIA: PRD seção 6.1 (Turnstile, 2FA, rate limiting)
@@ -530,6 +546,8 @@ ENTREGÁVEIS: Turnstile ativo em signup/login, rate limiting em endpoints críti
 
 ## Sessão 2.1 — CRUD Membros + vínculos familiares
 
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
+
 ```
 CONTEXTO: Início da fase 2. Primeiro módulo: Membros.
 REFERÊNCIA: PRD seção 11, TASK-MEM-01, TASK-MEM-02
@@ -563,6 +581,8 @@ NÃO FAÇA: Não crie alteração de role aqui (sessão separada).
 
 ## Sessão 2.2 — Promoção/rebaixamento de role + gestão de membros
 
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
+
 ```
 CONTEXTO: CRUD de membros pronto. Agora gestão de papéis.
 REFERÊNCIA: PRD seção 8.3 (US-RBAC-03)
@@ -584,6 +604,8 @@ NÃO FAÇA: Não crie o módulo de ministérios (próxima sessão).
 ---
 
 ## Sessão 2.3 — CRUD Eventos
+
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
 
 ```
 CONTEXTO: Membros prontos. Segundo módulo: Eventos.
@@ -615,6 +637,8 @@ NÃO FAÇA: Não implemente recorrência complexa (será coberta na sessão 2.9)
 
 ## Sessão 2.4 — Agenda (visualização mensal/semanal)
 
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
+
 ```
 CONTEXTO: Eventos criados. Agora visualização de agenda.
 REFERÊNCIA: PRD seção 12, TASK-AGD-01
@@ -637,6 +661,8 @@ NÃO FAÇA: Não integre com landing page ainda.
 ---
 
 ## Sessão 2.5 — CRUD Ministérios + Escalas
+
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
 
 ```
 CONTEXTO: Eventos prontos. Agora ministérios e escalas.
@@ -664,6 +690,8 @@ NÃO FAÇA: Não crie escala automática por IA (sessão 5.6). Não crie o siste
 
 ## Sessão 2.6 — CRUD Grupos Musicais + Repertório
 
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
+
 ```
 CONTEXTO: Ministérios prontos. Agora música.
 REFERÊNCIA: PRD seções 17, 18, TASK-GM-01, TASK-REP-01
@@ -687,6 +715,8 @@ NÃO FAÇA: Não integre com liturgia ainda (fase 4).
 
 ## Sessão 2.7 — CRUD Recursos
 
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
+
 ```
 CONTEXTO: Música pronta. Último CRUD da fase 2.
 REFERÊNCIA: PRD seção 19, TASK-REC-01
@@ -707,6 +737,8 @@ NÃO FAÇA: Não crie relatório de patrimônio.
 ---
 
 ## Sessão 2.8 — Associações de eventos (ministérios, música, recursos)
+
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
 
 ```
 CONTEXTO: Todos os CRUDs base prontos. Agora conectar.
@@ -732,6 +764,8 @@ NÃO FAÇA: Não use push notifications (OneSignal vem depois).
 ---
 
 ## Sessão 2.9 — Recorrência complexa de eventos
+
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
 
 ```
 CONTEXTO: CRUD de eventos funcional. Agora regras de recorrência adiadas na sessão 2.3.
@@ -768,6 +802,8 @@ NÃO FAÇA: Não implemente RRULE completo nem use rrule.js. Mantenha lógica si
 
 ## Sessão 3.1 — Mural de interação (posts + comentários)
 
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
+
 ```
 CONTEXTO: Início da fase 3. Módulo social.
 REFERÊNCIA: PRD seção 21, TASK-MUR-01
@@ -790,6 +826,8 @@ NÃO FAÇA: Não implemente reações nem fixação (próxima sessão).
 ---
 
 ## Sessão 3.2 — Reações, fixação e algoritmo de relevância
+
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
 
 ```
 REFERÊNCIA: PRD seção 21, TASK-MUR-02, TASK-MUR-03
@@ -816,6 +854,8 @@ NÃO FAÇA: Não use Supabase Realtime no mural (overhead desnecessário para MV
 ---
 
 ## Sessão 3.3 — Gamificação: equipes + pontuação + placar
+
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
 
 ```
 REFERÊNCIA: PRD seção 22, TASK-GAM-01, TASK-GAM-02
@@ -848,6 +888,8 @@ NÃO FAÇA: Não crie badges (sessão 3.5). Não crie check-in por QR (sessão 3
 
 ## Sessão 3.4 — Streaks de devoção
 
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
+
 ```
 REFERÊNCIA: PRD seção 22, TASK-GAM-03
 
@@ -870,6 +912,8 @@ TAREFAS:
 ---
 
 ## Sessão 3.5 — Badges e conquistas
+
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
 
 ```
 REFERÊNCIA: PRD seção 22, TASK-GAM-04
@@ -894,6 +938,8 @@ TAREFAS:
 ---
 
 ## Sessão 3.6 — Check-in por QR Code
+
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
 
 ```
 REFERÊNCIA: PRD seção 25, TASK-QR-01, TASK-QR-02
@@ -924,6 +970,8 @@ NÃO FAÇA: Não implemente geofencing complexo. Raio fixo configurável basta.
 ---
 
 ## Sessão 3.7 — Tags de atribuição + painel admin SaaS
+
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
 
 ```
 CONTEXTO: Gamificação completa. Agora tags de perfil e painel administrativo global do SaaS.
@@ -963,6 +1011,8 @@ NÃO FAÇA: Não crie chat de suporte nem gerenciamento de billing no painel adm
 
 ## Sessão 4.1 — Financeiro (contas + transações + KPIs)
 
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
+
 ```
 REFERÊNCIA: PRD seção 20, TASK-FIN-01, TASK-FIN-02
 
@@ -992,6 +1042,8 @@ NÃO FAÇA: Não crie relatórios avançados com gráficos (add-on premium).
 
 ## Sessão 4.2 — Assembléia + Eleição/Votação
 
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
+
 ```
 REFERÊNCIA: PRD seções 23, 24, TASK-ASM-01, TASK-VOT-01, TASK-VOT-02
 
@@ -1020,6 +1072,8 @@ NÃO FAÇA: Não integre com check-in de QR code na votação (simplificar MVP).
 
 ## Sessão 4.3 — Liturgia (esqueleto editável)
 
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
+
 ```
 REFERÊNCIA: PRD seção 16, TASK-LIT-01
 
@@ -1040,6 +1094,8 @@ NÃO FAÇA: Não integre IA (sessão 5.1). Não crie base bíblica (sessão 5.1)
 ---
 
 ## Sessão 4.4 — Landing page personalizável
+
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
 
 ```
 REFERÊNCIA: PRD seção 10, TASK-LP-01, TASK-LP-02
@@ -1076,6 +1132,8 @@ NÃO FAÇA: Não implemente domínio personalizado (sessão 4.5).
 
 ## Sessão 4.5 — Domínio personalizado (subdomínio)
 
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
+
 ```
 REFERÊNCIA: PRD seção 10, TASK-LP-03
 
@@ -1094,6 +1152,8 @@ NÃO FAÇA: Não implemente SSL customizado fora do Vercel.
 ---
 
 ## Sessão 4.6 — Gestão de multi-congregações
+
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
 
 ```
 CONTEXTO: Features avançadas prontas. Agora suporte completo à hierarquia matriz ↔ congregações.
@@ -1126,6 +1186,8 @@ ENTREGÁVEIS: Pastor da matriz consegue criar, listar e gerenciar congregações
 
 ## Sessão 4.7 — Relatórios financeiros avançados (add-on premium)
 
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
+
 ```
 CONTEXTO: Financeiro básico pronto. Agora o add-on de relatórios com gráficos.
 REFERÊNCIA: PRD seção 4.2 (add-on "Financeiro com relatórios avançados e gráficos" R$ 39)
@@ -1155,6 +1217,8 @@ NÃO FAÇA: Não use Chart.js nem D3.js — apenas Recharts. Não exiba dados in
 
 ## Sessão 5.1 — Liturgia Inteligente (IA) + Base bíblica
 
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
+
 ```
 REFERÊNCIA: PRD seção 16, TASK-LIT-02, TASK-LIT-03
 
@@ -1180,6 +1244,8 @@ NÃO FAÇA: Não crie as 3 versões bíblicas completas sem verificar licenciame
 ---
 
 ## Sessão 5.2 — Sistema de billing (AbacatePay)
+
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
 
 ```
 REFERÊNCIA: PRD seção 4
@@ -1250,6 +1316,8 @@ TAREFAS:
 
 ## Sessão 5.5 — Polish + soft launch
 
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
+
 ```
 TAREFAS:
 1. Performance:
@@ -1285,6 +1353,8 @@ TAREFAS:
 ---
 
 ## Sessão 5.6 — Escala automática por IA (add-on premium)
+
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
 
 ```
 CONTEXTO: Liturgia Inteligente pronta. Agora o add-on de escala automática por IA.

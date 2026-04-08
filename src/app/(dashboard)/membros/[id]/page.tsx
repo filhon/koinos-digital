@@ -1,0 +1,68 @@
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import { getMemberById } from "@/actions/members";
+import { getUser } from "@/lib/auth/session";
+import { isLeadershipRole } from "@/lib/auth/permissions";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Button } from "@/components/ui/button";
+import { MemberProfile } from "./member-profile";
+import { FamilyLinksSection } from "./family-links-section";
+import { Pencil } from "lucide-react";
+
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps) {
+  const { id } = await params;
+  const result = await getMemberById(id);
+  if (!result || !("data" in result) || !result.data)
+    return { title: "Membro — Koinos" };
+  return { title: `${result.data.name} — Koinos` };
+}
+
+export default async function MembroPage({ params }: PageProps) {
+  const { id } = await params;
+
+  const [memberResult, user] = await Promise.all([
+    getMemberById(id),
+    getUser(),
+  ]);
+
+  if (!memberResult || !("data" in memberResult) || !memberResult.data) {
+    notFound();
+  }
+
+  const member = memberResult.data;
+  const isLeadership = user ? isLeadershipRole(user.role) : false;
+
+  return (
+    <div className="px-4 py-6 lg:px-8 lg:py-8 max-w-2xl mx-auto">
+      <PageHeader
+        title={member.name}
+        breadcrumbs={[
+          { label: "Dashboard", href: "/dashboard" },
+          { label: "Membros", href: "/membros" },
+          { label: member.name },
+        ]}
+        action={
+          isLeadership ? (
+            <Button
+              render={<Link href={`/membros/${id}/editar`} />}
+              size="sm"
+              variant="outline"
+            >
+              <Pencil className="size-4" />
+              Editar
+            </Button>
+          ) : undefined
+        }
+      />
+
+      <div className="space-y-6">
+        <MemberProfile member={member} isLeadership={isLeadership} />
+        <FamilyLinksSection member={member} isLeadership={isLeadership} />
+      </div>
+    </div>
+  );
+}
