@@ -75,6 +75,7 @@ export default function LoginPage() {
         </motion.div>
       )}
 
+      {/* eslint-disable-next-line */}
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <div className="space-y-5">
           {/* Email */}

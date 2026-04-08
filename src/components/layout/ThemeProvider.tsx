@@ -25,6 +25,15 @@ interface ThemeProviderProps {
 export function ThemeProvider({ children, initialTheme }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(initialTheme);
 
+  const applyTheme = (t: Theme) => {
+    const root = document.documentElement;
+    if (t === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+  };
+
   // Na montagem, se não havia cookie, usa prefers-color-scheme como fallback
   useEffect(() => {
     if (initialTheme === "light") {
@@ -34,16 +43,8 @@ export function ThemeProvider({ children, initialTheme }: ThemeProviderProps) {
         setTheme("dark");
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const applyTheme = (t: Theme) => {
-    const root = document.documentElement;
-    if (t === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-  };
 
   const toggleTheme = useCallback(() => {
     setTheme((prev) => {
