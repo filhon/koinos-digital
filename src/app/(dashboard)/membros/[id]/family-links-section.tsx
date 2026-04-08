@@ -61,10 +61,8 @@ function RemoveLinkButton({
   const handleRemove = () => {
     startTransition(async () => {
       const result = await removeFamilyLink(memberId, relatedMemberId);
-      if (!result || "error" in result) {
-        toast.error(
-          (result as { error: string })?.error ?? "Erro ao remover vínculo"
-        );
+      if (!result || result.error) {
+        toast.error(result?.error ?? "Erro ao remover vínculo");
         return;
       }
       toast.success("Vínculo removido");
@@ -173,10 +171,8 @@ function AddLinkForm({ memberId, onSuccess }: AddLinkFormProps) {
         relationship: relationship as "cônjuge",
       });
 
-      if (!result || "error" in result) {
-        toast.error(
-          (result as { error: string })?.error ?? "Erro ao adicionar vínculo"
-        );
+      if (!result || result.error) {
+        toast.error(result?.error ?? "Erro ao adicionar vínculo");
         return;
       }
 

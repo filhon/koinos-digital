@@ -83,7 +83,13 @@ export const listMembersSchema = z.object({
   pageSize: z.number().int().min(1).max(100).optional().default(20),
 });
 
+export const updateMemberRoleSchema = z.object({
+  memberId: z.string().uuid("ID inválido"),
+  newRole: z.enum(MEMBER_ROLES),
+});
+
 export type CreateMemberInput = z.input<typeof createMemberSchema>;
 export type UpdateMemberInput = z.input<typeof updateMemberSchema>;
 export type AddFamilyLinkInput = z.input<typeof addFamilyLinkSchema>;
 export type ListMembersInput = z.input<typeof listMembersSchema>;
+export type UpdateMemberRoleInput = z.infer<typeof updateMemberRoleSchema>;

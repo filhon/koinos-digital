@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { listMembers } from "@/actions/members";
+import { getUser } from "@/lib/auth/session";
 import { MembersFilters } from "./members-filters";
 import { FamilyCard } from "./family-card";
 import { MemberCard } from "./member-card";
@@ -17,16 +18,20 @@ export async function MembersList({
   status,
   page,
 }: MembersListProps) {
-  const result = await listMembers({
-    search: search ?? "",
-    role: (role as "all") ?? "all",
-    status: (status as "active") ?? "active",
-    page,
-    pageSize: 20,
-  });
+  const [result, user] = await Promise.all([
+    listMembers({
+      search: search ?? "",
+      role: (role as "all") ?? "all",
+      status: (status as "active") ?? "active",
+      page,
+      pageSize: 20,
+    }),
+    getUser(),
+  ]);
+
+  const isPastor = user?.role === "pastor" || user?.role === "admin";
 
   const isEmpty =
-    !result ||
     !result ||
     !("data" in result) ||
     !result.data ||
@@ -34,9 +39,7 @@ export async function MembersList({
       result.data?.individuals.length === 0);
 
   const data =
-    !result || !result || !("data" in result) || !result.data
-      ? null
-      : result.data;
+    !result || !("data" in result) || !result.data ? null : result.data;
 
   return (
     <div className="space-y-4">
@@ -109,7 +112,11 @@ export async function MembersList({
               )}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {data.individuals.map((member) => (
-                  <MemberCard key={member.id} member={member} />
+                  <MemberCard
+                    key={member.id}
+                    member={member}
+                    isPastor={isPastor}
+                  />
                 ))}
               </div>
             </div>

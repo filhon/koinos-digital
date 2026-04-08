@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { MemberProfile } from "./member-profile";
 import { FamilyLinksSection } from "./family-links-section";
+import { RoleSection } from "./role-section";
 import { Pencil } from "lucide-react";
 
 interface PageProps {
@@ -35,6 +36,7 @@ export default async function MembroPage({ params }: PageProps) {
 
   const member = memberResult.data;
   const isLeadership = user ? isLeadershipRole(user.role) : false;
+  const canChangeRole = user?.role === "pastor" || user?.role === "admin";
 
   return (
     <div className="px-4 py-6 lg:px-8 lg:py-8 max-w-2xl mx-auto">
@@ -62,6 +64,13 @@ export default async function MembroPage({ params }: PageProps) {
 
       <div className="space-y-6">
         <MemberProfile member={member} isLeadership={isLeadership} />
+        {canChangeRole && (
+          <RoleSection
+            memberId={member.id}
+            memberName={member.name}
+            currentRole={member.role}
+          />
+        )}
         <FamilyLinksSection member={member} isLeadership={isLeadership} />
       </div>
     </div>

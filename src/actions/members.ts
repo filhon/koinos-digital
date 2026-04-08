@@ -9,11 +9,14 @@ import {
   updateMemberSchema,
   addFamilyLinkSchema,
   listMembersSchema,
+  updateMemberRoleSchema,
   type CreateMemberInput,
   type UpdateMemberInput,
   type AddFamilyLinkInput,
   type ListMembersInput,
+  type UpdateMemberRoleInput,
 } from "@/lib/validators/members";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { AuthUser } from "@/lib/auth/session";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -455,6 +458,83 @@ export const addFamilyLink = withPermission(
     return { data: { id: data.id }, error: null };
   },
   { module: "membros", minRole: "líder" }
+);
+
+/**
+ * Altera o papel (role) de um membro. Apenas pastor ou admin podem executar.
+ * Atualiza o JWT custom claims via admin client para efeito imediato.
+ */
+export const updateMemberRole = withPermission(
+  async (
+    user: AuthUser,
+    input: UpdateMemberRoleInput
+  ): Promise<ActionResult<{ id: string }>> => {
+    const parsed = updateMemberRoleSchema.safeParse(input);
+    if (!parsed.success) {
+      return { data: null, error: parsed.error.issues[0].message };
+    }
+
+    const { memberId, newRole } = parsed.data;
+    const supabase = await createClient();
+
+    // Busca role atual e email para poder atualizar o JWT
+    const { data: current, error: fetchError } = await supabase
+      .from("members")
+      .select("role, email")
+      .eq("id", memberId)
+      .eq("church_id", user.church_id)
+      .single();
+
+    if (fetchError || !current) {
+      return { data: null, error: "Membro não encontrado." };
+    }
+
+    const oldRole = current.role as string;
+    if (oldRole === newRole) {
+      return { data: { id: memberId }, error: null };
+    }
+
+    // Atualiza role na tabela members
+    const { error } = await supabase
+      .from("members")
+      .update({ role: newRole })
+      .eq("id", memberId)
+      .eq("church_id", user.church_id);
+
+    if (error) {
+      return { data: null, error: `Erro ao alterar papel: ${error.message}` };
+    }
+
+    // Atualiza JWT claims se o membro possuir conta auth (via email)
+    if (current.email) {
+      try {
+        const admin = createAdminClient();
+        const {
+          data: { users },
+        } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+        const authUser = users.find((u) => u.email === current.email);
+        if (authUser) {
+          await admin.auth.admin.updateUserById(authUser.id, {
+            app_metadata: { church_id: user.church_id, role: newRole },
+          });
+        }
+      } catch {
+        // Falha silenciosa — role já foi salvo no DB; JWT será atualizado no próximo login
+      }
+    }
+
+    await logAudit({
+      churchId: user.church_id,
+      userId: user.id,
+      action: "member_role_changed",
+      entityType: "member",
+      entityId: memberId,
+      metadata: { oldRole, newRole },
+    });
+
+    return { data: { id: memberId }, error: null };
+  },
+  { module: "membros", minRole: "pastor" }
 );
 
 /**
