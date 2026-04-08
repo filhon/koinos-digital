@@ -1,10 +1,13 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_URL!,
-  token: process.env.UPSTASH_REDIS_TOKEN!,
-});
+let redis: Redis | null = null;
+if (process.env.UPSTASH_REDIS_URL && process.env.UPSTASH_REDIS_TOKEN) {
+  redis = new Redis({
+    url: process.env.UPSTASH_REDIS_URL,
+    token: process.env.UPSTASH_REDIS_TOKEN,
+  });
+}
 
 interface RateLimitOptions {
   identifier: string;
@@ -24,6 +27,10 @@ export async function rateLimit({
   limit,
   window,
 }: RateLimitOptions): Promise<RateLimitResult> {
+  if (!redis) {
+    return { success: true, remaining: limit, reset: 0 };
+  }
+
   const limiter = new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(limit, `${window} s`),

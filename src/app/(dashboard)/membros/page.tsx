@@ -30,7 +30,11 @@ export default async function MembrosPage({ searchParams }: PageProps) {
           { label: "Membros" },
         ]}
         action={
-          <Button render={<Link href="/membros/novo" />} size="sm">
+          <Button
+            render={<Link href="/membros/novo" />}
+            nativeButton={false}
+            size="sm"
+          >
             <Plus className="size-4" />
             Novo membro
           </Button>

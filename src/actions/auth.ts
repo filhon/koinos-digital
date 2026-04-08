@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import {
   loginSchema,
-  signupSchema,
   resetSchema,
   newPasswordSchema,
 } from "@/lib/validators/auth";
@@ -62,66 +61,6 @@ export async function signIn(formData: FormData): Promise<ActionResult> {
 
   if (error) {
     return { success: false, error: "E-mail ou senha incorretos." };
-  }
-
-  return { success: true, redirectTo: "/dashboard" };
-}
-
-export async function signUp(formData: FormData): Promise<ActionResult> {
-  const ip = await getClientIp();
-
-  // Rate limit: 10 / hora por IP
-  const rl = await rateLimit({
-    identifier: `signup:${ip}`,
-    limit: 10,
-    window: 60 * 60,
-  });
-  if (!rl.success) {
-    return {
-      success: false,
-      error:
-        "Muitas criações de conta a partir deste endereço. Tente mais tarde.",
-    };
-  }
-
-  // Turnstile
-  const turnstileToken = formData.get("cf-turnstile-response") as string;
-  if (!(await verifyTurnstile(turnstileToken))) {
-    return {
-      success: false,
-      error: "Verificação de segurança falhou. Tente novamente.",
-    };
-  }
-
-  const raw = {
-    name: formData.get("name"),
-    cpf: formData.get("cpf"),
-    email: formData.get("email"),
-    password: formData.get("password"),
-  };
-
-  const parsed = signupSchema.safeParse(raw);
-  if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0].message };
-  }
-
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
-    email: parsed.data.email,
-    password: parsed.data.password,
-    options: {
-      data: {
-        full_name: parsed.data.name,
-        cpf_raw: parsed.data.cpf,
-      },
-    },
-  });
-
-  if (error) {
-    if (error.code === "user_already_exists") {
-      return { success: false, error: "Já existe uma conta com este e-mail." };
-    }
-    return { success: false, error: "Erro ao criar conta. Tente novamente." };
   }
 
   return { success: true, redirectTo: "/dashboard" };

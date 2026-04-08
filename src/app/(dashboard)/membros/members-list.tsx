@@ -50,7 +50,7 @@ export async function MembersList({
         </p>
       )}
 
-      {"error" in (result ?? {}) && (
+      {"error" in (result ?? {}) && !!(result as { error: string }).error && (
         <div className="rounded-lg bg-error-light border border-error/20 p-4 text-sm text-error-dark">
           {(result as { error: string }).error}
         </div>

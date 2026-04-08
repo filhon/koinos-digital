@@ -113,6 +113,13 @@ export async function createChurch(
       };
     }
   } else if (authError) {
+    if (authError.code === "over_email_send_rate_limit") {
+      return {
+        success: false,
+        error:
+          "Limite de envio de e-mail atingido. Aguarde alguns minutos e tente novamente.",
+      };
+    }
     return { success: false, error: "Erro ao criar conta. Tente novamente." };
   }
 
@@ -343,6 +350,13 @@ export async function registerMember(
       };
     }
   } else if (authError) {
+    if (authError.code === "over_email_send_rate_limit") {
+      return {
+        success: false,
+        error:
+          "Limite de envio de e-mail atingido. Aguarde alguns minutos e tente novamente.",
+      };
+    }
     return { success: false, error: "Erro ao criar conta. Tente novamente." };
   }
 
