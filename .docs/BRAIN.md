@@ -2,7 +2,7 @@
 
 **Última atualização:** 2026-04-08
 **Fase atual:** 2 - Módulos Core
-**Sessão atual:** 2.3
+**Sessão atual:** 2.4
 
 ---
 
@@ -149,10 +149,10 @@ admin (SaaS) → acesso global, sem dados sensíveis de tenants
 
 ### Eventos + Liturgia
 
-- [ ] `events` — id, church_id, name, responsible_id, date, start_time, end_time, modality, location, meeting_link, description, is_recurring, recurrence_rule
-- [ ] `event_ministries` — id, event_id, ministry_id
-- [ ] `event_music_groups` — id, event_id, music_group_id
-- [ ] `event_resources` — id, event_id, resource_id
+- [x] `events` — id, church_id, name, responsible_id, date, start_time, end_time, modality, location, meeting_link, description, is_recurring, recurrence_rule
+- [x] `event_ministries` — id, event_id, ministry_id
+- [x] `event_music_groups` — id, event_id, music_group_id
+- [x] `event_resources` — id, event_id, resource_id
 - [ ] `liturgies` — id, event_id, church_id
 - [ ] `liturgy_items` — id, liturgy_id, type, title, content, order
 
@@ -237,6 +237,7 @@ admin (SaaS) → acesso global, sem dados sensíveis de tenants
 | 1.6 | 2026-04-07 | Segurança multicamada: Cloudflare Turnstile (modo managed) em login e signup com validação server-side via siteverify; rate limiting Upstash Redis (signIn 5/15min, signUp 10/hora, checkin 100/min, ai 10/min por usuário) com header Retry-After; 2FA TOTP via Supabase Auth MFA (enroll QR code, verify, unenroll com reauth de senha, página /perfil/seguranca, página /verificar-2fa, middleware AAL2 para rotas sensíveis); 4 templates React Email (welcome, invite, reset-password, vote-code) + helper centralizado sendEmail via Resend; API routes /api/checkin e /api/ai com rate limiting; link de Segurança adicionado à página de perfil. | src/lib/rate-limit.ts, src/lib/turnstile.ts, src/lib/email.ts, src/actions/auth.ts, src/actions/mfa.ts, src/app/(auth)/login/page.tsx, src/app/(auth)/signup/page.tsx, src/app/(auth)/verificar-2fa/page.tsx, src/app/(dashboard)/perfil/seguranca/page.tsx, src/app/(dashboard)/perfil/seguranca/security-panel.tsx, src/app/(dashboard)/perfil/page.tsx, src/app/api/checkin/route.ts, src/app/api/ai/route.ts, src/emails/welcome.tsx, src/emails/invite.tsx, src/emails/reset-password.tsx, src/emails/vote-code.tsx, src/middleware.ts, .env.example |
 | 2.1 | 2026-04-08 | Módulo Membros: migration ALTER TABLE (received_at, baptized_at); validators Zod (createMemberSchema, updateMemberSchema, addFamilyLinkSchema, listMembersSchema); Server Actions members.ts (listMembers, getMemberById, createMember, updateMember, deleteMember soft-delete, addFamilyLink, removeFamilyLink — todos com withPermission + logAudit, CPF/RG criptografados, agrupamento por família via Union-Find); página /membros (server) com MembersList (server), MembersFilters (client), FamilyCard, MemberCard, RoleBadge, MembersListSkeleton; página /membros/novo com MemberForm (client, React Hook Form + Zod); página /membros/[id] (server) com MemberProfile e FamilyLinksSection (client). | supabase/migrations/20260408100000_members_extra_columns.sql, src/lib/validators/members.ts, src/actions/members.ts, src/app/(dashboard)/membros/page.tsx, src/app/(dashboard)/membros/members-list.tsx, src/app/(dashboard)/membros/members-filters.tsx, src/app/(dashboard)/membros/members-skeleton.tsx, src/app/(dashboard)/membros/family-card.tsx, src/app/(dashboard)/membros/member-card.tsx, src/app/(dashboard)/membros/role-badge.tsx, src/app/(dashboard)/membros/novo/page.tsx, src/app/(dashboard)/membros/novo/member-form.tsx, src/app/(dashboard)/membros/[id]/page.tsx, src/app/(dashboard)/membros/[id]/member-profile.tsx, src/app/(dashboard)/membros/[id]/family-links-section.tsx |
 | 2.2 | 2026-04-08 | Gestão de roles: updateMemberRoleSchema + updateMemberRoleInput adicionados ao validator; Server Action updateMemberRole (minRole: pastor, atualiza members.role + JWT app_metadata via admin.auth.admin.listUsers+updateUserById, audit_log com oldRole/newRole); RoleSection client component na página de detalhe (/membros/[id]) com Dialog de confirmação e select de role; MemberCard convertido para client component com DropdownMenu (Promover/Rebaixar com label do role alvo) + Dialog de confirmação; MembersList atualizado para chamar getUser() e passar isPastor para MemberCard. | src/lib/validators/members.ts, src/actions/members.ts, src/app/(dashboard)/membros/[id]/role-section.tsx, src/app/(dashboard)/membros/[id]/page.tsx, src/app/(dashboard)/membros/member-card.tsx, src/app/(dashboard)/membros/members-list.tsx |
+| 2.3 | 2026-04-08 | Módulo Eventos: migration events + pivots (event_ministries, event_music_groups, event_resources) com RLS por church_id, CHECK constraints (presencial→location, online→meeting_link), trigger updated_at, 5 índices; validators Zod (createEventSchema com superRefine condicional, updateEventSchema, listEventsSchema); Server Actions events.ts (listEvents, getEventById, createEvent, updateEvent, deleteEvent soft-delete — todos com withPermission + logAudit); página /eventos (server) com EventsList (server), EventsFilters (client pill-filters), EventCard (date-strip + meta row), EventsListSkeleton; página /eventos/novo com EventForm (modalidade toggle visual, campos condicionais, toggle recorrência sem geração de instâncias); página /eventos/[id] com EventDetails (tabs: Detalhes, Ministérios, Música, Recursos, Liturgia — tabs futuras com EmptyTab placeholder). | supabase/migrations/20260408120000_events_schema.sql, src/lib/validators/events.ts, src/actions/events.ts, src/app/(dashboard)/eventos/page.tsx, src/app/(dashboard)/eventos/events-list.tsx, src/app/(dashboard)/eventos/events-filters.tsx, src/app/(dashboard)/eventos/event-card.tsx, src/app/(dashboard)/eventos/events-skeleton.tsx, src/app/(dashboard)/eventos/novo/page.tsx, src/app/(dashboard)/eventos/novo/event-form.tsx, src/app/(dashboard)/eventos/[id]/page.tsx, src/app/(dashboard)/eventos/[id]/event-details.tsx |
 
 ---
 
