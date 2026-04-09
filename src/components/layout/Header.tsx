@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "@/actions/auth";
+import { NotificationBell } from "./NotificationBell";
 
 interface HeaderProps {
   userEmail?: string;
@@ -58,6 +59,9 @@ export function Header({ userEmail, userName, userAvatar }: HeaderProps) {
 
       {/* Ações direita */}
       <div className="flex items-center gap-1">
+        {/* Notificações */}
+        <NotificationBell />
+
         {/* Toggle dark mode */}
         <Button
           variant="ghost"

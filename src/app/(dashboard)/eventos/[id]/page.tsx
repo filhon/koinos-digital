@@ -1,6 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getEventById } from "@/actions/events";
+import {
+  getEventById,
+  listEventMinistries,
+  listEventMusicGroups,
+} from "@/actions/events";
 import { listEventResources } from "@/actions/resources";
 import { getUser } from "@/lib/auth/session";
 import { isLeadershipRole } from "@/lib/auth/permissions";
@@ -33,10 +37,26 @@ export default async function EventoPage({ params }: PageProps) {
   const event = eventResult.data;
   const isLeadership = user ? isLeadershipRole(user.role) : false;
 
-  const allocationsResult = await listEventResources(id);
+  const [allocationsResult, ministriesResult, musicGroupsResult] =
+    await Promise.all([
+      listEventResources(id),
+      listEventMinistries(id),
+      listEventMusicGroups(id),
+    ]);
+
   const allocations =
     allocationsResult && "data" in allocationsResult && allocationsResult.data
       ? allocationsResult.data
+      : [];
+
+  const eventMinistries =
+    ministriesResult && "data" in ministriesResult && ministriesResult.data
+      ? ministriesResult.data
+      : [];
+
+  const eventMusicGroups =
+    musicGroupsResult && "data" in musicGroupsResult && musicGroupsResult.data
+      ? musicGroupsResult.data
       : [];
 
   return (
@@ -67,6 +87,8 @@ export default async function EventoPage({ params }: PageProps) {
         event={event}
         isLeadership={isLeadership}
         allocations={allocations}
+        eventMinistries={eventMinistries}
+        eventMusicGroups={eventMusicGroups}
       />
     </div>
   );

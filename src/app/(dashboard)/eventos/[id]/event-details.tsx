@@ -18,9 +18,15 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import type { EventWithResponsible } from "@/actions/events";
+import type {
+  EventWithResponsible,
+  EventMinistryRow,
+  EventMusicGroupRow,
+} from "@/actions/events";
 import type { EventResourceRow } from "@/actions/resources";
 import { EventResourcesPanel } from "./event-resources-panel";
+import { EventMinistriesPanel } from "./event-ministries-panel";
+import { EventMusicPanel } from "./event-music-panel";
 
 function getInitials(name: string): string {
   return name
@@ -49,12 +55,16 @@ interface EventDetailsProps {
   event: EventWithResponsible;
   isLeadership: boolean;
   allocations?: EventResourceRow[];
+  eventMinistries?: EventMinistryRow[];
+  eventMusicGroups?: EventMusicGroupRow[];
 }
 
 export function EventDetails({
   event,
   isLeadership,
   allocations = [],
+  eventMinistries = [],
+  eventMusicGroups = [],
 }: EventDetailsProps) {
   const [activeTab, setActiveTab] = useState<TabId>("detalhes");
   const isOnline = event.modality === "online";
@@ -217,18 +227,18 @@ export function EventDetails({
       )}
 
       {activeTab === "ministerios" && (
-        <EmptyTab
-          icon={<Users className="size-6 text-muted-foreground" />}
-          label="Ministérios"
-          description="A associação de ministérios estará disponível em breve."
+        <EventMinistriesPanel
+          eventId={event.id}
+          eventMinistries={eventMinistries}
+          canManage={isLeadership}
         />
       )}
 
       {activeTab === "musica" && (
-        <EmptyTab
-          icon={<Music className="size-6 text-muted-foreground" />}
-          label="Grupos musicais"
-          description="A associação de grupos musicais estará disponível em breve."
+        <EventMusicPanel
+          eventId={event.id}
+          eventMusicGroups={eventMusicGroups}
+          canManage={isLeadership}
         />
       )}
 
