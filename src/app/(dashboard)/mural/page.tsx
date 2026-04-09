@@ -9,14 +9,13 @@ const INITIAL_LIMIT = 10;
 export default async function MuralPage() {
   const user = await requireAuth();
 
-  // Fetch initial posts + current member profile (name + avatar)
   const [postsResult, memberResult] = await Promise.all([
     listPosts({ limit: INITIAL_LIMIT }),
     (async () => {
       const supabase = await createClient();
       return supabase
         .from("members")
-        .select("name, avatar_url")
+        .select("id, name, avatar_url")
         .eq("church_id", user.church_id)
         .eq("email", user.email!)
         .maybeSingle();
@@ -27,11 +26,12 @@ export default async function MuralPage() {
     postsResult && "data" in postsResult && postsResult.data
       ? postsResult.data.posts
       : [];
-  const initialNextCursor =
+  const initialHasMore =
     postsResult && "data" in postsResult && postsResult.data
-      ? postsResult.data.nextCursor
-      : null;
+      ? postsResult.data.hasMore
+      : false;
 
+  const memberId = memberResult.data?.id ?? "";
   const memberName = memberResult.data?.name ?? user.email ?? "Membro";
   const memberAvatar = memberResult.data?.avatar_url ?? null;
 
@@ -44,8 +44,8 @@ export default async function MuralPage() {
 
       <MuralFeed
         initialPosts={initialPosts}
-        initialNextCursor={initialNextCursor}
-        currentUserId={user.id}
+        initialHasMore={initialHasMore}
+        currentMemberId={memberId}
         currentUserRole={user.role}
         currentUserName={memberName}
         currentUserAvatar={memberAvatar}

@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 
 interface CommentsSectionProps {
   postId: string;
-  currentUserId: string;
+  currentMemberId: string;
   currentUserRole: string;
   currentUserName: string;
   currentUserAvatar: string | null;
@@ -27,7 +27,7 @@ interface CommentsSectionProps {
 
 export function CommentsSection({
   postId,
-  currentUserId,
+  currentMemberId,
   currentUserRole,
   currentUserName,
   currentUserAvatar,
@@ -114,7 +114,7 @@ export function CommentsSection({
       {/* Comments list */}
       <AnimatePresence initial={false}>
         {comments.map((comment) => {
-          const canDelete = comment.author_id === currentUserId || isPastor;
+          const canDelete = comment.author_id === currentMemberId || isPastor;
           const commentInitials = (comment.author?.name ?? "?")
             .split(" ")
             .slice(0, 2)

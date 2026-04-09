@@ -7,9 +7,13 @@ import {
   createPostSchema,
   createCommentSchema,
   listPostsSchema,
+  reactToPostSchema,
+  pinPostSchema,
   type CreatePostInput,
   type CreateCommentInput,
   type ListPostsInput,
+  type ReactToPostInput,
+  type PinPostInput,
 } from "@/lib/validators/posts";
 import type { AuthUser } from "@/lib/auth/session";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -50,6 +54,10 @@ export interface PostRow {
   created_at: string;
   author: PostAuthor | null;
   comment_count: number;
+  reaction_orar: number;
+  reaction_gratidao: number;
+  user_orar: boolean;
+  user_gratidao: boolean;
 }
 
 export interface CommentRow {
@@ -64,25 +72,23 @@ export interface CommentRow {
 
 export interface ListPostsResult {
   posts: PostRow[];
-  nextCursor: string | null;
+  hasMore: boolean;
 }
 
 type ActionResult<T> = { data: T; error: null } | { data: null; error: string };
 
 // ─── Sanitize helper ──────────────────────────────────────────────────────────
-// Strip HTML tags e atributos perigosos — sem dependência de DOM.
-// Para conteúdo de textarea (texto puro), isso é equivalente ao DOMPurify
-// com { ALLOWED_TAGS: [], ALLOWED_ATTR: [] }.
 
 function sanitizeText(input: string): string {
   return input
-    .replace(/<[^>]*>/g, "") // remove todas as tags HTML
-    .replace(/javascript:/gi, "") // remove protocolo javascript:
-    .replace(/on\w+\s*=/gi, "") // remove event handlers inline
+    .replace(/<[^>]*>/g, "")
+    .replace(/javascript:/gi, "")
+    .replace(/on\w+\s*=/gi, "")
     .trim();
 }
 
 // ─── listPosts ────────────────────────────────────────────────────────────────
+// Usa a RPC get_mural_posts com ordenação por relevância.
 
 export const listPosts = withPermission(
   async (
@@ -93,26 +99,16 @@ export const listPosts = withPermission(
     if (!parsed.success)
       return { data: null, error: parsed.error.issues[0].message };
 
-    const { cursor, limit } = parsed.data;
+    const { offset, limit } = parsed.data;
     const supabase = await createClient();
 
-    let query = supabase
-      .from("posts")
-      .select(
-        `id, church_id, author_id, content, pinned_until, created_at,
-         author:members!posts_author_id_fkey(id, name, avatar_url, role),
-         comments(count)`
-      )
-      .eq("church_id", user.church_id)
-      .eq("is_active", true)
-      .order("created_at", { ascending: false })
-      .limit(limit + 1); // fetch one extra to determine if there's a next page
+    const memberId = await getMemberId(supabase, user);
 
-    if (cursor) {
-      query = query.lt("created_at", cursor);
-    }
-
-    const { data, error } = await query;
+    const { data, error } = await supabase.rpc("get_mural_posts", {
+      p_member_id: memberId ?? "00000000-0000-0000-0000-000000000000",
+      p_limit: limit + 1,
+      p_offset: offset,
+    });
 
     if (error) return { data: null, error: error.message };
 
@@ -123,8 +119,14 @@ export const listPosts = withPermission(
       content: string;
       pinned_until: string | null;
       created_at: string;
-      author: PostAuthor | PostAuthor[] | null;
-      comments: Array<{ count: number }> | null;
+      author_name: string | null;
+      author_avatar_url: string | null;
+      author_role: string | null;
+      comment_count: number;
+      reaction_orar: number;
+      reaction_gratidao: number;
+      user_orar: boolean;
+      user_gratidao: boolean;
     }>;
 
     const hasMore = rows.length > limit;
@@ -137,13 +139,22 @@ export const listPosts = withPermission(
       content: row.content,
       pinned_until: row.pinned_until,
       created_at: row.created_at,
-      author: Array.isArray(row.author) ? (row.author[0] ?? null) : row.author,
-      comment_count: row.comments?.[0]?.count ?? 0,
+      author: row.author_name
+        ? {
+            id: row.author_id,
+            name: row.author_name,
+            avatar_url: row.author_avatar_url,
+            role: row.author_role ?? "membro",
+          }
+        : null,
+      comment_count: Number(row.comment_count ?? 0),
+      reaction_orar: Number(row.reaction_orar ?? 0),
+      reaction_gratidao: Number(row.reaction_gratidao ?? 0),
+      user_orar: row.user_orar ?? false,
+      user_gratidao: row.user_gratidao ?? false,
     }));
 
-    const nextCursor = hasMore ? slice[slice.length - 1].created_at : null;
-
-    return { data: { posts, nextCursor }, error: null };
+    return { data: { posts, hasMore }, error: null };
   },
   { minRole: "visitante" }
 );
@@ -164,7 +175,6 @@ export const createPost = withPermission(
       return { data: null, error: "O conteúdo do post não pode estar vazio." };
 
     const supabase = await createClient();
-
     const memberId = await getMemberId(supabase, user);
     if (!memberId)
       return {
@@ -172,7 +182,6 @@ export const createPost = withPermission(
         error: "Perfil não encontrado. Faça login novamente.",
       };
 
-    // Inserir o post e buscar autor — sem aggregate no returning (PostgREST não suporta)
     const { data, error } = await supabase
       .from("posts")
       .insert({ church_id: user.church_id, author_id: memberId, content })
@@ -204,7 +213,11 @@ export const createPost = withPermission(
       pinned_until: row.pinned_until,
       created_at: row.created_at,
       author: Array.isArray(row.author) ? (row.author[0] ?? null) : row.author,
-      comment_count: 0, // post recém-criado não tem comentários
+      comment_count: 0,
+      reaction_orar: 0,
+      reaction_gratidao: 0,
+      user_orar: false,
+      user_gratidao: false,
     };
 
     return { data: { post }, error: null };
@@ -260,6 +273,129 @@ export const deletePost = withPermission(
     return { data: { id: postId }, error: null };
   },
   { minRole: "visitante" }
+);
+
+// ─── reactToPost ──────────────────────────────────────────────────────────────
+// Toggle: se já existe a reação do tipo → remove; caso contrário → insere.
+
+export const reactToPost = withPermission(
+  async (
+    user: AuthUser,
+    input: ReactToPostInput
+  ): Promise<ActionResult<{ reacted: boolean; type: string }>> => {
+    const parsed = reactToPostSchema.safeParse(input);
+    if (!parsed.success)
+      return { data: null, error: parsed.error.issues[0].message };
+
+    const { post_id, type } = parsed.data;
+    const supabase = await createClient();
+
+    const memberId = await getMemberId(supabase, user);
+    if (!memberId)
+      return {
+        data: null,
+        error: "Perfil não encontrado. Faça login novamente.",
+      };
+
+    // Verifica se a reação deste tipo já existe
+    const { data: existing } = await supabase
+      .from("reactions")
+      .select("id")
+      .eq("post_id", post_id)
+      .eq("member_id", memberId)
+      .eq("type", type)
+      .maybeSingle();
+
+    if (existing) {
+      // Desreagir
+      const { error } = await supabase
+        .from("reactions")
+        .delete()
+        .eq("id", existing.id);
+      if (error) return { data: null, error: error.message };
+      return { data: { reacted: false, type }, error: null };
+    } else {
+      // Reagir
+      const { error } = await supabase.from("reactions").insert({
+        post_id,
+        church_id: user.church_id,
+        member_id: memberId,
+        type,
+      });
+      if (error) return { data: null, error: error.message };
+      return { data: { reacted: true, type }, error: null };
+    }
+  },
+  { minRole: "visitante" }
+);
+
+// ─── pinPost ──────────────────────────────────────────────────────────────────
+
+export const pinPost = withPermission(
+  async (
+    user: AuthUser,
+    input: PinPostInput
+  ): Promise<ActionResult<{ id: string }>> => {
+    const parsed = pinPostSchema.safeParse(input);
+    if (!parsed.success)
+      return { data: null, error: parsed.error.issues[0].message };
+
+    const { post_id, pinned_until } = parsed.data;
+    const supabase = await createClient();
+
+    const { error } = await supabase
+      .from("posts")
+      .update({ pinned_until })
+      .eq("id", post_id)
+      .eq("church_id", user.church_id)
+      .eq("is_active", true);
+
+    if (error) return { data: null, error: error.message };
+
+    await logAudit({
+      churchId: user.church_id,
+      userId: user.id,
+      action: "update",
+      entityType: "post",
+      entityId: post_id,
+      metadata: { pinned_until },
+    });
+
+    return { data: { id: post_id }, error: null };
+  },
+  { minRole: "presbítero" }
+);
+
+// ─── unpinPost ────────────────────────────────────────────────────────────────
+
+export const unpinPost = withPermission(
+  async (
+    user: AuthUser,
+    postId: string
+  ): Promise<ActionResult<{ id: string }>> => {
+    const supabase = await createClient();
+
+    const { error } = await supabase
+      .from("posts")
+      .update({ pinned_until: null })
+      .eq("id", postId)
+      .eq("church_id", user.church_id)
+      .eq("is_active", true);
+
+    if (error) return { data: null, error: error.message };
+
+    await logAudit({
+      churchId: user.church_id,
+      userId: user.id,
+      action: "update",
+      entityType: "post",
+      entityId: postId,
+      metadata: { pinned_until: null },
+    });
+
+    return { data: { id: postId }, error: null };
+  },
+  { minRole: "presbítero" }
 );
 
 // ─── listComments ─────────────────────────────────────────────────────────────
@@ -323,7 +459,6 @@ export const createComment = withPermission(
       };
 
     const supabase = await createClient();
-
     const memberId = await getMemberId(supabase, user);
     if (!memberId)
       return {

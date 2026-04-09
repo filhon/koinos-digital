@@ -10,8 +10,8 @@ import { PostCard } from "./post-card";
 
 interface MuralFeedProps {
   initialPosts: PostRow[];
-  initialNextCursor: string | null;
-  currentUserId: string;
+  initialHasMore: boolean;
+  currentMemberId: string;
   currentUserRole: string;
   currentUserName: string;
   currentUserAvatar: string | null;
@@ -21,42 +21,36 @@ const LIMIT = 10;
 
 export function MuralFeed({
   initialPosts,
-  initialNextCursor,
-  currentUserId,
+  initialHasMore,
+  currentMemberId,
   currentUserRole,
   currentUserName,
   currentUserAvatar,
 }: MuralFeedProps) {
   const [posts, setPosts] = useState<PostRow[]>(initialPosts);
-  const [nextCursor, setNextCursor] = useState<string | null>(
-    initialNextCursor
-  );
+  const [offset, setOffset] = useState(initialPosts.length);
+  const [hasMore, setHasMore] = useState(initialHasMore);
   const [isFetching, startTransition] = useTransition();
   const sentinelRef = useRef<HTMLDivElement>(null);
-  const hasMore = nextCursor !== null;
 
   // Infinite scroll via IntersectionObserver
   const loadMore = useCallback(() => {
     if (!hasMore || isFetching) return;
 
     startTransition(async () => {
-      const result = await listPosts({
-        cursor: nextCursor ?? undefined,
-        limit: LIMIT,
-      });
+      const result = await listPosts({ offset, limit: LIMIT });
 
       if (!result || "code" in result || !result.data) return;
 
+      const newPosts = result.data.posts;
       setPosts((prev) => {
         const existingIds = new Set(prev.map((p) => p.id));
-        const newPosts = result.data!.posts.filter(
-          (p) => !existingIds.has(p.id)
-        );
-        return [...prev, ...newPosts];
+        return [...prev, ...newPosts.filter((p) => !existingIds.has(p.id))];
       });
-      setNextCursor(result.data.nextCursor);
+      setOffset((prev) => prev + newPosts.length);
+      setHasMore(result.data.hasMore);
     });
-  }, [hasMore, isFetching, nextCursor]);
+  }, [hasMore, isFetching, offset]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -75,10 +69,20 @@ export function MuralFeed({
 
   function handlePostCreated(post: PostRow) {
     setPosts((prev) => [post, ...prev]);
+    setOffset((prev) => prev + 1);
   }
 
   function handlePostDeleted(postId: string) {
     setPosts((prev) => prev.filter((p) => p.id !== postId));
+    setOffset((prev) => Math.max(0, prev - 1));
+  }
+
+  function handlePinChanged(postId: string, pinnedUntil: string | null) {
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId ? { ...p, pinned_until: pinnedUntil } : p
+      )
+    );
   }
 
   return (
@@ -109,11 +113,12 @@ export function MuralFeed({
             <PostCard
               key={post.id}
               post={post}
-              currentUserId={currentUserId}
+              currentMemberId={currentMemberId}
               currentUserRole={currentUserRole}
               currentUserName={currentUserName}
               currentUserAvatar={currentUserAvatar}
               onDeleted={handlePostDeleted}
+              onPinChanged={handlePinChanged}
             />
           ))
         )}
