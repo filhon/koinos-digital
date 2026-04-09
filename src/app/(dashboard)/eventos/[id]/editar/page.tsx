@@ -1,11 +1,10 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getEventById } from "@/actions/events";
 import { listMembers } from "@/actions/members";
 import { getUser } from "@/lib/auth/session";
 import { isLeadershipRole } from "@/lib/auth/permissions";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { EditEventForm } from "./edit-event-form";
-import { redirect } from "next/navigation";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -33,6 +32,8 @@ export default async function EditarEventoPage({ params }: PageProps) {
   }
 
   const event = eventResult.data;
+  const isRecurringSeries =
+    event.is_recurring || event.parent_event_id !== null;
 
   const leadershipRoles = ["pastor", "presbítero", "diácono", "líder"];
   const membersResult = await listMembers({
@@ -60,7 +61,11 @@ export default async function EditarEventoPage({ params }: PageProps) {
           { label: "Editar" },
         ]}
       />
-      <EditEventForm event={event} leadershipMembers={leadershipMembers} />
+      <EditEventForm
+        event={event}
+        leadershipMembers={leadershipMembers}
+        isRecurringSeries={isRecurringSeries}
+      />
     </div>
   );
 }

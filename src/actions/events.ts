@@ -1,16 +1,20 @@
 "use server";
 
+import { format, parseISO } from "date-fns";
 import { createClient } from "@/lib/supabase/server";
 import { withPermission } from "@/lib/auth/with-permission";
 import { logAudit } from "@/actions/audit";
 import { createNotification } from "@/actions/notifications";
+import { generateInstanceDates } from "@/lib/utils/recurrence";
 import {
   createEventSchema,
   updateEventSchema,
   listEventsSchema,
+  recurringEditScopeSchema,
   type CreateEventInput,
   type UpdateEventInput,
   type ListEventsInput,
+  type RecurringEditScope,
 } from "@/lib/validators/events";
 import type { AuthUser } from "@/lib/auth/session";
 
@@ -30,6 +34,7 @@ export interface EventRow {
   description: string | null;
   is_recurring: boolean;
   recurrence_rule: Record<string, unknown> | null;
+  parent_event_id: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -179,6 +184,19 @@ export const createEvent = withPermission(
       return { data: null, error: error.message };
     }
 
+    // Gerar instâncias se evento for recorrente
+    if (parsed.data.is_recurring && parsed.data.recurrence_rule) {
+      const instanceError = await _insertRecurringInstances(
+        supabase,
+        row as EventRow,
+        user.church_id
+      );
+      if (instanceError) {
+        // Instâncias não criadas, mas evento pai foi criado — logar e prosseguir
+        console.error("Falha ao gerar instâncias recorrentes:", instanceError);
+      }
+    }
+
     await logAudit({
       churchId: user.church_id,
       userId: user.id,
@@ -192,6 +210,105 @@ export const createEvent = withPermission(
   },
   { module: "eventos", minRole: "líder" }
 );
+
+// ─── generateRecurringInstances ───────────────────────────────────────────────
+
+export const generateRecurringInstances = withPermission(
+  async (
+    user: AuthUser,
+    parentEventId: string
+  ): Promise<ActionResult<{ count: number }>> => {
+    const supabase = await createClient();
+
+    const { data: parent, error: fetchError } = await supabase
+      .from("events")
+      .select("*")
+      .eq("id", parentEventId)
+      .eq("church_id", user.church_id)
+      .eq("is_active", true)
+      .single();
+
+    if (fetchError || !parent) {
+      return { data: null, error: "Evento não encontrado" };
+    }
+
+    if (!parent.is_recurring || !parent.recurrence_rule) {
+      return { data: null, error: "Evento não é recorrente" };
+    }
+
+    const insertError = await _insertRecurringInstances(
+      supabase,
+      parent as EventRow,
+      user.church_id
+    );
+
+    if (insertError) {
+      return { data: null, error: insertError };
+    }
+
+    const baseDate = parseISO(parent.date);
+    const dates = generateInstanceDates(
+      baseDate,
+      parent.recurrence_rule as Parameters<typeof generateInstanceDates>[1]
+    );
+
+    await logAudit({
+      churchId: user.church_id,
+      userId: user.id,
+      action: "create",
+      entityType: "recurring_instances",
+      entityId: parentEventId,
+      metadata: { count: dates.length },
+    }).catch(() => {});
+
+    return { data: { count: dates.length }, error: null };
+  },
+  { module: "eventos", minRole: "líder" }
+);
+
+// ─── _insertRecurringInstances (helper interno) ───────────────────────────────
+
+async function _insertRecurringInstances(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any,
+  parent: EventRow,
+  churchId: string
+): Promise<string | null> {
+  if (!parent.recurrence_rule) return null;
+
+  const baseDate = parseISO(parent.date);
+
+  let rule: Parameters<typeof generateInstanceDates>[1];
+  try {
+    rule = parent.recurrence_rule as Parameters<
+      typeof generateInstanceDates
+    >[1];
+  } catch {
+    return "Regra de recorrência inválida";
+  }
+
+  const dates = generateInstanceDates(baseDate, rule);
+  if (dates.length === 0) return null;
+
+  const instances = dates.map((d) => ({
+    church_id: churchId,
+    name: parent.name,
+    responsible_id: parent.responsible_id,
+    date: format(d, "yyyy-MM-dd"),
+    start_time: parent.start_time,
+    end_time: parent.end_time,
+    modality: parent.modality,
+    location: parent.location,
+    meeting_link: parent.meeting_link,
+    description: parent.description,
+    is_recurring: false,
+    recurrence_rule: null,
+    parent_event_id: parent.id,
+  }));
+
+  const { error } = await supabase.from("events").insert(instances);
+  return error ? error.message : null;
+}
 
 // ─── updateEvent ─────────────────────────────────────────────────────────────
 
@@ -208,7 +325,6 @@ export const updateEvent = withPermission(
 
     const supabase = await createClient();
 
-    // Verificar que o evento pertence ao church_id do usuário
     const { data: existing, error: fetchError } = await supabase
       .from("events")
       .select("id, name, church_id")
@@ -245,7 +361,125 @@ export const updateEvent = withPermission(
   { module: "eventos", minRole: "líder" }
 );
 
-// ─── deleteEvent (soft-delete) ────────────────────────────────────────────────
+// ─── updateRecurringEvents ────────────────────────────────────────────────────
+
+export const updateRecurringEvents = withPermission(
+  async (
+    user: AuthUser,
+    eventId: string,
+    scope: RecurringEditScope,
+    input: UpdateEventInput
+  ): Promise<ActionResult<{ updated: number }>> => {
+    const parsedScope = recurringEditScopeSchema.safeParse(scope);
+    if (!parsedScope.success) {
+      return { data: null, error: "Escopo inválido" };
+    }
+
+    const parsed = updateEventSchema.safeParse(input);
+    if (!parsed.success) {
+      return { data: null, error: parsed.error.issues[0].message };
+    }
+
+    const supabase = await createClient();
+
+    // Buscar evento atual
+    const { data: current, error: fetchError } = await supabase
+      .from("events")
+      .select("id, date, parent_event_id, name")
+      .eq("id", eventId)
+      .eq("is_active", true)
+      .single();
+
+    if (fetchError || !current) {
+      return { data: null, error: "Evento não encontrado" };
+    }
+
+    if (parsedScope.data === "only_this") {
+      const { error } = await supabase
+        .from("events")
+        .update(parsed.data)
+        .eq("id", eventId);
+
+      if (error) return { data: null, error: error.message };
+
+      await logAudit({
+        churchId: user.church_id,
+        userId: user.id,
+        action: "update",
+        entityType: "event",
+        entityId: eventId,
+        metadata: { scope, fields: Object.keys(parsed.data) },
+      }).catch(() => {});
+      return { data: { updated: 1 }, error: null };
+    }
+
+    // Para "this_and_following" e "all", não atualizar date/recurrence_rule
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { date: _date, recurrence_rule: _rule, ...safeFields } = parsed.data;
+
+    const topParentId = current.parent_event_id ?? current.id;
+
+    if (parsedScope.data === "this_and_following") {
+      // Atualiza evento atual + irmãos com date >= current.date
+      const { error: e1 } = await supabase
+        .from("events")
+        .update(safeFields)
+        .eq("id", eventId);
+
+      const { error: e2 } = await supabase
+        .from("events")
+        .update(safeFields)
+        .eq("parent_event_id", topParentId)
+        .gte("date", current.date)
+        .neq("id", eventId);
+
+      // Se for o próprio pai, atualizar o pai também
+      if (topParentId === current.id) {
+        await supabase
+          .from("events")
+          .update(safeFields)
+          .eq("id", topParentId)
+          .neq("id", eventId);
+      }
+
+      if (e1 || e2)
+        return {
+          data: null,
+          error: e1?.message ?? e2?.message ?? "Erro ao atualizar",
+        };
+    } else {
+      // "all": atualiza pai + todas as instâncias
+      const { error: e1 } = await supabase
+        .from("events")
+        .update(safeFields)
+        .eq("id", topParentId);
+
+      const { error: e2 } = await supabase
+        .from("events")
+        .update(safeFields)
+        .eq("parent_event_id", topParentId);
+
+      if (e1 || e2)
+        return {
+          data: null,
+          error: e1?.message ?? e2?.message ?? "Erro ao atualizar",
+        };
+    }
+
+    await logAudit({
+      churchId: user.church_id,
+      userId: user.id,
+      action: "update",
+      entityType: "event",
+      entityId: eventId,
+      metadata: { scope, fields: Object.keys(safeFields) },
+    }).catch(() => {});
+    return { data: { updated: -1 }, error: null }; // count aproximado
+  },
+  { module: "eventos", minRole: "líder" }
+);
+
+// ─── deleteEvent (soft-delete, avulso) ────────────────────────────────────────
 
 export const deleteEvent = withPermission(
   async (
@@ -284,6 +518,112 @@ export const deleteEvent = withPermission(
     }).catch(() => {});
 
     return { data: { id: eventId }, error: null };
+  },
+  { module: "eventos", minRole: "líder" }
+);
+
+// ─── deleteRecurringEvents ────────────────────────────────────────────────────
+
+export const deleteRecurringEvents = withPermission(
+  async (
+    user: AuthUser,
+    eventId: string,
+    scope: RecurringEditScope
+  ): Promise<ActionResult<{ deleted: number }>> => {
+    const parsedScope = recurringEditScopeSchema.safeParse(scope);
+    if (!parsedScope.success) {
+      return { data: null, error: "Escopo inválido" };
+    }
+
+    const supabase = await createClient();
+
+    const { data: current, error: fetchError } = await supabase
+      .from("events")
+      .select("id, date, parent_event_id, name")
+      .eq("id", eventId)
+      .eq("is_active", true)
+      .single();
+
+    if (fetchError || !current) {
+      return { data: null, error: "Evento não encontrado" };
+    }
+
+    if (parsedScope.data === "only_this") {
+      const { error } = await supabase
+        .from("events")
+        .update({ is_active: false })
+        .eq("id", eventId);
+
+      if (error) return { data: null, error: error.message };
+
+      await logAudit({
+        churchId: user.church_id,
+        userId: user.id,
+        action: "delete",
+        entityType: "event",
+        entityId: eventId,
+        metadata: { scope, name: current.name },
+      }).catch(() => {});
+      return { data: { deleted: 1 }, error: null };
+    }
+
+    const topParentId = current.parent_event_id ?? current.id;
+
+    if (parsedScope.data === "this_and_following") {
+      // Soft-delete: evento atual + irmãos com date >= current.date
+      const { error: e1 } = await supabase
+        .from("events")
+        .update({ is_active: false })
+        .eq("id", eventId);
+
+      const { error: e2 } = await supabase
+        .from("events")
+        .update({ is_active: false })
+        .eq("parent_event_id", topParentId)
+        .gte("date", current.date)
+        .neq("id", eventId);
+
+      // Se current É o pai, soft-delete do próprio pai
+      if (topParentId === current.id) {
+        await supabase
+          .from("events")
+          .update({ is_active: false })
+          .eq("id", topParentId);
+      }
+
+      if (e1 || e2)
+        return {
+          data: null,
+          error: e1?.message ?? e2?.message ?? "Erro ao deletar",
+        };
+    } else {
+      // "all": soft-delete pai + todas as instâncias
+      const { error: e1 } = await supabase
+        .from("events")
+        .update({ is_active: false })
+        .eq("id", topParentId);
+
+      const { error: e2 } = await supabase
+        .from("events")
+        .update({ is_active: false })
+        .eq("parent_event_id", topParentId);
+
+      if (e1 || e2)
+        return {
+          data: null,
+          error: e1?.message ?? e2?.message ?? "Erro ao deletar",
+        };
+    }
+
+    await logAudit({
+      churchId: user.church_id,
+      userId: user.id,
+      action: "delete",
+      entityType: "event",
+      entityId: eventId,
+      metadata: { scope, name: current.name },
+    }).catch(() => {});
+    return { data: { deleted: -1 }, error: null };
   },
   { module: "eventos", minRole: "líder" }
 );
@@ -336,7 +676,6 @@ export const addEventMinistry = withPermission(
   ): Promise<ActionResult<EventMinistryRow>> => {
     const supabase = await createClient();
 
-    // Verificar que o evento existe e pertence à igreja
     const { data: event, error: eventError } = await supabase
       .from("events")
       .select("id, name, church_id")
@@ -349,7 +688,6 @@ export const addEventMinistry = withPermission(
       return { data: null, error: "Evento não encontrado" };
     }
 
-    // Verificar que o ministério existe e pertence à igreja
     const { data: ministry, error: ministryError } = await supabase
       .from("ministries")
       .select(
@@ -364,7 +702,6 @@ export const addEventMinistry = withPermission(
       return { data: null, error: "Ministério não encontrado" };
     }
 
-    // Verificar duplicata
     const { data: existing } = await supabase
       .from("event_ministries")
       .select("id")
@@ -376,7 +713,6 @@ export const addEventMinistry = withPermission(
       return { data: null, error: "Ministério já associado a este evento" };
     }
 
-    // Inserir associação
     const { data: row, error: insertError } = await supabase
       .from("event_ministries")
       .insert({ event_id: eventId, ministry_id: ministryId })
@@ -387,7 +723,6 @@ export const addEventMinistry = withPermission(
       return { data: null, error: insertError?.message ?? "Erro ao associar" };
     }
 
-    // Notificar líder do ministério
     const leader = ministry.leader as unknown as {
       id: string;
       name: string;
@@ -435,7 +770,6 @@ export const removeEventMinistry = withPermission(
   ): Promise<ActionResult<{ id: string }>> => {
     const supabase = await createClient();
 
-    // Verificar que a associação existe
     const { data: em, error: emError } = await supabase
       .from("event_ministries")
       .select("id, event_id, ministry_id")
@@ -446,7 +780,6 @@ export const removeEventMinistry = withPermission(
       return { data: null, error: "Associação não encontrada" };
     }
 
-    // Verificar se a escala tem membros atribuídos
     const { data: scales } = await supabase
       .from("scales")
       .select("id")
@@ -461,7 +794,6 @@ export const removeEventMinistry = withPermission(
       };
     }
 
-    // Remover associação
     const { error: deleteError } = await supabase
       .from("event_ministries")
       .delete()
@@ -522,7 +854,6 @@ export const addEventMusicGroup = withPermission(
   ): Promise<ActionResult<EventMusicGroupRow>> => {
     const supabase = await createClient();
 
-    // Verificar que o evento existe
     const { data: event, error: eventError } = await supabase
       .from("events")
       .select("id, church_id")
@@ -535,7 +866,6 @@ export const addEventMusicGroup = withPermission(
       return { data: null, error: "Evento não encontrado" };
     }
 
-    // Verificar que o grupo existe e pertence à igreja
     const { data: group, error: groupError } = await supabase
       .from("music_groups")
       .select("id, name")
@@ -548,7 +878,6 @@ export const addEventMusicGroup = withPermission(
       return { data: null, error: "Grupo musical não encontrado" };
     }
 
-    // Verificar duplicata
     const { data: existing } = await supabase
       .from("event_music_groups")
       .select("id")

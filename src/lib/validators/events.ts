@@ -4,11 +4,21 @@ export const EVENT_MODALITIES = ["presencial", "online"] as const;
 
 export const RECURRENCE_FREQUENCIES = ["semanal", "mensal"] as const;
 
+// ─── Recurrence Rule Schema ───────────────────────────────────────────────────
+// { frequency, interval, days_of_week?, end_date?, count? }
+// Ao menos end_date ou count deve ser fornecido quando is_recurring = true.
+
 const recurrenceRuleSchema = z.object({
   frequency: z.enum(RECURRENCE_FREQUENCIES),
-  weekday: z.number().int().min(0).max(6).optional(), // 0=domingo
-  dayOfMonth: z.number().int().min(1).max(31).optional(),
+  interval: z.number().int().min(1).max(12).default(1),
+  days_of_week: z.array(z.number().int().min(0).max(6)).optional(),
+  end_date: z.string().optional(),
+  count: z.number().int().min(1).max(52).optional(),
 });
+
+export type RecurrenceRule = z.infer<typeof recurrenceRuleSchema>;
+
+// ─── Base Event Schema ────────────────────────────────────────────────────────
 
 const baseEventSchema = z.object({
   name: z
@@ -60,6 +70,15 @@ export const createEventSchema = baseEventSchema.superRefine((data, ctx) => {
       path: ["recurrence_rule"],
     });
   }
+  if (data.is_recurring && data.recurrence_rule) {
+    if (!data.recurrence_rule.end_date && !data.recurrence_rule.count) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Informe uma data de encerramento ou número de ocorrências",
+        path: ["recurrence_rule", "end_date"],
+      });
+    }
+  }
 });
 
 export const updateEventSchema = baseEventSchema.partial().extend({
@@ -76,7 +95,19 @@ export const listEventsSchema = z.object({
   pageSize: z.number().int().min(1).max(100).optional().default(20),
 });
 
+// ─── Recurring edit scope ─────────────────────────────────────────────────────
+
+export const RECURRING_EDIT_SCOPES = [
+  "only_this",
+  "this_and_following",
+  "all",
+] as const;
+
+export const recurringEditScopeSchema = z.enum(RECURRING_EDIT_SCOPES);
+export type RecurringEditScope = z.infer<typeof recurringEditScopeSchema>;
+
+// ─── Input types ──────────────────────────────────────────────────────────────
+
 export type CreateEventInput = z.input<typeof createEventSchema>;
 export type UpdateEventInput = z.input<typeof updateEventSchema>;
 export type ListEventsInput = z.input<typeof listEventsSchema>;
-export type RecurrenceRule = z.infer<typeof recurrenceRuleSchema>;

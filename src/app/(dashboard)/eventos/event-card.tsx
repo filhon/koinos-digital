@@ -114,9 +114,9 @@ export function EventCard({ event }: EventCardProps) {
             </span>
           ) : null}
 
-          {event.is_recurring && (
-            <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
-              <RefreshCw className="size-3" />
+          {(event.is_recurring || event.parent_event_id) && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400">
+              <RefreshCw className="size-2.5" />
               Recorrente
             </span>
           )}

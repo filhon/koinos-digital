@@ -107,6 +107,9 @@ export function CalendarMonth({
                         : "bg-accent-100 text-accent-700 dark:bg-accent-900/30 dark:text-accent-300"
                     )}
                   >
+                    {(event.is_recurring || event.parent_event_id) && (
+                      <span className="opacity-60 mr-0.5">↻</span>
+                    )}
                     <span className="opacity-70">
                       {event.start_time.slice(0, 5)}
                     </span>{" "}
