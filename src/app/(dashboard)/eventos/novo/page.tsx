@@ -15,9 +15,10 @@ export default async function NovoEventoPage() {
   const leadershipRoles = ["pastor", "presbítero", "diácono", "líder"];
   const leadershipMembers =
     leadershipResult && !("code" in leadershipResult) && leadershipResult.data
-      ? leadershipResult.data.individuals.filter((m) =>
-          leadershipRoles.includes(m.role)
-        )
+      ? [
+          ...leadershipResult.data.individuals,
+          ...leadershipResult.data.families.flatMap((f) => f.members),
+        ].filter((m) => leadershipRoles.includes(m.role))
       : [];
 
   return (

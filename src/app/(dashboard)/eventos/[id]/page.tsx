@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getEventById } from "@/actions/events";
+import { listEventResources } from "@/actions/resources";
 import { getUser } from "@/lib/auth/session";
 import { isLeadershipRole } from "@/lib/auth/permissions";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -32,6 +33,12 @@ export default async function EventoPage({ params }: PageProps) {
   const event = eventResult.data;
   const isLeadership = user ? isLeadershipRole(user.role) : false;
 
+  const allocationsResult = await listEventResources(id);
+  const allocations =
+    allocationsResult && "data" in allocationsResult && allocationsResult.data
+      ? allocationsResult.data
+      : [];
+
   return (
     <div className="px-4 py-6 lg:px-8 lg:py-8 max-w-3xl mx-auto">
       <PageHeader
@@ -56,7 +63,11 @@ export default async function EventoPage({ params }: PageProps) {
         }
       />
 
-      <EventDetails event={event} isLeadership={isLeadership} />
+      <EventDetails
+        event={event}
+        isLeadership={isLeadership}
+        allocations={allocations}
+      />
     </div>
   );
 }

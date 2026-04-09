@@ -43,7 +43,7 @@ async function resizeImage(file: File): Promise<Blob> {
           if (!blob) return reject(new Error("Falha ao gerar imagem"));
           resolve(blob);
         },
-        "image/webp",
+        "image/jpeg",
         0.85
       );
     };
@@ -88,22 +88,30 @@ export function AvatarUpload({
 
     try {
       const resized = await resizeImage(file);
+      // O canvas sempre retornará image/jpeg quando especificado (ou fallback para png)
+      const ext = resized.type === "image/png" ? "png" : "jpg";
+      const contentType = resized.type || "image/jpeg";
+
+      const fileToUpload = new File([resized], `${memberId}.${ext}`, {
+        type: contentType,
+      });
 
       // Show local preview immediately
       const previewUrl = URL.createObjectURL(resized);
       setPreview(previewUrl);
 
       const supabase = createClient();
-      const path = `${churchId}/avatars/${memberId}.webp`;
+      const path = `${churchId}/avatars/${memberId}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(path, resized, {
-          contentType: "image/webp",
+        .upload(path, fileToUpload, {
+          contentType: contentType,
           upsert: true,
         });
 
       if (uploadError) {
+        console.error("Supabase storage error:", uploadError);
         toast.error("Erro ao enviar foto. Tente novamente.");
         setPreview(null);
         return;

@@ -19,6 +19,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { EventWithResponsible } from "@/actions/events";
+import type { EventResourceRow } from "@/actions/resources";
+import { EventResourcesPanel } from "./event-resources-panel";
 
 function getInitials(name: string): string {
   return name
@@ -46,9 +48,14 @@ type TabId = (typeof TABS)[number]["id"];
 interface EventDetailsProps {
   event: EventWithResponsible;
   isLeadership: boolean;
+  allocations?: EventResourceRow[];
 }
 
-export function EventDetails({ event }: EventDetailsProps) {
+export function EventDetails({
+  event,
+  isLeadership,
+  allocations = [],
+}: EventDetailsProps) {
   const [activeTab, setActiveTab] = useState<TabId>("detalhes");
   const isOnline = event.modality === "online";
   const eventDate = parseISO(event.date);
@@ -226,10 +233,10 @@ export function EventDetails({ event }: EventDetailsProps) {
       )}
 
       {activeTab === "recursos" && (
-        <EmptyTab
-          icon={<Package className="size-6 text-muted-foreground" />}
-          label="Recursos"
-          description="A alocação de recursos estará disponível em breve."
+        <EventResourcesPanel
+          eventId={event.id}
+          allocations={allocations}
+          canManage={isLeadership}
         />
       )}
 
