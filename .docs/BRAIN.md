@@ -1,8 +1,8 @@
 > **Propósito:** Este é o documento central de contexto do projeto. Toda sessão de desenvolvimento assistido por IA DEVE começar lendo este arquivo. Ele evita desvios, elimina redundâncias e economiza tokens.
 
-**Última atualização:** 2026-04-08
+**Última atualização:** 2026-04-09
 **Fase atual:** 2 - Módulos Core
-**Sessão atual:** 2.5
+**Sessão atual:** 2.6
 
 ---
 
@@ -158,9 +158,9 @@ admin (SaaS) → acesso global, sem dados sensíveis de tenants
 
 ### Ministérios + Escalas
 
-- [ ] `ministries` — id, church_id, name, counselor_id, leader_id
-- [ ] `ministry_members` — id, ministry_id, member_id
-- [ ] `scales` — id, event_ministry_id, member_id
+- [x] `ministries` — id, church_id, name, counselor_id, leader_id
+- [x] `ministry_members` — id, ministry_id, member_id
+- [x] `scales` — id, event_ministry_id, member_id
 
 ### Música
 
@@ -239,6 +239,7 @@ admin (SaaS) → acesso global, sem dados sensíveis de tenants
 | 2.2 | 2026-04-08 | Gestão de roles: updateMemberRoleSchema + updateMemberRoleInput adicionados ao validator; Server Action updateMemberRole (minRole: pastor, atualiza members.role + JWT app_metadata via admin.auth.admin.listUsers+updateUserById, audit_log com oldRole/newRole); RoleSection client component na página de detalhe (/membros/[id]) com Dialog de confirmação e select de role; MemberCard convertido para client component com DropdownMenu (Promover/Rebaixar com label do role alvo) + Dialog de confirmação; MembersList atualizado para chamar getUser() e passar isPastor para MemberCard. | src/lib/validators/members.ts, src/actions/members.ts, src/app/(dashboard)/membros/[id]/role-section.tsx, src/app/(dashboard)/membros/[id]/page.tsx, src/app/(dashboard)/membros/member-card.tsx, src/app/(dashboard)/membros/members-list.tsx |
 | 2.3 | 2026-04-08 | Módulo Eventos: migration events + pivots (event_ministries, event_music_groups, event_resources) com RLS por church_id, CHECK constraints (presencial→location, online→meeting_link), trigger updated_at, 5 índices; validators Zod (createEventSchema com superRefine condicional, updateEventSchema, listEventsSchema); Server Actions events.ts (listEvents, getEventById, createEvent, updateEvent, deleteEvent soft-delete — todos com withPermission + logAudit); página /eventos (server) com EventsList (server), EventsFilters (client pill-filters), EventCard (date-strip + meta row), EventsListSkeleton; página /eventos/novo com EventForm (modalidade toggle visual, campos condicionais, toggle recorrência sem geração de instâncias); página /eventos/[id] com EventDetails (tabs: Detalhes, Ministérios, Música, Recursos, Liturgia — tabs futuras com EmptyTab placeholder). | supabase/migrations/20260408120000_events_schema.sql, src/lib/validators/events.ts, src/actions/events.ts, src/app/(dashboard)/eventos/page.tsx, src/app/(dashboard)/eventos/events-list.tsx, src/app/(dashboard)/eventos/events-filters.tsx, src/app/(dashboard)/eventos/event-card.tsx, src/app/(dashboard)/eventos/events-skeleton.tsx, src/app/(dashboard)/eventos/novo/page.tsx, src/app/(dashboard)/eventos/novo/event-form.tsx, src/app/(dashboard)/eventos/[id]/page.tsx, src/app/(dashboard)/eventos/[id]/event-details.tsx |
 | 2.4 | 2026-04-08 | Módulo Agenda: Server Action listEventsInRange (query otimizada por range de datas visível, withPermission visitante+); componentes reutilizáveis CalendarMonth (grid 7 colunas com event pills presencial/online, today/selected highlights) e CalendarWeek (timeline 7h–22h com eventos posicionados absolutamente por start_time/end_time) em src/components/modules/agenda/; AgendaView (client) com toggle mensal/semanal, navegação de período, toggle "Todos/Minha unidade", AnimatePresence entre views, painel do dia selecionado com lista de eventos linkados; página /agenda (server) com SSR dos eventos do mês atual, passa isLeadership para CTA "Criar evento". | src/actions/agenda.ts, src/components/modules/agenda/CalendarMonth.tsx, src/components/modules/agenda/CalendarWeek.tsx, src/components/modules/agenda/index.ts, src/app/(dashboard)/agenda/AgendaView.tsx, src/app/(dashboard)/agenda/page.tsx |
+| 2.5 | 2026-04-09 | Módulo Ministérios + Escalas: migration com ministries/ministry_members/scales + FK event_ministries→ministries + RLS (presbítero+ para ministries, is_leadership para ministry_members e scales); validators Zod (createMinistrySchema, updateMinistrySchema, addMinistryMemberSchema, removeMinistryMemberSchema, upsertScaleMemberSchema, removeScaleMemberSchema); Server Actions ministries.ts (listMinistries, getMinistryById, createMinistry, updateMinistry, deleteMinistry soft-delete, addMinistryMember, removeMinistryMember — granular check para líder do próprio ministério) e scales.ts (getMyScale, upsertScaleMember, removeScaleMember — granular check para líder do próprio ministério); UI /ministerios (lista grid 2 colunas com MinistryCard + border accent, filtro por nome, skeleton), /ministerios/novo (MinistryForm com selects de conselheiro/líder), /ministerios/[id] (MinistryDetails com 3 abas: Informações/Componentes/Escalas; MembersPanel com search e add/remove; ScalesPanel com toggle optimístico por membro), /ministerios/[id]/editar (EditMinistryForm), /escalas (MyScaleView agrupada por mês). TODOs na sessão 2.8 para notificações. | supabase/migrations/20260409100000_ministries_scales_schema.sql, src/lib/validators/ministries.ts, src/actions/ministries.ts, src/actions/scales.ts, src/app/(dashboard)/ministerios/page.tsx, src/app/(dashboard)/ministerios/ministries-list.tsx, src/app/(dashboard)/ministerios/ministry-card.tsx, src/app/(dashboard)/ministerios/ministries-filters.tsx, src/app/(dashboard)/ministerios/ministries-skeleton.tsx, src/app/(dashboard)/ministerios/novo/page.tsx, src/app/(dashboard)/ministerios/novo/ministry-form.tsx, src/app/(dashboard)/ministerios/[id]/page.tsx, src/app/(dashboard)/ministerios/[id]/ministry-details.tsx, src/app/(dashboard)/ministerios/[id]/members-panel.tsx, src/app/(dashboard)/ministerios/[id]/scales-panel.tsx, src/app/(dashboard)/ministerios/[id]/editar/page.tsx, src/app/(dashboard)/ministerios/[id]/editar/edit-ministry-form.tsx, src/app/(dashboard)/escalas/page.tsx, src/app/(dashboard)/escalas/my-scale-view.tsx |
 
 ---
 
