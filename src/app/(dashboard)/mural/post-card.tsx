@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useOptimistic, startTransition } from "react";
+import { useState, useTransition } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow, addDays } from "date-fns";
@@ -91,8 +91,7 @@ export function PostCard({
   const [isDeletePending, startDeleteTransition] = useTransition();
   const [isPinPending, startPinTransition] = useTransition();
 
-  // Optimistic reactions
-  const [reactions, setOptimisticReactions] = useOptimistic<ReactionState>({
+  const [reactions, setReactions] = useState<ReactionState>({
     orar: post.reaction_orar,
     gratidao: post.reaction_gratidao,
     userOrar: post.user_orar,
@@ -136,22 +135,27 @@ export function PostCard({
       ? reactions.userOrar
       : reactions.userGratidao;
 
-    startTransition(() => {
-      // Optimistic update
-      setOptimisticReactions((prev) => ({
-        ...prev,
-        orar: isOrar ? prev.orar + (currentlyActive ? -1 : 1) : prev.orar,
-        gratidao: !isOrar
-          ? prev.gratidao + (currentlyActive ? -1 : 1)
-          : prev.gratidao,
-        userOrar: isOrar ? !currentlyActive : prev.userOrar,
-        userGratidao: !isOrar ? !currentlyActive : prev.userGratidao,
-      }));
-    });
+    // Optimistic update imediato
+    setReactions((prev) => ({
+      orar: isOrar ? prev.orar + (currentlyActive ? -1 : 1) : prev.orar,
+      gratidao: !isOrar
+        ? prev.gratidao + (currentlyActive ? -1 : 1)
+        : prev.gratidao,
+      userOrar: isOrar ? !currentlyActive : prev.userOrar,
+      userGratidao: !isOrar ? !currentlyActive : prev.userGratidao,
+    }));
 
-    // Fire and forget — the next feed refresh will sync
     reactToPost({ post_id: post.id, type }).then((result) => {
       if (!result || "code" in result || result.error) {
+        // Revert em caso de erro
+        setReactions((prev) => ({
+          orar: isOrar ? prev.orar + (currentlyActive ? 1 : -1) : prev.orar,
+          gratidao: !isOrar
+            ? prev.gratidao + (currentlyActive ? 1 : -1)
+            : prev.gratidao,
+          userOrar: isOrar ? currentlyActive : prev.userOrar,
+          userGratidao: !isOrar ? currentlyActive : prev.userGratidao,
+        }));
         toast.error("Erro ao registrar reação.");
       }
     });
