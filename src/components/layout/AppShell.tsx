@@ -1,6 +1,7 @@
 import { Sidebar } from "./Sidebar";
 import { BottomNav } from "./BottomNav";
 import { Header } from "./Header";
+import { Toaster } from "@/components/ui/sonner";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -43,6 +44,8 @@ export function AppShell({
 
       {/* Bottom nav: apenas mobile (< 640px) */}
       <BottomNav />
+
+      <Toaster position="bottom-right" richColors />
     </div>
   );
 }
