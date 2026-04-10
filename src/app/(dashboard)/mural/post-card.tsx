@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { deletePost, reactToPost, pinPost, unpinPost } from "@/actions/posts";
 import type { PostRow } from "@/actions/posts";
 import { CommentsSection } from "./comments-section";
+import { TribeBadge } from "@/app/(dashboard)/gamificacao/tribe-badge";
 import { cn } from "@/lib/utils";
 
 const ROLE_CONFIG: Record<string, { label: string; className: string }> = {
@@ -255,6 +256,13 @@ export function PostCard({
               >
                 {roleConfig.label}
               </span>
+              {/* Tribo */}
+              {author?.team_name && author.team_color && (
+                <TribeBadge
+                  teamName={author.team_name}
+                  teamColor={author.team_color}
+                />
+              )}
               {/* Streak placeholder */}
               <span className="inline-flex items-center gap-0.5 text-[10px] text-accent-600 dark:text-accent-400 font-medium">
                 <Flame className="w-3 h-3" />

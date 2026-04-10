@@ -43,6 +43,8 @@ export interface PostAuthor {
   name: string;
   avatar_url: string | null;
   role: string;
+  team_name: string | null;
+  team_color: string | null;
 }
 
 export interface PostRow {
@@ -122,6 +124,8 @@ export const listPosts = withPermission(
       author_name: string | null;
       author_avatar_url: string | null;
       author_role: string | null;
+      author_team_name: string | null;
+      author_team_color: string | null;
       comment_count: number;
       reaction_orar: number;
       reaction_gratidao: number;
@@ -145,6 +149,8 @@ export const listPosts = withPermission(
             name: row.author_name,
             avatar_url: row.author_avatar_url,
             role: row.author_role ?? "membro",
+            team_name: row.author_team_name ?? null,
+            team_color: row.author_team_color ?? null,
           }
         : null,
       comment_count: Number(row.comment_count ?? 0),
@@ -212,7 +218,13 @@ export const createPost = withPermission(
       content: row.content,
       pinned_until: row.pinned_until,
       created_at: row.created_at,
-      author: Array.isArray(row.author) ? (row.author[0] ?? null) : row.author,
+      author: (() => {
+        const a = Array.isArray(row.author)
+          ? (row.author[0] ?? null)
+          : row.author;
+        if (!a) return null;
+        return { ...a, team_name: null, team_color: null };
+      })(),
       comment_count: 0,
       reaction_orar: 0,
       reaction_gratidao: 0,
@@ -431,7 +443,20 @@ export const listComments = withPermission(
         author_id: r.author_id,
         content: r.content,
         created_at: r.created_at,
-        author: Array.isArray(r.author) ? (r.author[0] ?? null) : r.author,
+        author: (() => {
+          const a = (Array.isArray(r.author) ? r.author[0] : r.author) as
+            | (PostAuthor & {
+                team_name?: string | null;
+                team_color?: string | null;
+              })
+            | null;
+          if (!a) return null;
+          return {
+            ...a,
+            team_name: a.team_name ?? null,
+            team_color: a.team_color ?? null,
+          };
+        })(),
       };
     });
 
@@ -493,7 +518,20 @@ export const createComment = withPermission(
       author_id: row.author_id,
       content: row.content,
       created_at: row.created_at,
-      author: Array.isArray(row.author) ? (row.author[0] ?? null) : row.author,
+      author: (() => {
+        const a = (Array.isArray(row.author) ? row.author[0] : row.author) as
+          | (PostAuthor & {
+              team_name?: string | null;
+              team_color?: string | null;
+            })
+          | null;
+        if (!a) return null;
+        return {
+          ...a,
+          team_name: a.team_name ?? null,
+          team_color: a.team_color ?? null,
+        };
+      })(),
     };
 
     return { data: { comment }, error: null };

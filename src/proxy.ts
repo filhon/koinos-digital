@@ -33,7 +33,7 @@ const AAL2_ROUTES = [
   "/dashboard/assembleia",
 ];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // Refresh automático do token (obrigatório — não remover)
   const response = await updateSession(request);
 

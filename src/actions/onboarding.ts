@@ -477,7 +477,17 @@ export async function registerMember(
 
   await supabase.auth.refreshSession();
 
-  // 6. Audit log
+  // 6. Pontos por convite pessoal: +50 pts ao convidante
+  if (invitedBy) {
+    try {
+      const { awardInvitePoints } = await import("@/actions/gamification");
+      await awardInvitePoints(invitedBy, churchId);
+    } catch (err) {
+      console.error("[onboarding] Erro ao conceder pontos de convite:", err);
+    }
+  }
+
+  // 7. Audit log
   await logAudit({
     churchId,
     userId,
