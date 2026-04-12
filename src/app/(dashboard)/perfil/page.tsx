@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Shield, Lock } from "lucide-react";
 import { requireAuth } from "@/lib/auth/session";
 import { getProfile } from "@/actions/profile";
+import { getMyStreak } from "@/actions/devotion";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ProfileForm } from "./profile-form";
 
@@ -9,7 +10,14 @@ export const metadata = { title: "Meu Perfil — Koinos" };
 
 export default async function PerfilPage() {
   const user = await requireAuth();
-  const result = await getProfile();
+  const [result, streakResult] = await Promise.all([
+    getProfile(),
+    getMyStreak(),
+  ]);
+  const streak =
+    streakResult && "data" in streakResult && streakResult.data
+      ? streakResult.data.current_streak
+      : 0;
 
   if (!result.success) {
     return (
@@ -26,7 +34,11 @@ export default async function PerfilPage() {
         title="Meu Perfil"
         description="Gerencie suas informações pessoais e foto."
       />
-      <ProfileForm profile={result.data} churchId={user.church_id} />
+      <ProfileForm
+        profile={result.data}
+        churchId={user.church_id}
+        streak={streak}
+      />
 
       {/* Links de conta */}
       <div className="flex flex-col gap-2 pt-2">

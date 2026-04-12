@@ -46,9 +46,14 @@ const ROLE_LABELS: Record<string, string> = {
 interface ProfileFormProps {
   profile: MemberProfile;
   churchId: string;
+  streak?: number;
 }
 
-export function ProfileForm({ profile, churchId }: ProfileFormProps) {
+export function ProfileForm({
+  profile,
+  churchId,
+  streak = 0,
+}: ProfileFormProps) {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(profile.avatar_url);
   const [showAddress, setShowAddress] = useState(!!profile.address);
 
@@ -111,6 +116,7 @@ export function ProfileForm({ profile, churchId }: ProfileFormProps) {
               name={profile.name}
               churchId={churchId}
               memberId={profile.id}
+              streak={streak}
               onUpdate={setAvatarUrl}
             />
 

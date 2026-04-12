@@ -263,11 +263,28 @@ export function PostCard({
                   teamColor={author.team_color}
                 />
               )}
-              {/* Streak placeholder */}
-              <span className="inline-flex items-center gap-0.5 text-[10px] text-accent-600 dark:text-accent-400 font-medium">
-                <Flame className="w-3 h-3" />
-                <span>— dias</span>
-              </span>
+              {/* Streak */}
+              {(author?.streak ?? 0) >= 3 && (
+                <motion.span
+                  animate={{ y: [0, -1, 0] }}
+                  transition={{
+                    duration: 1.8,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                  className={cn(
+                    "inline-flex items-center gap-0.5 text-[10px] font-bold",
+                    (author?.streak ?? 0) >= 30
+                      ? "text-orange-600 dark:text-orange-400"
+                      : (author?.streak ?? 0) >= 7
+                        ? "text-orange-500 dark:text-orange-400"
+                        : "text-amber-600 dark:text-amber-400"
+                  )}
+                >
+                  <Flame className="w-3 h-3" />
+                  <span>{author?.streak}</span>
+                </motion.span>
+              )}
             </div>
             <p className="text-[11px] text-muted-foreground mt-0.5">
               {formatDistanceToNow(new Date(post.created_at), {

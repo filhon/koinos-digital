@@ -45,6 +45,7 @@ export interface PostAuthor {
   role: string;
   team_name: string | null;
   team_color: string | null;
+  streak: number;
 }
 
 export interface PostRow {
@@ -126,6 +127,7 @@ export const listPosts = withPermission(
       author_role: string | null;
       author_team_name: string | null;
       author_team_color: string | null;
+      author_streak: number | null;
       comment_count: number;
       reaction_orar: number;
       reaction_gratidao: number;
@@ -151,6 +153,7 @@ export const listPosts = withPermission(
             role: row.author_role ?? "membro",
             team_name: row.author_team_name ?? null,
             team_color: row.author_team_color ?? null,
+            streak: Number(row.author_streak ?? 0),
           }
         : null,
       comment_count: Number(row.comment_count ?? 0),
@@ -223,7 +226,7 @@ export const createPost = withPermission(
           ? (row.author[0] ?? null)
           : row.author;
         if (!a) return null;
-        return { ...a, team_name: null, team_color: null };
+        return { ...a, team_name: null, team_color: null, streak: 0 };
       })(),
       comment_count: 0,
       reaction_orar: 0,

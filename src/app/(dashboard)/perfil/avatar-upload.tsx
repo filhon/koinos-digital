@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Camera, Loader2 } from "lucide-react";
@@ -13,6 +14,7 @@ interface AvatarUploadProps {
   name: string;
   churchId: string;
   memberId: string;
+  streak?: number;
   onUpdate: (url: string) => void;
 }
 
@@ -57,6 +59,7 @@ export function AvatarUpload({
   name,
   churchId,
   memberId,
+  streak = 0,
   onUpdate,
 }: AvatarUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -159,6 +162,27 @@ export function AvatarUpload({
             {initials}
           </AvatarFallback>
         </Avatar>
+
+        {/* Streak flame badge */}
+        {streak >= 1 && (
+          <motion.div
+            className="absolute -top-1 -right-1 flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold bg-amber-400 text-white shadow-sm"
+            animate={{ y: [0, -1.5, 0] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+            title={`${streak} ${streak === 1 ? "dia" : "dias"} de streak`}
+          >
+            <svg
+              width="9"
+              height="9"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M12 2C12 2 7 7.5 7 12.5C7 15.54 9.24 18 12 18C14.76 18 17 15.54 17 12.5C17 10.5 16 9 15 8C15 8 14.5 10 13 10C13 10 14 8.5 12 2Z" />
+            </svg>
+            <span>{streak}</span>
+          </motion.div>
+        )}
 
         <button
           type="button"
