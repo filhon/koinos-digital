@@ -19,6 +19,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ScanLine,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { sidebarSpring } from "@/lib/motion";
@@ -86,6 +87,17 @@ const navigation: NavGroup[] = [
         href: "/configuracoes",
         icon: Cog,
         roles: ["admin", "pastor"],
+      },
+    ],
+  },
+  {
+    group: "SaaS",
+    items: [
+      {
+        label: "Painel Admin",
+        href: "/admin/dashboard",
+        icon: Shield,
+        roles: ["admin"],
       },
     ],
   },

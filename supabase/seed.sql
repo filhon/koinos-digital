@@ -6,6 +6,7 @@ ON CONFLICT (id) DO NOTHING;
 -- 2. Inserir usuários no Supabase Auth (senha: Senha123) e suas identidades
 INSERT INTO auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, is_super_admin)
 VALUES
+('11111111-0000-0000-0000-111111111111', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'admin@saas.com', crypt('Senha123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"],"role":"admin"}', '{}', now(), now(), false),
 ('22222222-2222-2222-2222-222222222222', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'pastor@teste.com', crypt('Senha123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"church_id":"11111111-1111-1111-1111-111111111111","role":"pastor"}', now(), now(), false),
 ('33333333-3333-3333-3333-333333333333', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'presbitero@teste.com', crypt('Senha123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"church_id":"11111111-1111-1111-1111-111111111111","role":"presbítero"}', now(), now(), false),
 ('44444444-4444-4444-4444-444444444444', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'diacono@teste.com', crypt('Senha123', gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"church_id":"11111111-1111-1111-1111-111111111111","role":"diácono"}', now(), now(), false),
@@ -18,6 +19,7 @@ ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO auth.identities (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
 VALUES
+(gen_random_uuid(), '11111111-0000-0000-0000-111111111111', '11111111-0000-0000-0000-111111111111', '{"sub":"11111111-0000-0000-0000-111111111111","email":"admin@saas.com"}', 'email', now(), now(), now()),
 (gen_random_uuid(), '22222222-2222-2222-2222-222222222222', '22222222-2222-2222-2222-222222222222', '{"sub":"22222222-2222-2222-2222-222222222222","email":"pastor@teste.com"}', 'email', now(), now(), now()),
 (gen_random_uuid(), '33333333-3333-3333-3333-333333333333', '33333333-3333-3333-3333-333333333333', '{"sub":"33333333-3333-3333-3333-333333333333","email":"presbitero@teste.com"}', 'email', now(), now(), now()),
 (gen_random_uuid(), '44444444-4444-4444-4444-444444444444', '44444444-4444-4444-4444-444444444444', '{"sub":"44444444-4444-4444-4444-444444444444","email":"diacono@teste.com"}', 'email', now(), now(), now()),
