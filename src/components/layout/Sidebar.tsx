@@ -18,6 +18,7 @@ import {
   Cog,
   ChevronLeft,
   ChevronRight,
+  ScanLine,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { sidebarSpring } from "@/lib/motion";
@@ -53,6 +54,7 @@ const navigation: NavGroup[] = [
       { label: "Ministérios", href: "/ministerios", icon: ListTodo },
       { label: "Escalas", href: "/escalas", icon: CalendarDays },
       { label: "Eventos", href: "/eventos", icon: CalendarDays },
+      { label: "Check-in", href: "/checkin", icon: ScanLine },
     ],
   },
   {

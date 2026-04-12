@@ -15,7 +15,9 @@ import {
   Music,
   Package,
   BookOpen,
+  ScanLine,
 } from "lucide-react";
+import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type {
@@ -47,6 +49,7 @@ const TABS = [
   { id: "musica", label: "Música", icon: Music },
   { id: "recursos", label: "Recursos", icon: Package },
   { id: "liturgia", label: "Liturgia", icon: BookOpen },
+  { id: "checkin", label: "Check-in", icon: ScanLine },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -256,6 +259,36 @@ export function EventDetails({
           label="Liturgia"
           description="A liturgia deste evento estará disponível em breve."
         />
+      )}
+
+      {activeTab === "checkin" && (
+        <div className="rounded-xl border border-border bg-card p-6 space-y-4 text-center">
+          <div className="flex size-14 items-center justify-center rounded-full bg-primary/10 mx-auto">
+            <ScanLine className="size-7 text-primary" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-foreground">
+              Check-in por QR Code
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground max-w-xs mx-auto">
+              Gere o QR Code para que os membros façam check-in presencialmente.
+            </p>
+          </div>
+          {isLeadership && (
+            <Link
+              href={`/eventos/${event.id}/checkin`}
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              <ScanLine className="size-4" />
+              Abrir tela de Check-in
+            </Link>
+          )}
+          {!isLeadership && (
+            <p className="text-xs text-muted-foreground">
+              Apenas lideranças podem gerar o QR Code.
+            </p>
+          )}
+        </div>
       )}
     </div>
   );
