@@ -34,6 +34,20 @@ const addressSchema = z.object({
     .optional(),
 });
 
+export const PRESET_TAGS = [
+  "Intercessor",
+  "Servidor",
+  "Líder de Louvor",
+  "Evangelista",
+  "Discipulador",
+  "Testemunha",
+] as const;
+
+export const tagsSchema = z
+  .array(z.string().min(1).max(50))
+  .max(3, "Máximo de 3 tags por membro")
+  .default([]);
+
 export const createMemberSchema = z.object({
   name: z
     .string()
@@ -53,6 +67,7 @@ export const createMemberSchema = z.object({
   baptized_at: z.string().optional(),
   home_church_id: z.string().uuid().optional(),
   address: addressSchema.optional(),
+  tags: tagsSchema.optional(),
 });
 
 export const updateMemberSchema = createMemberSchema
@@ -88,8 +103,14 @@ export const updateMemberRoleSchema = z.object({
   newRole: z.enum(MEMBER_ROLES),
 });
 
+export const updateMemberTagsSchema = z.object({
+  memberId: z.string().uuid("ID inválido"),
+  tags: tagsSchema,
+});
+
 export type CreateMemberInput = z.input<typeof createMemberSchema>;
 export type UpdateMemberInput = z.input<typeof updateMemberSchema>;
 export type AddFamilyLinkInput = z.input<typeof addFamilyLinkSchema>;
 export type ListMembersInput = z.input<typeof listMembersSchema>;
 export type UpdateMemberRoleInput = z.infer<typeof updateMemberRoleSchema>;
+export type UpdateMemberTagsInput = z.infer<typeof updateMemberTagsSchema>;

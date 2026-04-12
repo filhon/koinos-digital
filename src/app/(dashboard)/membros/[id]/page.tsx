@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { MemberProfile } from "./member-profile";
 import { FamilyLinksSection } from "./family-links-section";
 import { RoleSection } from "./role-section";
+import { TagsEditor } from "./tags-editor";
 import { Pencil } from "lucide-react";
 
 interface PageProps {
@@ -70,6 +71,9 @@ export default async function MembroPage({ params }: PageProps) {
             memberName={member.name}
             currentRole={member.role}
           />
+        )}
+        {isLeadership && (
+          <TagsEditor memberId={member.id} initialTags={member.tags ?? []} />
         )}
         <FamilyLinksSection member={member} isLeadership={isLeadership} />
       </div>

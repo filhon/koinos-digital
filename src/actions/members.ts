@@ -10,11 +10,13 @@ import {
   addFamilyLinkSchema,
   listMembersSchema,
   updateMemberRoleSchema,
+  updateMemberTagsSchema,
   type CreateMemberInput,
   type UpdateMemberInput,
   type AddFamilyLinkInput,
   type ListMembersInput,
   type UpdateMemberRoleInput,
+  type UpdateMemberTagsInput,
 } from "@/lib/validators/members";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { AuthUser } from "@/lib/auth/session";
@@ -39,6 +41,7 @@ export interface MemberRow {
   received_at: string | null;
   baptized_at: string | null;
   address: Record<string, string> | null;
+  tags: string[];
   created_at: string;
   updated_at: string;
 }
@@ -572,4 +575,57 @@ export const removeFamilyLink = withPermission(
     return { data: { removed: count ?? 0 }, error: null };
   },
   { module: "membros", minRole: "líder" }
+);
+
+/**
+ * Atualiza as tags de atribuição de um membro.
+ * Apenas liderança pode definir tags. Máximo de 3 tags por membro.
+ */
+export const updateMemberTags = withPermission(
+  async (
+    user: AuthUser,
+    input: UpdateMemberTagsInput
+  ): Promise<ActionResult<{ id: string; tags: string[] }>> => {
+    const parsed = updateMemberTagsSchema.safeParse(input);
+    if (!parsed.success) {
+      return { data: null, error: parsed.error.issues[0].message };
+    }
+
+    const { memberId, tags } = parsed.data;
+    const supabase = await createClient();
+
+    // Garante que o membro pertence ao mesmo tenant
+    const { data: existing, error: fetchError } = await supabase
+      .from("members")
+      .select("id")
+      .eq("id", memberId)
+      .eq("church_id", user.church_id)
+      .maybeSingle();
+
+    if (fetchError || !existing) {
+      return { data: null, error: "Membro não encontrado." };
+    }
+
+    const { error } = await supabase
+      .from("members")
+      .update({ tags })
+      .eq("id", memberId)
+      .eq("church_id", user.church_id);
+
+    if (error) {
+      return { data: null, error: `Erro ao atualizar tags: ${error.message}` };
+    }
+
+    await logAudit({
+      churchId: user.church_id,
+      userId: user.id,
+      action: "member_tags_updated",
+      entityType: "member",
+      entityId: memberId,
+      metadata: { tags },
+    });
+
+    return { data: { id: memberId, tags }, error: null };
+  },
+  { module: "membros", minRole: "presbítero" }
 );

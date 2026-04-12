@@ -8,6 +8,7 @@ import type { MemberRole } from "@/lib/auth/session";
 const ROUTE_GUARDS: Array<{
   test: (pathname: string) => boolean;
   roles: MemberRole[];
+  redirect?: string;
 }> = [
   {
     // Financeiro: tesoureiro, diácono, presbítero, pastor, admin
@@ -24,6 +25,12 @@ const ROUTE_GUARDS: Array<{
     test: (p) => p.startsWith("/dashboard/assembleia"),
     roles: ["admin", "pastor"],
   },
+  {
+    // Painel admin SaaS: exclusivo para admin global
+    test: (p) => p.startsWith("/admin"),
+    roles: ["admin"],
+    redirect: "/dashboard",
+  },
 ];
 
 // Rotas que exigem AAL2 (2FA verificado na sessão atual)
@@ -39,8 +46,8 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Rotas protegidas: /dashboard/*
-  if (pathname.startsWith("/dashboard")) {
+  // Rotas protegidas: /dashboard/* e /admin/*
+  if (pathname.startsWith("/dashboard") || pathname.startsWith("/admin")) {
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -72,7 +79,7 @@ export async function proxy(request: NextRequest) {
     for (const guard of ROUTE_GUARDS) {
       if (guard.test(pathname) && !guard.roles.includes(role)) {
         const forbiddenUrl = request.nextUrl.clone();
-        forbiddenUrl.pathname = "/403";
+        forbiddenUrl.pathname = guard.redirect ?? "/403";
         return NextResponse.redirect(forbiddenUrl);
       }
     }

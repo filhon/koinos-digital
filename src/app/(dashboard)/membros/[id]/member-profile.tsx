@@ -3,6 +3,7 @@ import { RoleBadge } from "../role-badge";
 import { formatDate } from "@/lib/utils/formatters";
 import { formatCPF, formatPhone } from "@/lib/utils/cpf";
 import type { MemberWithLinks } from "@/actions/members";
+import { TagChip } from "./tags-editor";
 
 function getInitials(name: string): string {
   return name
@@ -83,6 +84,9 @@ export function MemberProfile({ member, isLeadership }: MemberProfileProps) {
                   Inativo
                 </span>
               )}
+              {(member.tags ?? []).map((tag) => (
+                <TagChip key={tag} tag={tag} size="sm" />
+              ))}
             </div>
           </div>
         </div>

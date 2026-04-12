@@ -21,6 +21,7 @@ import { deletePost, reactToPost, pinPost, unpinPost } from "@/actions/posts";
 import type { PostRow } from "@/actions/posts";
 import { CommentsSection } from "./comments-section";
 import { TribeBadge } from "@/app/(dashboard)/gamificacao/tribe-badge";
+import { TagChip } from "@/app/(dashboard)/membros/[id]/tags-editor";
 import { cn } from "@/lib/utils";
 
 const ROLE_CONFIG: Record<string, { label: string; className: string }> = {
@@ -263,6 +264,10 @@ export function PostCard({
                   teamColor={author.team_color}
                 />
               )}
+              {/* Tags */}
+              {(author?.tags ?? []).map((tag) => (
+                <TagChip key={tag} tag={tag} size="sm" />
+              ))}
               {/* Streak */}
               {(author?.streak ?? 0) >= 3 && (
                 <motion.span
