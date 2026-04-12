@@ -3,16 +3,19 @@ import { Shield, Lock } from "lucide-react";
 import { requireAuth } from "@/lib/auth/session";
 import { getProfile } from "@/actions/profile";
 import { getMyStreak } from "@/actions/devotion";
+import { getMyBadges } from "@/actions/badges";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ProfileForm } from "./profile-form";
+import { BadgesSection } from "./badges-section";
 
 export const metadata = { title: "Meu Perfil — Koinos" };
 
 export default async function PerfilPage() {
   const user = await requireAuth();
-  const [result, streakResult] = await Promise.all([
+  const [result, streakResult, badgesResult] = await Promise.all([
     getProfile(),
     getMyStreak(),
+    getMyBadges(),
   ]);
   const streak =
     streakResult && "data" in streakResult && streakResult.data
@@ -28,6 +31,11 @@ export default async function PerfilPage() {
     );
   }
 
+  const badges =
+    badgesResult && "data" in badgesResult && badgesResult.data
+      ? badgesResult.data
+      : [];
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -39,6 +47,11 @@ export default async function PerfilPage() {
         churchId={user.church_id}
         streak={streak}
       />
+
+      {/* Conquistas */}
+      <div className="rounded-2xl border border-border bg-card p-4">
+        <BadgesSection initialBadges={badges} />
+      </div>
 
       {/* Links de conta */}
       <div className="flex flex-col gap-2 pt-2">
