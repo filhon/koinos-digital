@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -115,9 +115,19 @@ export function TransactionsPanel({
   );
 
   // Load on mount
-  if (!loaded) {
-    load(page);
-  }
+  useEffect(() => {
+    let active = true;
+    if (!loaded) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      load(page).then(() => {
+        if (!active) return;
+        // The state updates are handled in load()
+      });
+    }
+    return () => {
+      active = false;
+    };
+  }, [loaded, load, page]);
 
   function applyFilters() {
     setPage(1);
