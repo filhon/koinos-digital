@@ -29,6 +29,8 @@ import type { EventResourceRow } from "@/actions/resources";
 import { EventResourcesPanel } from "./event-resources-panel";
 import { EventMinistriesPanel } from "./event-ministries-panel";
 import { EventMusicPanel } from "./event-music-panel";
+import { LiturgyTab } from "./liturgy-tab";
+import type { LiturgyRow } from "@/lib/validators/liturgy";
 
 function getInitials(name: string): string {
   return name
@@ -57,17 +59,21 @@ type TabId = (typeof TABS)[number]["id"];
 interface EventDetailsProps {
   event: EventWithResponsible;
   isLeadership: boolean;
+  isResponsible: boolean;
   allocations?: EventResourceRow[];
   eventMinistries?: EventMinistryRow[];
   eventMusicGroups?: EventMusicGroupRow[];
+  liturgy?: LiturgyRow | null;
 }
 
 export function EventDetails({
   event,
   isLeadership,
+  isResponsible,
   allocations = [],
   eventMinistries = [],
   eventMusicGroups = [],
+  liturgy = null,
 }: EventDetailsProps) {
   const [activeTab, setActiveTab] = useState<TabId>("detalhes");
   const isOnline = event.modality === "online";
@@ -254,10 +260,10 @@ export function EventDetails({
       )}
 
       {activeTab === "liturgia" && (
-        <EmptyTab
-          icon={<BookOpen className="size-6 text-muted-foreground" />}
-          label="Liturgia"
-          description="A liturgia deste evento estará disponível em breve."
+        <LiturgyTab
+          initialLiturgy={liturgy}
+          eventId={event.id}
+          canEdit={isLeadership || isResponsible}
         />
       )}
 
@@ -290,30 +296,6 @@ export function EventDetails({
           )}
         </div>
       )}
-    </div>
-  );
-}
-
-function EmptyTab({
-  icon,
-  label,
-  description,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  description: string;
-}) {
-  return (
-    <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border bg-card/50 py-14 text-center">
-      <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-        {icon}
-      </div>
-      <div>
-        <p className="text-sm font-medium text-foreground">{label}</p>
-        <p className="mt-1 text-xs text-muted-foreground max-w-xs">
-          {description}
-        </p>
-      </div>
     </div>
   );
 }

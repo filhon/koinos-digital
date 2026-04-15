@@ -6,6 +6,7 @@ import {
   listEventMusicGroups,
 } from "@/actions/events";
 import { listEventResources } from "@/actions/resources";
+import { getLiturgyByEventId } from "@/actions/liturgy";
 import { getUser } from "@/lib/auth/session";
 import { isLeadershipRole } from "@/lib/auth/permissions";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -36,13 +37,19 @@ export default async function EventoPage({ params }: PageProps) {
 
   const event = eventResult.data;
   const isLeadership = user ? isLeadershipRole(user.role) : false;
+  const isResponsible = user ? event.responsible_id === user.id : false;
 
-  const [allocationsResult, ministriesResult, musicGroupsResult] =
-    await Promise.all([
-      listEventResources(id),
-      listEventMinistries(id),
-      listEventMusicGroups(id),
-    ]);
+  const [
+    allocationsResult,
+    ministriesResult,
+    musicGroupsResult,
+    liturgyResult,
+  ] = await Promise.all([
+    listEventResources(id),
+    listEventMinistries(id),
+    listEventMusicGroups(id),
+    getLiturgyByEventId(id),
+  ]);
 
   const allocations =
     allocationsResult && "data" in allocationsResult && allocationsResult.data
@@ -58,6 +65,11 @@ export default async function EventoPage({ params }: PageProps) {
     musicGroupsResult && "data" in musicGroupsResult && musicGroupsResult.data
       ? musicGroupsResult.data
       : [];
+
+  const liturgy =
+    liturgyResult && "data" in liturgyResult && liturgyResult.data
+      ? liturgyResult.data
+      : null;
 
   return (
     <div className="px-4 py-6 lg:px-8 lg:py-8 max-w-3xl mx-auto">
@@ -86,9 +98,11 @@ export default async function EventoPage({ params }: PageProps) {
       <EventDetails
         event={event}
         isLeadership={isLeadership}
+        isResponsible={isResponsible}
         allocations={allocations}
         eventMinistries={eventMinistries}
         eventMusicGroups={eventMusicGroups}
+        liturgy={liturgy}
       />
     </div>
   );
