@@ -1,5 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "*.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
+    ],
+  },
   async headers() {
     return [
       {
@@ -15,6 +24,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: *.supabase.co",
               "connect-src 'self' *.supabase.co *.upstash.io",
+              "frame-src www.youtube.com youtube.com www.google.com maps.google.com",
             ].join("; "),
           },
           {

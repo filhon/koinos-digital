@@ -20,6 +20,7 @@ import {
   ChevronRight,
   ScanLine,
   Shield,
+  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { sidebarSpring } from "@/lib/motion";
@@ -77,6 +78,12 @@ const navigation: NavGroup[] = [
       },
       { label: "Gamificação", href: "/gamificacao", icon: Trophy },
       { label: "Assembléia", href: "/assembleia", icon: Vote },
+      {
+        label: "Landing Page",
+        href: "/landing-page",
+        icon: Globe,
+        roles: ["admin", "pastor"],
+      },
       {
         label: "Configurações",
         href: "/configuracoes",
