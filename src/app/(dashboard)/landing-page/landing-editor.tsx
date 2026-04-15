@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useTransition, useRef } from "react";
+import Link from "next/link";
 import { Reorder, useDragControls } from "framer-motion";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
@@ -485,6 +486,43 @@ export default function LandingEditor({ initialData }: Props) {
                     : "Publicar"}
               </button>
             </div>
+
+            {/* Domain shortcut */}
+            <Link
+              href="/landing-page/dominio"
+              className="flex items-center justify-between rounded-xl px-4 py-3 border transition-colors group"
+              style={{
+                background: "var(--surface-1)",
+                borderColor: "var(--border)",
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-sm">🌐</span>
+                <div>
+                  <p className="text-sm font-medium">Domínio personalizado</p>
+                  <p className="text-xs text-muted-foreground">
+                    {(data as { custom_domain?: string | null }).custom_domain
+                      ? (data as { custom_domain: string }).custom_domain
+                      : "Configurar domínio próprio"}
+                  </p>
+                </div>
+              </div>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 14 14"
+                fill="none"
+                className="text-muted-foreground group-hover:text-foreground transition-colors"
+              >
+                <path
+                  d="M3 7h8M7 3l4 4-4 4"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </Link>
 
             {/* ── Seção: Imagens ── */}
             <fieldset className="space-y-6">

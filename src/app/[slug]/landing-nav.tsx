@@ -7,6 +7,8 @@ interface Props {
   churchName: string;
 }
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://app.koinos.digital";
+
 export default function LandingNav({ churchName }: Props) {
   const [scrolled, setScrolled] = useState(false);
   const { scrollY } = useScroll();
@@ -36,16 +38,28 @@ export default function LandingNav({ churchName }: Props) {
         >
           {churchName}
         </span>
-        <a
-          href="#cta"
-          className="px-5 py-2 rounded-full text-sm font-medium transition-all duration-200"
-          style={{
-            background: "oklch(0.78 0.13 55)",
-            color: "oklch(0.13 0.025 250)",
-          }}
-        >
-          Cadastre-se
-        </a>
+        <div className="flex items-center gap-3">
+          <a
+            href={`${APP_URL}/dashboard`}
+            className="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
+            style={{
+              color: "oklch(0.75 0.04 250)",
+              border: "1px solid oklch(0.35 0.02 250 / 0.6)",
+            }}
+          >
+            Acessar sistema
+          </a>
+          <a
+            href="#cta"
+            className="px-5 py-2 rounded-full text-sm font-medium transition-all duration-200"
+            style={{
+              background: "oklch(0.78 0.13 55)",
+              color: "oklch(0.13 0.025 250)",
+            }}
+          >
+            Cadastre-se
+          </a>
+        </div>
       </div>
     </motion.nav>
   );

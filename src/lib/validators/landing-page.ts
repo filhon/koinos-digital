@@ -50,6 +50,37 @@ export const updateLandingPageSchema = z.object({
   sections_order: z.array(z.enum(LANDING_SECTIONS)).optional(),
 });
 
+// ─── Domain settings ──────────────────────────────────────────────────────────
+
+export const updateDomainSettingsSchema = z.object({
+  custom_domain: z
+    .string()
+    .max(253)
+    .regex(
+      /^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/,
+      "Domínio inválido (ex: www.minhaigreia.com.br)"
+    )
+    .optional()
+    .nullable()
+    .or(z.literal("")),
+});
+
+export type UpdateDomainSettingsInput = z.infer<
+  typeof updateDomainSettingsSchema
+>;
+
+export interface DomainStatus {
+  custom_domain: string | null;
+  domain_verified: boolean;
+  subdomain: string; // {slug}.koinos.digital
+}
+
+export interface DnsCheckResult {
+  propagated: boolean;
+  records: string[];
+  error?: string;
+}
+
 export const registerVisitorFromLandingSchema = z.object({
   church_slug: z.string().min(1),
   name: z.string().min(2, "Nome muito curto").max(100),
@@ -91,6 +122,8 @@ export interface LandingPageData {
   address_embed_url: string | null;
   sections_order: LandingSection[];
   is_published: boolean;
+  custom_domain: string | null;
+  domain_verified: boolean;
 }
 
 export interface LandingLeader {

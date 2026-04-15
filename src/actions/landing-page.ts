@@ -8,12 +8,16 @@ import { logAudit } from "@/actions/audit";
 import { getRedis } from "@/lib/redis";
 import {
   updateLandingPageSchema,
+  updateDomainSettingsSchema,
   registerVisitorFromLandingSchema,
   LANDING_SECTIONS,
   type UpdateLandingPageInput,
+  type UpdateDomainSettingsInput,
   type RegisterVisitorFromLandingInput,
   type FullLandingData,
   type LandingPageData,
+  type DomainStatus,
+  type DnsCheckResult,
 } from "@/lib/validators/landing-page";
 
 type ActionResult<T> = { data: T; error: null } | { data: null; error: string };
@@ -78,7 +82,7 @@ export const getMyLandingPage = withPermission(
     const { data, error } = await supabase
       .from("tenants")
       .select(
-        "id, name, slug, hero_image_url, slogan, about_us, pastor_name, pastor_photo_url, pastor_bio, pastor_quote, streaming_url, address_text, address_embed_url, sections_order, is_published"
+        "id, name, slug, hero_image_url, slogan, about_us, pastor_name, pastor_photo_url, pastor_bio, pastor_quote, streaming_url, address_text, address_embed_url, sections_order, is_published, custom_domain, domain_verified"
       )
       .eq("id", user.church_id)
       .single();
@@ -319,6 +323,177 @@ export async function registerVisitorFromLanding(
 
   return { data: null, error: null };
 }
+
+// ─── Dashboard: get domain status ────────────────────────────────────────────
+
+export const getDomainStatus = withPermission(
+  async (user): Promise<ActionResult<DomainStatus>> => {
+    const admin = createAdminClient();
+    const { data, error } = await admin
+      .from("tenants")
+      .select("slug, custom_domain, domain_verified")
+      .eq("id", user.church_id)
+      .single();
+
+    if (error || !data)
+      return { data: null, error: "Não foi possível carregar o domínio." };
+
+    const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN ?? "koinos.digital";
+
+    return {
+      data: {
+        custom_domain: data.custom_domain ?? null,
+        domain_verified: data.domain_verified ?? false,
+        subdomain: `${data.slug}.${appDomain}`,
+      },
+      error: null,
+    };
+  },
+  { minRole: "pastor" }
+);
+
+// ─── Dashboard: save custom domain ───────────────────────────────────────────
+
+export const saveDomainSettings = withPermission(
+  async (
+    user,
+    input: UpdateDomainSettingsInput
+  ): Promise<ActionResult<null>> => {
+    const parsed = updateDomainSettingsSchema.safeParse(input);
+    if (!parsed.success) {
+      return {
+        data: null,
+        error: parsed.error.issues[0]?.message ?? "Domínio inválido.",
+      };
+    }
+
+    const newDomain =
+      parsed.data.custom_domain === ""
+        ? null
+        : (parsed.data.custom_domain ?? null);
+
+    const admin = createAdminClient();
+
+    // Verifica unicidade (outro tenant não pode ter o mesmo custom_domain)
+    if (newDomain) {
+      const { data: conflict } = await admin
+        .from("tenants")
+        .select("id")
+        .eq("custom_domain", newDomain)
+        .neq("id", user.church_id)
+        .maybeSingle();
+
+      if (conflict) {
+        return {
+          data: null,
+          error: "Este domínio já está sendo usado por outra igreja.",
+        };
+      }
+    }
+
+    const { error } = await admin
+      .from("tenants")
+      .update({
+        custom_domain: newDomain,
+        // Reset verificação ao trocar domínio
+        domain_verified: false,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", user.church_id);
+
+    if (error)
+      return { data: null, error: "Não foi possível salvar o domínio." };
+
+    await logAudit({
+      churchId: user.church_id,
+      userId: user.id,
+      action: "update_custom_domain",
+      entityType: "tenant",
+      entityId: user.church_id,
+      metadata: { custom_domain: newDomain },
+    });
+
+    return { data: null, error: null };
+  },
+  { minRole: "pastor" }
+);
+
+// ─── Dashboard: verify DNS propagation ───────────────────────────────────────
+
+export const verifyCustomDomain = withPermission(
+  async (user): Promise<ActionResult<DnsCheckResult>> => {
+    const admin = createAdminClient();
+    const { data: tenant } = await admin
+      .from("tenants")
+      .select("slug, custom_domain")
+      .eq("id", user.church_id)
+      .single();
+
+    if (!tenant?.custom_domain) {
+      return { data: null, error: "Nenhum domínio personalizado configurado." };
+    }
+
+    const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN ?? "koinos.digital";
+    const expectedCname = `${tenant.slug}.${appDomain}`;
+
+    try {
+      // Consulta CNAME via Google DNS-over-HTTPS (API pública, sem auth)
+      const url = `https://dns.google/resolve?name=${encodeURIComponent(tenant.custom_domain)}&type=CNAME`;
+      const res = await fetch(url, {
+        headers: { Accept: "application/dns-json" },
+        // Timeout via AbortSignal (Next.js 16 suporta)
+        signal: AbortSignal.timeout(8000),
+      });
+
+      if (!res.ok) throw new Error("DNS query failed");
+
+      const json = (await res.json()) as {
+        Answer?: Array<{ data: string; type: number }>;
+        Status: number;
+      };
+
+      const cnameRecords = (json.Answer ?? [])
+        .filter((r) => r.type === 5) // type 5 = CNAME
+        .map((r) => r.data.replace(/\.$/, "")); // remove trailing dot
+
+      const propagated = cnameRecords.some(
+        (r) => r === expectedCname || r.endsWith(`.${appDomain}`)
+      );
+
+      // Se propagado, marca como verificado no banco
+      if (propagated) {
+        await admin
+          .from("tenants")
+          .update({
+            domain_verified: true,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", user.church_id);
+
+        await logAudit({
+          churchId: user.church_id,
+          userId: user.id,
+          action: "domain_verified",
+          entityType: "tenant",
+          entityId: user.church_id,
+          metadata: { custom_domain: tenant.custom_domain },
+        });
+      }
+
+      return {
+        data: { propagated, records: cnameRecords },
+        error: null,
+      };
+    } catch (err) {
+      const message =
+        err instanceof Error && err.name === "TimeoutError"
+          ? "Tempo esgotado ao verificar DNS. Tente novamente."
+          : "Erro ao verificar propagação DNS.";
+      return { data: null, error: message };
+    }
+  },
+  { minRole: "pastor" }
+);
 
 // ─── Internal helper ──────────────────────────────────────────────────────────
 

@@ -3,6 +3,67 @@ import { updateSession } from "@/lib/supabase/middleware";
 import { createServerClient } from "@supabase/ssr";
 import type { MemberRole } from "@/lib/auth/session";
 
+// ─── Hostname → tenant slug resolver ─────────────────────────────────────────
+
+const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN ?? "koinos.digital";
+const APP_HOSTNAME = `app.${APP_DOMAIN}`;
+
+/**
+ * Retorna o slug do tenant se o hostname for:
+ *  - {slug}.koinos.digital  → extrai o slug do subdomínio
+ *  - domínio personalizado  → busca no banco pelo campo custom_domain
+ * Retorna null se o hostname for o app principal ou localhost.
+ */
+async function resolveTenantSlug(
+  hostname: string,
+  request: NextRequest
+): Promise<string | null> {
+  // Remove porta (ex: localhost:3000)
+  const host = hostname.split(":")[0];
+
+  // É o app principal ou ambiente local → não é landing page
+  if (
+    host === APP_HOSTNAME ||
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host.endsWith(".vercel.app")
+  ) {
+    return null;
+  }
+
+  // Subdomínio padrão: {slug}.koinos.digital
+  const subdomainRegex = new RegExp(
+    `^([a-z0-9-]+)\\.${APP_DOMAIN.replace(/\./g, "\\.")}$`
+  );
+  const subMatch = subdomainRegex.exec(host);
+  if (subMatch) {
+    return subMatch[1]; // slug extraído do subdomínio
+  }
+
+  // Domínio personalizado: busca no banco (anon key — tabela tem RLS pública para is_published)
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll() {},
+      },
+    }
+  );
+
+  const { data } = await supabase
+    .from("tenants")
+    .select("slug")
+    .eq("custom_domain", host)
+    .eq("is_published", true)
+    .maybeSingle();
+
+  return data?.slug ?? null;
+}
+
 // Rotas que exigem roles específicos além de estar autenticado.
 // A ordem importa: mais específico primeiro.
 const ROUTE_GUARDS: Array<{
@@ -41,10 +102,51 @@ const AAL2_ROUTES = [
 ];
 
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const hostname = request.headers.get("host") ?? request.nextUrl.hostname;
+
+  // ── Resolução de hostname para tenant ──────────────────────────────────────
+  // Só intercepta se NÃO for uma rota interna do Next.js ou do dashboard
+  if (
+    !pathname.startsWith("/_next") &&
+    !pathname.startsWith("/api") &&
+    !pathname.startsWith("/dashboard") &&
+    !pathname.startsWith("/admin") &&
+    !pathname.startsWith("/login") &&
+    !pathname.startsWith("/signup") &&
+    !pathname.startsWith("/convite") &&
+    !pathname.startsWith("/verificar-2fa") &&
+    !pathname.startsWith("/403") &&
+    !pathname.startsWith("/perfil") &&
+    !pathname.startsWith("/checkin") &&
+    !pathname.startsWith("/c/") &&
+    !pathname.startsWith("/agenda") &&
+    !pathname.startsWith("/membros") &&
+    !pathname.startsWith("/ministerios") &&
+    !pathname.startsWith("/escalas") &&
+    !pathname.startsWith("/eventos") &&
+    !pathname.startsWith("/liturgia") &&
+    !pathname.startsWith("/grupos-musicais") &&
+    !pathname.startsWith("/repertorio") &&
+    !pathname.startsWith("/recursos") &&
+    !pathname.startsWith("/financeiro") &&
+    !pathname.startsWith("/mural") &&
+    !pathname.startsWith("/gamificacao") &&
+    !pathname.startsWith("/assembleia") &&
+    !pathname.startsWith("/configuracoes") &&
+    !pathname.startsWith("/landing-page")
+  ) {
+    const slug = await resolveTenantSlug(hostname, request);
+    if (slug) {
+      // Reescreve a URL internamente para /[slug]{pathname}
+      const rewriteUrl = request.nextUrl.clone();
+      rewriteUrl.pathname = `/${slug}${pathname === "/" ? "" : pathname}`;
+      return NextResponse.rewrite(rewriteUrl);
+    }
+  }
+
   // Refresh automático do token (obrigatório — não remover)
   const response = await updateSession(request);
-
-  const { pathname } = request.nextUrl;
 
   // Rotas protegidas: /dashboard/* e /admin/*
   if (pathname.startsWith("/dashboard") || pathname.startsWith("/admin")) {
