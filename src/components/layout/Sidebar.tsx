@@ -76,12 +76,7 @@ const navigation: NavGroup[] = [
         roles: ["admin", "pastor", "presbítero", "diácono", "tesoureiro"],
       },
       { label: "Gamificação", href: "/gamificacao", icon: Trophy },
-      {
-        label: "Assembléia",
-        href: "/assembleia",
-        icon: Vote,
-        roles: ["admin", "pastor"],
-      },
+      { label: "Assembléia", href: "/assembleia", icon: Vote },
       {
         label: "Configurações",
         href: "/configuracoes",
