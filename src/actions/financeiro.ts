@@ -11,15 +11,21 @@ import {
   updateAccountSchema,
   createTransactionSchema,
   listTransactionsSchema,
+  financialReportSchema,
   reversalSchema,
   type CreateAccountInput,
   type UpdateAccountInput,
   type CreateTransactionInput,
   type ListTransactionsInput,
+  type FinancialReportInput,
   type ReversalInput,
   type AccountRow,
   type TransactionRow,
   type FinanceKPIs,
+  type FinancialReport,
+  type MonthlyDataPoint,
+  type CategoryDataPoint,
+  type TopContributor,
 } from "@/lib/validators/financeiro";
 
 type ActionResult<T> = { data: T; error: null } | { data: null; error: string };
@@ -637,6 +643,302 @@ export const getFinanceBreakdown = withPermission(
     );
 
     return { data: results, error: null };
+  },
+  { minRole: "diácono", module: "financeiro" }
+);
+
+// ─── Helpers para relatórios ──────────────────────────────────────────────────
+
+/** Mapeia "mes_atual" | "trimestre" | "ano" | "personalizado" → { dateFrom, dateTo } */
+function buildDateRange(input: FinancialReportInput): {
+  dateFrom: string;
+  dateTo: string;
+} {
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  switch (input.period) {
+    case "mes_atual": {
+      const y = now.getFullYear();
+      const m = now.getMonth(); // 0-indexed
+      const lastDay = new Date(y, m + 1, 0).getDate();
+      return {
+        dateFrom: `${y}-${pad(m + 1)}-01`,
+        dateTo: `${y}-${pad(m + 1)}-${pad(lastDay)}`,
+      };
+    }
+    case "trimestre": {
+      const start = new Date(now);
+      start.setMonth(now.getMonth() - 2);
+      start.setDate(1);
+      return {
+        dateFrom: `${start.getFullYear()}-${pad(start.getMonth() + 1)}-01`,
+        dateTo: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`,
+      };
+    }
+    case "ano": {
+      const y = now.getFullYear();
+      return { dateFrom: `${y}-01-01`, dateTo: `${y}-12-31` };
+    }
+    case "personalizado": {
+      return { dateFrom: input.date_from!, dateTo: input.date_to! };
+    }
+  }
+}
+
+/** Gera todos os meses entre duas datas (inclusive), retornando rótulos "Mmm/AA". */
+function generateMonthLabels(
+  dateFrom: string,
+  dateTo: string
+): { key: string; label: string }[] {
+  const months: { key: string; label: string }[] = [];
+  const PT_MONTHS = [
+    "Jan",
+    "Fev",
+    "Mar",
+    "Abr",
+    "Mai",
+    "Jun",
+    "Jul",
+    "Ago",
+    "Set",
+    "Out",
+    "Nov",
+    "Dez",
+  ];
+
+  const [fromY, fromM] = dateFrom.split("-").map(Number);
+  const [toY, toM] = dateTo.split("-").map(Number);
+
+  let y = fromY;
+  let m = fromM; // 1-indexed
+  while (y < toY || (y === toY && m <= toM)) {
+    const yy = String(y).slice(-2);
+    months.push({
+      key: `${y}-${String(m).padStart(2, "0")}`,
+      label: `${PT_MONTHS[m - 1]}/${yy}`,
+    });
+    m++;
+    if (m > 12) {
+      m = 1;
+      y++;
+    }
+  }
+  return months;
+}
+
+// ─── getFinancialReport ────────────────────────────────────────────────────────
+
+export const getFinancialReport = withPermission(
+  async (
+    user: AuthUser,
+    input: FinancialReportInput = { period: "ano" }
+  ): Promise<ActionResult<FinancialReport>> => {
+    const parsed = financialReportSchema.safeParse(input);
+    if (!parsed.success)
+      return { data: null, error: parsed.error.issues[0].message };
+
+    const { dateFrom, dateTo } = buildDateRange(parsed.data);
+    const churchIds = await getRelevantChurchIds(user.church_id);
+    const supabase = await createClient();
+
+    let query = supabase
+      .from("transactions")
+      .select("type, date, category, value, member_id, members(name)", {
+        count: "exact",
+      })
+      .in("church_id", churchIds)
+      .gte("date", dateFrom)
+      .lte("date", dateTo)
+      .order("date", { ascending: true });
+
+    if (parsed.data.account_id) {
+      query = query.eq("account_id", parsed.data.account_id);
+    }
+
+    const { data: txRaw, error } = await query;
+    if (error) return { data: null, error: error.message };
+
+    const transactions = (txRaw ?? []).map((t) => {
+      const mem = t.members as unknown as { name: string } | null;
+      return {
+        type: t.type as "entrada" | "saída",
+        date: t.date as string,
+        category: t.category as string,
+        value: Number(t.value),
+        member_id: t.member_id as string | null,
+        member_name: mem?.name ?? null,
+      };
+    });
+
+    // ── Monthly data ──────────────────────────────────────────────────────────
+    const monthLabels = generateMonthLabels(dateFrom, dateTo);
+    const monthMap = new Map<string, { income: number; expenses: number }>(
+      monthLabels.map(({ key }) => [key, { income: 0, expenses: 0 }])
+    );
+
+    for (const tx of transactions) {
+      const monthKey = tx.date.substring(0, 7); // "YYYY-MM"
+      const bucket = monthMap.get(monthKey);
+      if (!bucket) continue;
+      if (tx.type === "entrada") bucket.income += tx.value;
+      else bucket.expenses += tx.value;
+    }
+
+    const monthly_data: MonthlyDataPoint[] = monthLabels.map(
+      ({ key, label }) => ({
+        month: label,
+        income: monthMap.get(key)?.income ?? 0,
+        expenses: monthMap.get(key)?.expenses ?? 0,
+      })
+    );
+
+    // ── Category aggregation ──────────────────────────────────────────────────
+    const incomeCats = new Map<string, number>();
+    const expenseCats = new Map<string, number>();
+
+    for (const tx of transactions) {
+      const cat = tx.category;
+      if (tx.type === "entrada") {
+        incomeCats.set(cat, (incomeCats.get(cat) ?? 0) + tx.value);
+      } else {
+        expenseCats.set(cat, (expenseCats.get(cat) ?? 0) + tx.value);
+      }
+    }
+
+    const toSortedArray = (map: Map<string, number>): CategoryDataPoint[] =>
+      Array.from(map.entries())
+        .map(([category, value]) => ({ category, value }))
+        .sort((a, b) => b.value - a.value);
+
+    const income_by_category = toSortedArray(incomeCats);
+    const expenses_by_category = toSortedArray(expenseCats);
+
+    // ── Totals ────────────────────────────────────────────────────────────────
+    const totalIncome = transactions
+      .filter((t) => t.type === "entrada")
+      .reduce((s, t) => s + t.value, 0);
+    const totalExpenses = transactions
+      .filter((t) => t.type === "saída")
+      .reduce((s, t) => s + t.value, 0);
+
+    // ── Top contributors (apenas tesoureiro, pastor, admin) ───────────────────
+    const ROLE_HIERARCHY_MAP: Record<string, number> = {
+      admin: 8,
+      pastor: 7,
+      presbítero: 6,
+      diácono: 5,
+      tesoureiro: 4,
+    };
+    const canSeeContributors =
+      ROLE_HIERARCHY_MAP[user.role] !== undefined &&
+      (user.role === "admin" ||
+        user.role === "pastor" ||
+        user.role === "tesoureiro");
+
+    let top_contributors: TopContributor[] = [];
+    if (canSeeContributors) {
+      const contributorMap = new Map<
+        string,
+        { member_id: string; member_name: string; total: number }
+      >();
+      for (const tx of transactions) {
+        if (tx.type !== "entrada" || !tx.member_id) continue;
+        const existing = contributorMap.get(tx.member_id);
+        if (existing) {
+          existing.total += tx.value;
+        } else {
+          contributorMap.set(tx.member_id, {
+            member_id: tx.member_id,
+            member_name: tx.member_name ?? "Sem nome",
+            total: tx.value,
+          });
+        }
+      }
+      top_contributors = Array.from(contributorMap.values())
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 10);
+    }
+
+    return {
+      data: {
+        monthly_data,
+        income_by_category,
+        expenses_by_category,
+        top_contributors,
+        totals: {
+          income: totalIncome,
+          expenses: totalExpenses,
+          net: totalIncome - totalExpenses,
+        },
+        date_from: dateFrom,
+        date_to: dateTo,
+      },
+      error: null,
+    };
+  },
+  { minRole: "diácono", module: "financeiro" }
+);
+
+// ─── getTransactionsForExport ─────────────────────────────────────────────────
+// Retorna todas as transações do período sem paginação (para CSV).
+
+export const getTransactionsForExport = withPermission(
+  async (
+    user: AuthUser,
+    input: FinancialReportInput = { period: "ano" }
+  ): Promise<ActionResult<TransactionRow[]>> => {
+    const parsed = financialReportSchema.safeParse(input);
+    if (!parsed.success)
+      return { data: null, error: parsed.error.issues[0].message };
+
+    const { dateFrom, dateTo } = buildDateRange(parsed.data);
+    const churchIds = await getRelevantChurchIds(user.church_id);
+    const supabase = await createClient();
+
+    let query = supabase
+      .from("transactions")
+      .select(
+        `id, church_id, account_id, type, date, description, category,
+         value, member_id, receipt_url, notes, reversal_of, created_at,
+         accounts(name), members(name)`
+      )
+      .in("church_id", churchIds)
+      .gte("date", dateFrom)
+      .lte("date", dateTo)
+      .order("date", { ascending: false })
+      .limit(5000);
+
+    if (parsed.data.account_id) {
+      query = query.eq("account_id", parsed.data.account_id);
+    }
+
+    const { data, error } = await query;
+    if (error) return { data: null, error: error.message };
+
+    const rows: TransactionRow[] = (data ?? []).map((t) => {
+      const acc = t.accounts as unknown as { name: string } | null;
+      const mem = t.members as unknown as { name: string } | null;
+      return {
+        id: t.id,
+        church_id: t.church_id,
+        account_id: t.account_id,
+        account_name: acc?.name ?? "",
+        type: t.type as TransactionRow["type"],
+        date: t.date,
+        description: t.description,
+        category: t.category,
+        value: Number(t.value),
+        member_id: t.member_id ?? null,
+        member_name: mem?.name ?? null,
+        receipt_url: t.receipt_url ?? null,
+        notes: t.notes ?? null,
+        reversal_of: t.reversal_of ?? null,
+        created_at: t.created_at,
+      };
+    });
+
+    return { data: rows, error: null };
   },
   { minRole: "diácono", module: "financeiro" }
 );

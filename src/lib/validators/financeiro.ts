@@ -142,3 +142,67 @@ export interface FinanceKPIs {
   annual_expenses: number;
   net_annual: number;
 }
+
+// ─── Financial Report schemas ─────────────────────────────────────────────────
+
+export const REPORT_PERIODS = [
+  "mes_atual",
+  "trimestre",
+  "ano",
+  "personalizado",
+] as const;
+export type ReportPeriod = (typeof REPORT_PERIODS)[number];
+
+export const financialReportSchema = z
+  .object({
+    period: z.enum(REPORT_PERIODS).default("ano"),
+    account_id: z.string().uuid().optional(),
+    date_from: z.string().date().optional(),
+    date_to: z.string().date().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.period === "personalizado") {
+        return !!data.date_from && !!data.date_to;
+      }
+      return true;
+    },
+    { message: "Informe date_from e date_to para período personalizado" }
+  );
+
+export type FinancialReportInput = z.infer<typeof financialReportSchema>;
+
+export interface MonthlyDataPoint {
+  month: string; // e.g. "Jan/26"
+  income: number;
+  expenses: number;
+}
+
+export interface CategoryDataPoint {
+  category: string;
+  value: number;
+}
+
+export interface TopContributor {
+  member_id: string;
+  member_name: string;
+  total: number;
+}
+
+export interface FinancialReport {
+  monthly_data: MonthlyDataPoint[];
+  income_by_category: CategoryDataPoint[];
+  expenses_by_category: CategoryDataPoint[];
+  /** Apenas para tesoureiro, pastor e admin */
+  top_contributors: TopContributor[];
+  totals: {
+    income: number;
+    expenses: number;
+    net: number;
+  };
+  date_from: string;
+  date_to: string;
+}
+
+// Schema para export CSV (mesmos filtros de período)
+export const exportCsvSchema = financialReportSchema;

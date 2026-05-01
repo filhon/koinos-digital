@@ -22,6 +22,7 @@ import {
   Shield,
   Globe,
   Building2,
+  BarChart2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { sidebarSpring } from "@/lib/motion";
@@ -77,6 +78,12 @@ const navigation: NavGroup[] = [
         icon: Banknote,
         roles: ["admin", "pastor", "presbítero", "diácono", "tesoureiro"],
       },
+      {
+        label: "Relatórios",
+        href: "/financeiro/relatorios",
+        icon: BarChart2,
+        roles: ["admin", "pastor", "presbítero", "diácono", "tesoureiro"],
+      },
       { label: "Gamificação", href: "/gamificacao", icon: Trophy },
       { label: "Assembléia", href: "/assembleia", icon: Vote },
       {
@@ -121,12 +128,12 @@ export function Sidebar() {
     <motion.aside
       animate={{ width: collapsed ? 64 : 240 }}
       transition={sidebarSpring}
-      className="hidden sm:flex flex-col h-screen sticky top-0 border-r border-sidebar-border overflow-hidden flex-shrink-0"
+      className="hidden sm:flex flex-col h-screen sticky top-0 border-r border-sidebar-border overflow-hidden shrink-0"
       style={{ background: "var(--sidebar)" }}
       aria-label="Navegação principal"
     >
       {/* Logo */}
-      <div className="flex h-14 items-center border-b border-sidebar-border px-4 flex-shrink-0">
+      <div className="flex h-14 items-center border-b border-sidebar-border px-4 shrink-0">
         <AnimatePresence mode="popLayout" initial={false}>
           {!collapsed ? (
             <motion.span
@@ -242,7 +249,7 @@ export function Sidebar() {
       </nav>
 
       {/* Collapse toggle */}
-      <div className="border-t border-sidebar-border p-2 flex-shrink-0">
+      <div className="border-t border-sidebar-border p-2 shrink-0">
         <button
           onClick={() => setCollapsed((v) => !v)}
           aria-label={collapsed ? "Expandir sidebar" : "Colapsar sidebar"}

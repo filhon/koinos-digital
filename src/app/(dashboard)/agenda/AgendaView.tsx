@@ -161,7 +161,7 @@ export function AgendaView({
 
           <button
             onClick={navigateToday}
-            className="px-3 py-1.5 rounded-lg text-sm font-semibold capitalize text-foreground hover:bg-muted transition-colors min-w-[148px] text-center"
+            className="px-3 py-1.5 rounded-lg text-sm font-semibold capitalize text-foreground hover:bg-muted transition-colors min-w-37 text-center"
           >
             {periodLabel}
           </button>
@@ -381,7 +381,7 @@ export function AgendaView({
                       {/* Barra lateral colorida */}
                       <div
                         className={cn(
-                          "w-1 rounded-full flex-shrink-0 self-stretch",
+                          "w-1 rounded-full shrink-0 self-stretch",
                           event.modality === "presencial"
                             ? "bg-primary-500"
                             : "bg-accent-500"
@@ -392,7 +392,7 @@ export function AgendaView({
                           <span className="text-sm font-semibold text-foreground">
                             {event.name}
                           </span>
-                          <span className="text-xs text-muted-foreground flex-shrink-0">
+                          <span className="text-xs text-muted-foreground shrink-0">
                             {event.start_time.slice(0, 5)}
                             {event.end_time
                               ? ` – ${event.end_time.slice(0, 5)}`
