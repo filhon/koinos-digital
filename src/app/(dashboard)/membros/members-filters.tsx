@@ -2,7 +2,8 @@
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useCallback, useTransition } from "react";
-import { Search, X } from "lucide-react";
+import { Search, X, Building2 } from "lucide-react";
+import type { CongregationRow } from "@/lib/validators/congregacoes";
 
 const ROLE_OPTIONS = [
   { value: "all", label: "Todos os papéis" },
@@ -25,9 +26,17 @@ interface MembersFiltersProps {
   search?: string;
   role?: string;
   status?: string;
+  churchIdFilter?: string;
+  congregations?: CongregationRow[];
 }
 
-export function MembersFilters({ search, role, status }: MembersFiltersProps) {
+export function MembersFilters({
+  search,
+  role,
+  status,
+  churchIdFilter,
+  congregations = [],
+}: MembersFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -73,57 +82,100 @@ export function MembersFilters({ search, role, status }: MembersFiltersProps) {
   };
 
   const hasFilters =
-    search || (role && role !== "all") || (status && status !== "active");
+    search ||
+    (role && role !== "all") ||
+    (status && status !== "active") ||
+    churchIdFilter;
+
+  const hasMultipleUnits = congregations.length > 0;
 
   return (
-    <div className="flex flex-col sm:flex-row gap-2">
-      {/* Search */}
-      <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
-        <input
-          type="search"
-          placeholder="Buscar por nome..."
-          defaultValue={search ?? ""}
-          onChange={handleSearch}
-          className="w-full pl-9 pr-3 h-9 text-sm bg-background border border-input rounded-lg placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring transition-colors"
-        />
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
+        {/* Search */}
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
+          <input
+            type="search"
+            placeholder="Buscar por nome..."
+            defaultValue={search ?? ""}
+            onChange={handleSearch}
+            className="w-full pl-9 pr-3 h-9 text-sm bg-background border border-input rounded-lg placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring transition-colors"
+          />
+        </div>
+
+        {/* Role filter */}
+        <select
+          value={role ?? "all"}
+          onChange={(e) => updateParam("role", e.target.value)}
+          className="h-9 px-3 text-sm bg-background border border-input rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring transition-colors sm:w-44"
+        >
+          {ROLE_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+
+        {/* Status filter */}
+        <select
+          value={status ?? "active"}
+          onChange={(e) => updateParam("status", e.target.value)}
+          className="h-9 px-3 text-sm bg-background border border-input rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring transition-colors sm:w-32"
+        >
+          {STATUS_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+
+        {/* Clear all */}
+        {hasFilters && (
+          <button
+            onClick={clearAll}
+            className="h-9 px-3 text-xs text-muted-foreground hover:text-foreground border border-input rounded-lg hover:bg-muted transition-colors flex items-center gap-1.5 shrink-0"
+          >
+            <X className="size-3" />
+            Limpar
+          </button>
+        )}
       </div>
 
-      {/* Role filter */}
-      <select
-        value={role ?? "all"}
-        onChange={(e) => updateParam("role", e.target.value)}
-        className="h-9 px-3 text-sm bg-background border border-input rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring transition-colors sm:w-44"
-      >
-        {ROLE_OPTIONS.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-
-      {/* Status filter */}
-      <select
-        value={status ?? "active"}
-        onChange={(e) => updateParam("status", e.target.value)}
-        className="h-9 px-3 text-sm bg-background border border-input rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring transition-colors sm:w-32"
-      >
-        {STATUS_OPTIONS.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-
-      {/* Clear all */}
-      {hasFilters && (
-        <button
-          onClick={clearAll}
-          className="h-9 px-3 text-xs text-muted-foreground hover:text-foreground border border-input rounded-lg hover:bg-muted transition-colors flex items-center gap-1.5 shrink-0"
-        >
-          <X className="size-3" />
-          Limpar
-        </button>
+      {/* Unidade filter — only visible for matrix with congregations */}
+      {hasMultipleUnits && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
+            <Building2 className="size-3.5" />
+            Unidade:
+          </div>
+          <div className="flex gap-1.5 flex-wrap">
+            {/* "Minha unidade" = own church (no filter) */}
+            <button
+              onClick={() => updateParam("unit", undefined)}
+              className={`h-7 px-3 rounded-full text-xs font-medium transition-all border ${
+                !churchIdFilter
+                  ? "bg-primary-500 text-white border-primary-500"
+                  : "border-border text-muted-foreground hover:border-primary-300 hover:text-foreground"
+              }`}
+            >
+              Minha unidade
+            </button>
+            {congregations.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => updateParam("unit", c.id)}
+                className={`h-7 px-3 rounded-full text-xs font-medium transition-all border ${
+                  churchIdFilter === c.id
+                    ? "bg-primary-500 text-white border-primary-500"
+                    : "border-border text-muted-foreground hover:border-primary-300 hover:text-foreground"
+                }`}
+              >
+                {c.name}
+              </button>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

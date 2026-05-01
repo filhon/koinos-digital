@@ -103,13 +103,51 @@ export const listMembers = withPermission(
       return { data: null, error: parsed.error.issues[0].message };
     }
 
-    const { search, role, status, page, pageSize } = parsed.data;
+    const { search, role, status, page, pageSize, church_id_filter } =
+      parsed.data;
+
+    // Cross-congregation: validate that the target church is a child of the user's church
+    let effectiveChurchId = user.church_id;
+    if (church_id_filter && church_id_filter !== user.church_id) {
+      const leadershipRoles = [
+        "admin",
+        "pastor",
+        "presbítero",
+        "diácono",
+        "líder",
+      ];
+      if (!leadershipRoles.includes(user.role)) {
+        return {
+          data: null,
+          error: "Sem permissão para ver esta congregação.",
+        };
+      }
+      if (user.parent_tenant_id !== null) {
+        return {
+          data: null,
+          error: "Esta funcionalidade é exclusiva da Igreja Matriz.",
+        };
+      }
+      const adminClient = createAdminClient();
+      const { data: childTenant } = await adminClient
+        .from("tenants")
+        .select("id")
+        .eq("id", church_id_filter)
+        .eq("parent_tenant_id", user.church_id)
+        .eq("is_active", true)
+        .maybeSingle();
+      if (!childTenant) {
+        return { data: null, error: "Congregação não encontrada." };
+      }
+      effectiveChurchId = church_id_filter;
+    }
+
     const supabase = await createClient();
 
     let query = supabase
       .from("members")
       .select("*", { count: "exact" })
-      .eq("church_id", user.church_id)
+      .eq("church_id", effectiveChurchId)
       .order("name");
 
     if (status === "active") query = query.eq("is_active", true);
@@ -141,7 +179,7 @@ export const listMembers = withPermission(
       const { data: linksData } = await supabase
         .from("family_links")
         .select("member_id, related_member_id")
-        .eq("church_id", user.church_id)
+        .eq("church_id", effectiveChurchId)
         .in("member_id", memberIds);
       links = linksData ?? [];
     }

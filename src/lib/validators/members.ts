@@ -96,6 +96,8 @@ export const listMembersSchema = z.object({
   status: z.enum(["active", "inactive", "all"]).optional().default("active"),
   page: z.number().int().positive().optional().default(1),
   pageSize: z.number().int().min(1).max(100).optional().default(20),
+  /** Filtra por uma unidade/congregação específica (apenas para liderança de matriz). */
+  church_id_filter: z.string().uuid().optional(),
 });
 
 export const updateMemberRoleSchema = z.object({

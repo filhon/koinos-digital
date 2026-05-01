@@ -38,12 +38,15 @@ interface AgendaViewProps {
   initialEvents: EventWithResponsible[];
   initialDate: Date;
   isLeadership: boolean;
+  /** true quando a church é matriz e tem congregações ativas */
+  hasMultipleUnits?: boolean;
 }
 
 export function AgendaView({
   initialEvents,
   initialDate,
   isLeadership,
+  hasMultipleUnits = false,
 }: AgendaViewProps) {
   const [view, setView] = useState<ViewMode>("mensal");
   const [currentDate, setCurrentDate] = useState<Date>(initialDate);
@@ -82,24 +85,27 @@ export function AgendaView({
   );
 
   const fetchEvents = useCallback(
-    (date: Date, viewMode: ViewMode) => {
+    (date: Date, viewMode: ViewMode, filter: UnitFilter) => {
       const range = getVisibleRange(date, viewMode);
       startTransition(async () => {
-        const result = await listEventsInRange(range);
+        const result = await listEventsInRange({
+          ...range,
+          all_units: filter === "todos" && hasMultipleUnits,
+        });
         if (result && !("code" in result) && result.data) {
           setEvents(result.data);
         }
       });
     },
-    [getVisibleRange]
+    [getVisibleRange, hasMultipleUnits]
   );
 
-  // Re-fetch quando muda a data ou a view (skip na montagem — initialEvents já foi buscado pelo server)
+  // Re-fetch quando muda a data, view ou filtro de unidade
   useEffect(() => {
     if (!mounted) return;
-    fetchEvents(currentDate, view);
+    fetchEvents(currentDate, view, unitFilter);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentDate, view]);
+  }, [currentDate, view, unitFilter]);
 
   const navigatePrev = () => {
     setSelectedDay(null);
@@ -176,27 +182,29 @@ export function AgendaView({
 
         {/* Filtros e toggle de visualização */}
         <div className="flex items-center gap-2">
-          {/* Filtro de unidade (para igrejas com congregações) */}
-          <div
-            className="hidden sm:flex rounded-lg overflow-hidden border border-border text-xs"
-            role="group"
-            aria-label="Filtrar por unidade"
-          >
-            {(["todos", "minha-unidade"] as UnitFilter[]).map((f) => (
-              <button
-                key={f}
-                onClick={() => setUnitFilter(f)}
-                className={cn(
-                  "px-3 py-1.5 transition-colors",
-                  unitFilter === f
-                    ? "bg-primary-500 text-white font-medium"
-                    : "bg-card text-muted-foreground hover:bg-muted"
-                )}
-              >
-                {f === "todos" ? "Todos" : "Minha unidade"}
-              </button>
-            ))}
-          </div>
+          {/* Filtro de unidade — visível apenas para matrizes com congregações */}
+          {hasMultipleUnits && (
+            <div
+              className="hidden sm:flex rounded-lg overflow-hidden border border-border text-xs"
+              role="group"
+              aria-label="Filtrar por unidade"
+            >
+              {(["minha-unidade", "todos"] as UnitFilter[]).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setUnitFilter(f)}
+                  className={cn(
+                    "px-3 py-1.5 transition-colors",
+                    unitFilter === f
+                      ? "bg-primary-500 text-white font-medium"
+                      : "bg-card text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  {f === "todos" ? "Todas as unidades" : "Minha unidade"}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Toggle de visualização */}
           <div

@@ -251,12 +251,13 @@ export async function createChurch(
 
   await admin.from("consent_records").insert(consentInserts);
 
-  // 8. Set JWT custom claims via admin
+  // 8. Set JWT custom claims via admin (igreja matriz: parent_tenant_id = null)
   try {
     await admin.auth.admin.updateUserById(userId, {
       app_metadata: {
         church_id: churchId,
         role: "pastor",
+        parent_tenant_id: null,
       },
     });
   } catch (err) {
@@ -317,7 +318,7 @@ export async function registerMember(
   // 1. Validate invite code
   const { data: invite, error: inviteError } = await admin
     .from("invite_links")
-    .select("id, church_id, member_id, active")
+    .select("id, church_id, member_id, active, invite_type")
     .eq("code", inviteCode)
     .maybeSingle();
 
@@ -466,13 +467,37 @@ export async function registerMember(
   );
   await admin.from("consent_records").insert(consentInserts);
 
-  // 5. JWT custom claims
+  // 5. JWT custom claims (inclui parent_tenant_id se for congregação)
+  const { data: tenantRow } = await admin
+    .from("tenants")
+    .select("parent_tenant_id")
+    .eq("id", churchId)
+    .maybeSingle();
+
+  const parentTenantId = tenantRow?.parent_tenant_id ?? null;
+
+  // Se for convite de pastor de congregação, atribui role pastor automaticamente
+  const isSpecialInvite = invite.invite_type === "congregation_pastor";
+  const finalRole = isSpecialInvite ? "pastor" : role;
+
   try {
     await admin.auth.admin.updateUserById(userId, {
-      app_metadata: { church_id: churchId, role },
+      app_metadata: {
+        church_id: churchId,
+        role: finalRole,
+        parent_tenant_id: parentTenantId,
+      },
     });
   } catch (err) {
     console.error("[onboarding] Erro ao definir JWT claims:", err);
+  }
+
+  // Se for pastor da congregação, atualizar role no banco também
+  if (isSpecialInvite) {
+    await admin
+      .from("members")
+      .update({ role: "pastor", updated_at: new Date().toISOString() })
+      .eq("id", memberId);
   }
 
   await supabase.auth.refreshSession();

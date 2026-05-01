@@ -1,11 +1,16 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getUser } from "@/lib/auth/session";
-import { getFinanceKPIs, listAccounts } from "@/actions/financeiro";
+import {
+  getFinanceKPIs,
+  listAccounts,
+  getFinanceBreakdown,
+} from "@/actions/financeiro";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { FinanceKPICards } from "./finance-kpi-cards";
 import { TransactionsPanel } from "./transactions-panel";
 import { FinanceSkeleton } from "./finance-skeleton";
+import { FinanceBreakdown } from "./finance-breakdown";
 import type { ListTransactionsInput } from "@/lib/validators/financeiro";
 
 interface FinanceiroPageProps {
@@ -40,9 +45,13 @@ export default async function FinanceiroPage({
     limit: 20,
   };
 
-  const [kpisResult, accountsResult] = await Promise.all([
+  // Busca dados em paralelo; breakdown apenas para matriz
+  const isMatrix = user.parent_tenant_id === null;
+
+  const [kpisResult, accountsResult, breakdownResult] = await Promise.all([
     getFinanceKPIs(),
     listAccounts(),
+    isMatrix ? getFinanceBreakdown() : Promise.resolve(null),
   ]);
 
   const kpis =
@@ -60,6 +69,14 @@ export default async function FinanceiroPage({
       ? accountsResult.data
       : [];
 
+  const breakdownUnits =
+    breakdownResult &&
+    "data" in breakdownResult &&
+    breakdownResult.data &&
+    breakdownResult.data.length > 1
+      ? breakdownResult.data
+      : [];
+
   return (
     <div className="space-y-6 pb-20 md:pb-6">
       <PageHeader
@@ -70,6 +87,9 @@ export default async function FinanceiroPage({
 
       {/* KPI Cards */}
       <FinanceKPICards kpis={kpis} />
+
+      {/* Breakdown por unidade (apenas matriz com shared_finances) */}
+      {breakdownUnits.length > 0 && <FinanceBreakdown units={breakdownUnits} />}
 
       {/* Transações */}
       <Suspense fallback={<FinanceSkeleton />}>

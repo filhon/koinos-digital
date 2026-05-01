@@ -21,6 +21,7 @@ import {
   ScanLine,
   Shield,
   Globe,
+  Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { sidebarSpring } from "@/lib/motion";
@@ -88,6 +89,12 @@ const navigation: NavGroup[] = [
         label: "Configurações",
         href: "/configuracoes",
         icon: Cog,
+        roles: ["admin", "pastor"],
+      },
+      {
+        label: "Congregações",
+        href: "/configuracoes/congregacoes",
+        icon: Building2,
         roles: ["admin", "pastor"],
       },
     ],

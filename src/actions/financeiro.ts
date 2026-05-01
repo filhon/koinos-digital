@@ -552,3 +552,91 @@ export const uploadReceipt = withPermission(
   },
   { minRole: "tesoureiro", module: "financeiro" }
 );
+
+// ─── getFinanceBreakdown ──────────────────────────────────────────────────────
+// Retorna KPIs por unidade (matriz + congregações com shared_finances = true).
+// Disponível apenas para liderança da Igreja Matriz.
+
+export interface UnitFinanceKPIs {
+  church_id: string;
+  church_name: string;
+  total_balance: number;
+  annual_income: number;
+  annual_expenses: number;
+}
+
+export const getFinanceBreakdown = withPermission(
+  async (user: AuthUser): Promise<ActionResult<UnitFinanceKPIs[]>> => {
+    // Apenas para matriz (sem parent_tenant_id)
+    if (user.parent_tenant_id !== null) {
+      return { data: [], error: null };
+    }
+
+    const admin = createAdminClient();
+    const currentYear = new Date().getFullYear();
+    const yearStart = `${currentYear}-01-01`;
+    const yearEnd = `${currentYear}-12-31`;
+
+    // Congregações com shared_finances = true
+    const { data: children } = await admin
+      .from("tenants")
+      .select("id, name")
+      .eq("parent_tenant_id", user.church_id)
+      .eq("is_active", true)
+      .eq("shared_finances", true);
+
+    if (!children || children.length === 0) return { data: [], error: null };
+
+    // Incluir a própria matriz + filhos com shared_finances
+    const { data: matrixRow } = await admin
+      .from("tenants")
+      .select("name")
+      .eq("id", user.church_id)
+      .maybeSingle();
+
+    const allUnits = [
+      { id: user.church_id, church_name: matrixRow?.name ?? "Matriz" },
+      ...children.map((c) => ({ id: c.id, church_name: c.name })),
+    ];
+
+    const results: UnitFinanceKPIs[] = await Promise.all(
+      allUnits.map(async (unit) => {
+        const [balRes, txRes] = await Promise.all([
+          admin
+            .from("accounts")
+            .select("current_balance")
+            .eq("church_id", unit.id)
+            .eq("is_active", true),
+          admin
+            .from("transactions")
+            .select("type, value")
+            .eq("church_id", unit.id)
+            .gte("date", yearStart)
+            .lte("date", yearEnd),
+        ]);
+
+        const total_balance = (balRes.data ?? []).reduce(
+          (s, a) => s + Number(a.current_balance),
+          0
+        );
+        const annual_income = (txRes.data ?? [])
+          .filter((t) => t.type === "entrada")
+          .reduce((s, t) => s + Number(t.value), 0);
+        const annual_expenses = (txRes.data ?? [])
+          .filter((t) => t.type === "saída")
+          .reduce((s, t) => s + Number(t.value), 0);
+
+        return {
+          church_id: unit.id,
+          church_name: unit.church_name,
+          total_balance,
+          annual_income,
+          annual_expenses,
+        };
+      })
+    );
+
+    return { data: results, error: null };
+  },
+  { minRole: "diácono", module: "financeiro" }
+);

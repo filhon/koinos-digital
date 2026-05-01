@@ -16,6 +16,8 @@ export interface AuthUser {
   email: string | undefined;
   church_id: string;
   role: MemberRole;
+  /** null se for igreja matriz, UUID da matriz se for congregação. */
+  parent_tenant_id: string | null;
 }
 
 /** Retorna a sessão atual ou null se não autenticado. */
@@ -43,6 +45,7 @@ export async function getUser(): Promise<AuthUser | null> {
     email: user.email,
     church_id: (jwt.church_id as string) ?? "",
     role: (jwt.role as MemberRole) ?? "visitante",
+    parent_tenant_id: (jwt.parent_tenant_id as string | null) ?? null,
   };
 }
 

@@ -16,7 +16,8 @@ export type AppModule =
   | "mural"
   | "assembleia"
   | "eleicao"
-  | "gamificacao";
+  | "gamificacao"
+  | "configuracoes";
 
 // Roles de liderança conforme PRD seção 8.1
 const LEADERSHIP: MemberRole[] = [
@@ -142,6 +143,12 @@ export const PERMISSIONS_MATRIX: PermissionMatrix = {
     read: ALL_ROLES,
     update: ["admin"],
     delete: ["admin"],
+  },
+  configuracoes: {
+    create: ["admin", "pastor"],
+    read: ["admin", "pastor"],
+    update: ["admin", "pastor"],
+    delete: ["admin", "pastor"],
   },
 };
 

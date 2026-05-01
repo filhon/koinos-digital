@@ -4,12 +4,15 @@ import { getUser } from "@/lib/auth/session";
 import { MembersFilters } from "./members-filters";
 import { FamilyCard } from "./family-card";
 import { MemberCard } from "./member-card";
+import type { CongregationRow } from "@/lib/validators/congregacoes";
 
 interface MembersListProps {
   search?: string;
   role?: string;
   status?: string;
   page: number;
+  churchIdFilter?: string;
+  congregations?: CongregationRow[];
 }
 
 export async function MembersList({
@@ -17,6 +20,8 @@ export async function MembersList({
   role,
   status,
   page,
+  churchIdFilter,
+  congregations = [],
 }: MembersListProps) {
   const [result, user] = await Promise.all([
     listMembers({
@@ -25,6 +30,7 @@ export async function MembersList({
       status: (status as "active") ?? "active",
       page,
       pageSize: 20,
+      church_id_filter: churchIdFilter,
     }),
     getUser(),
   ]);
@@ -41,16 +47,33 @@ export async function MembersList({
   const data =
     !result || !("data" in result) || !result.data ? null : result.data;
 
+  // Label da unidade sendo visualizada
+  const selectedUnit = congregations.find((c) => c.id === churchIdFilter);
+  const unitLabel = selectedUnit ? selectedUnit.name : null;
+
   return (
     <div className="space-y-4">
-      <MembersFilters search={search} role={role} status={status} />
+      <MembersFilters
+        search={search}
+        role={role}
+        status={status}
+        churchIdFilter={churchIdFilter}
+        congregations={congregations}
+      />
 
       {data && (
-        <p className="text-xs text-muted-foreground">
-          {data.total} membro{data.total !== 1 ? "s" : ""}
-          {data.families.length > 0 &&
-            ` · ${data.families.length} famíl${data.families.length !== 1 ? "ias" : "ia"}`}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-xs text-muted-foreground">
+            {data.total} membro{data.total !== 1 ? "s" : ""}
+            {data.families.length > 0 &&
+              ` · ${data.families.length} famíl${data.families.length !== 1 ? "ias" : "ia"}`}
+          </p>
+          {unitLabel && (
+            <span className="text-xs px-2 py-0.5 rounded-full bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 font-medium">
+              {unitLabel}
+            </span>
+          )}
+        </div>
       )}
 
       {"error" in (result ?? {}) && !!(result as { error: string }).error && (
@@ -84,7 +107,7 @@ export async function MembersList({
               ? "Tente outro termo de busca ou limpe os filtros."
               : "Comece adicionando o primeiro membro."}
           </p>
-          {!search && (
+          {!search && !churchIdFilter && (
             <Link
               href="/membros/novo"
               className="mt-4 text-xs text-primary font-medium hover:underline"
@@ -135,6 +158,7 @@ export async function MembersList({
                       ...(search ? { q: search } : {}),
                       ...(role ? { role } : {}),
                       ...(status ? { status } : {}),
+                      ...(churchIdFilter ? { unit: churchIdFilter } : {}),
                       page: String(data.page - 1),
                     })}`}
                     className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg border border-border hover:bg-muted transition-colors"
@@ -148,6 +172,7 @@ export async function MembersList({
                       ...(search ? { q: search } : {}),
                       ...(role ? { role } : {}),
                       ...(status ? { status } : {}),
+                      ...(churchIdFilter ? { unit: churchIdFilter } : {}),
                       page: String(data.page + 1),
                     })}`}
                     className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg border border-border hover:bg-muted transition-colors"

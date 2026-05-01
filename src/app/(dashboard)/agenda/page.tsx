@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { getUser } from "@/lib/auth/session";
 import { isLeadershipRole } from "@/lib/auth/permissions";
 import { listEventsInRange } from "@/actions/agenda";
+import { listCongregations } from "@/actions/congregacoes";
 import { AgendaView } from "./AgendaView";
 import type { EventWithResponsible } from "@/actions/events";
 
@@ -33,6 +34,20 @@ export default async function AgendaPage() {
   const initialEvents: EventWithResponsible[] =
     result && !("code" in result) && result.data ? result.data : [];
 
+  // Verifica se é pastor da matriz com congregações
+  let hasMultipleUnits = false;
+  if (user && user.parent_tenant_id === null && isLeadership) {
+    const congResult = await listCongregations();
+    if (
+      congResult &&
+      !("code" in congResult) &&
+      congResult.data &&
+      congResult.data.filter((c) => c.is_active).length > 0
+    ) {
+      hasMultipleUnits = true;
+    }
+  }
+
   return (
     <div className="px-4 py-6 lg:px-8 lg:py-8 max-w-5xl mx-auto">
       <PageHeader
@@ -49,6 +64,7 @@ export default async function AgendaPage() {
           initialEvents={initialEvents}
           initialDate={today}
           isLeadership={isLeadership}
+          hasMultipleUnits={hasMultipleUnits}
         />
       </div>
     </div>
