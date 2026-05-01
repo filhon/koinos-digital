@@ -73,7 +73,7 @@ O diferencial competitivo está na experiência do usuário. Cada tela, cada com
 | QR Code        | qrcode.react + qr-scanner | 4.2 / latest | SVG dinâmico para display, Web Worker para scan. Padrão de mercado.                                                            |
 | Deploy         | Vercel                    | —            | Edge-first, integração nativa com Next.js 16, preview deploys, analytics.                                                      |
 | Email          | Resend                    | —            | API moderna, React Email templates, DKIM/DMARC, preço por volume.                                                              |
-| Pagamento      | AbacatePay                | —            | PIX nativo, CNPJ brasileiro, webhook verificado, sem intermediários internacionais.                                            |
+| Pagamento      | Stripe                    | —            | Checkout hosted, Billing Portal, Webhooks com verificação nativa, suporte a BRL, cartão + boleto + PIX via Stripe.             |
 
 **Dependências complementares:**
 
@@ -237,7 +237,7 @@ Multa de até 2% do faturamento no Brasil, limitada a R$ 50 milhões por infraç
 | SQL Injection    | Supabase client usa prepared statements. Validação Zod em todas as entradas.                                    |
 | Rate Limiting    | Upstash Redis: rate limit por IP e por usuário em endpoints sensíveis.                                          |
 | Bots             | Cloudflare Turnstile (alternativa ao reCAPTCHA) no cadastro e login. Invisível para UX.                         |
-| Webhook          | Verificação de assinatura HMAC em webhooks do AbacatePay.                                                       |
+| Webhook          | Verificação de assinatura via `stripe.webhooks.constructEvent()` com signing secret.                            |
 | Auditoria        | Tabela `audit_logs` com todas as operações sensíveis (quem, quando, o quê, IP). Retenção: 5 anos.               |
 | Secrets          | Variáveis de ambiente via Vercel (encrypted at rest). Rotação programada de API keys.                           |
 | Headers          | `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`. |

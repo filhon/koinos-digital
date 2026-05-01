@@ -25,6 +25,7 @@ import {
   Check,
   Loader2,
   ChevronDown,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -33,6 +34,8 @@ import {
   addLiturgyItem,
   removeLiturgyItem,
 } from "@/actions/liturgy";
+import { getAIRecommendations } from "@/actions/ai";
+import { PremiumGate } from "@/components/ui/premium-gate";
 import {
   LITURGY_ITEM_TYPES,
   LITURGY_ITEM_TYPE_LABELS,
@@ -40,6 +43,7 @@ import {
   type LiturgyItemRow,
   type LiturgyItemType,
 } from "@/lib/validators/liturgy";
+import { type AIRecommendationResult } from "@/lib/validators/ai";
 import {
   Dialog,
   DialogContent,
@@ -385,6 +389,182 @@ function AddItemDialog({
   );
 }
 
+// ─── AISuggestionsDialog ──────────────────────────────────────────────────────
+
+interface AISuggestionsDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  liturgyId: string;
+  onAdded: (item: LiturgyItemRow) => void; // Could add multiple items, but we'll just re-use AddItem logic or refresh
+}
+
+function AISuggestionsDialog({
+  open,
+  onOpenChange,
+  liturgyId,
+  onAdded,
+}: AISuggestionsDialogProps) {
+  const [objective, setObjective] = useState("");
+  const [isGenerating, startGenerating] = useTransition();
+  const [suggestions, setSuggestions] = useState<AIRecommendationResult | null>(
+    null
+  );
+
+  async function handleGenerate(e: React.FormEvent) {
+    e.preventDefault();
+    if (!objective.trim()) return;
+
+    startGenerating(async () => {
+      const res = await getAIRecommendations(objective.trim());
+      if (res.error) {
+        toast.error(res.error);
+        if (res.data) setSuggestions(res.data); // Support fallback
+        return;
+      }
+      setSuggestions(res.data);
+    });
+  }
+
+  async function handleAccept(
+    type: LiturgyItemType,
+    title: string,
+    content: string
+  ) {
+    const result = await addLiturgyItem({
+      liturgy_id: liturgyId,
+      type,
+      title,
+      content,
+    });
+    if (result && "error" in result && result.error) {
+      toast.error(result.error);
+      return;
+    }
+    if (result && "data" in result && result.data) {
+      onAdded(result.data);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 font-display text-lg">
+            <Sparkles className="size-5 text-amber-500" />
+            Sugestões com IA
+          </DialogTitle>
+        </DialogHeader>
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleGenerate(e);
+          }}
+          className="space-y-4"
+        >
+          <div className="space-y-1.5">
+            <Label>Qual o objetivo ou tema do culto?</Label>
+            <Input
+              value={objective}
+              onChange={(e) => setObjective(e.target.value)}
+              placeholder="Ex: Culto de ceia, consagração de jovens, missões..."
+              required
+            />
+          </div>
+          <Button
+            type="submit"
+            disabled={isGenerating || !objective.trim()}
+            className="w-full"
+          >
+            {isGenerating ? (
+              <Loader2 className="mr-2 size-4 animate-spin" />
+            ) : (
+              <Sparkles className="mr-2 size-4" />
+            )}
+            Gerar Sugestões
+          </Button>
+        </form>
+
+        {suggestions && (
+          <div className="mt-6 space-y-6 border-t pt-4">
+            <div>
+              <h3 className="font-semibold text-sm mb-3">Leituras Sugeridas</h3>
+              <div className="space-y-3">
+                {suggestions.leituras.map((l, i) => {
+                  const title = `${l.livro} ${l.capitulo}:${l.versiculo_inicial}-${l.versiculo_final}`;
+                  return (
+                    <div
+                      key={i}
+                      className="flex flex-col sm:flex-row gap-3 rounded-lg border p-3 bg-muted/50"
+                    >
+                      <div className="flex-1 text-sm">
+                        <p className="font-medium text-primary">{title}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {l.justificativa}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() =>
+                          handleAccept(
+                            "leitura_biblica",
+                            `Leitura: ${title}`,
+                            l.justificativa
+                          )
+                        }
+                      >
+                        <Check className="mr-1 size-3" /> Aceitar
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-sm mb-3">Cânticos Sugeridos</h3>
+              <div className="space-y-3">
+                {suggestions.canticos.map((c, i) => (
+                  <div
+                    key={i}
+                    className="flex flex-col sm:flex-row gap-3 rounded-lg border p-3 bg-muted/50"
+                  >
+                    <div className="flex-1 text-sm">
+                      <p className="font-medium text-primary">
+                        {c.titulo}{" "}
+                        <span className="text-muted-foreground text-xs font-normal">
+                          — {c.artista}
+                        </span>
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {c.justificativa}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() =>
+                        handleAccept(
+                          "louvor",
+                          `Louvor: ${c.titulo}`,
+                          `Artista: ${c.artista}\n${c.justificativa}`
+                        )
+                      }
+                    >
+                      <Check className="mr-1 size-3" /> Aceitar
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ─── LiturgyEditor ────────────────────────────────────────────────────────────
 
 interface LiturgyEditorProps {
@@ -399,6 +579,7 @@ export function LiturgyEditor({ liturgy }: LiturgyEditorProps) {
   );
   const [isSavingOrder, startSaveOrder] = useTransition();
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showAIDialog, setShowAIDialog] = useState(false);
 
   const currentOrder = items.map((i) => i.id);
   const orderChanged =
@@ -493,19 +674,43 @@ export function LiturgyEditor({ liturgy }: LiturgyEditorProps) {
         </Reorder.Group>
       )}
 
-      {/* Add item */}
-      <button
-        type="button"
-        onClick={() => setShowAddDialog(true)}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border py-3 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
-      >
-        <Plus className="size-4" />
-        Adicionar item
-      </button>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => setShowAddDialog(true)}
+          className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-3 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
+        >
+          <div className="flex items-center gap-2">
+            <Plus className="size-4" />
+            Adicionar item
+          </div>
+        </button>
+
+        <PremiumGate feature="ai_liturgy">
+          <button
+            type="button"
+            onClick={() => setShowAIDialog(true)}
+            className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-accent-300 bg-accent-50/50 py-3 text-sm font-medium text-accent-700 transition-colors hover:border-accent-400 hover:bg-accent-100"
+            style={{ width: "100%" }}
+          >
+            <div className="flex items-center gap-2">
+              <Sparkles className="size-4" />
+              Sugestões com IA
+            </div>
+          </button>
+        </PremiumGate>
+      </div>
 
       <AddItemDialog
         open={showAddDialog}
         onOpenChange={setShowAddDialog}
+        liturgyId={liturgy.id}
+        onAdded={handleItemAdded}
+      />
+
+      <AISuggestionsDialog
+        open={showAIDialog}
+        onOpenChange={setShowAIDialog}
         liturgyId={liturgy.id}
         onAdded={handleItemAdded}
       />

@@ -2,7 +2,7 @@
 
 **Última atualização:** 2026-05-01
 **Fase atual:** 5 - Premium + Lançamento
-**Sessão atual:** 5.1
+**Sessão atual:** 5.2
 
 ---
 
@@ -24,7 +24,7 @@ SaaS de gestão para igrejas evangélicas brasileiras. Multi-tenant com RLS no S
 | Animações        | Framer Motion                                                     |
 | Cache/Rate Limit | Upstash Redis                                                     |
 | Email            | Resend (React Email)                                              |
-| Pagamento        | AbacatePay (PIX)                                                  |
+| Pagamento        | Stripe (Checkout, Billing Portal, Webhooks)                       |
 | IA (Liturgia)    | GPT-4.1 → fallback Gemini 2.5 Flash                               |
 | Deploy           | Vercel                                                            |
 | QR Code          | qrcode.react + qr-scanner                                         |
@@ -208,11 +208,12 @@ admin (SaaS) → acesso global, sem dados sensíveis de tenants
 
 ### Bíblia (Liturgia IA)
 
-- [ ] `bible_verses` — id, book, chapter, verse, text, version
+- [x] `bible_verses` — id, book, chapter, verse, text, version
 
 ### Billing
 
-- [ ] `subscriptions` — id, church_id, plan, status, started_at, expires_at
+- [ ] `stripe_customers` — id, church_id, stripe_customer_id, stripe_subscription_id, created_at
+- [ ] `subscriptions` — id, church_id, stripe_subscription_id, plan, status, current_period_start, current_period_end, cancel_at_period_end, created_at, updated_at
 - [ ] `feature_flags` — id, plan, feature_key, enabled
 
 ---
@@ -259,6 +260,7 @@ npm| 3.3 | 2026-04-10 | Gamificação — equipes + pontuação + placar: migrat
 | 4.5 | 2026-04-15 | Domínio personalizado por tenant: migration (ALTER TABLE tenants ADD custom_domain text UNIQUE + domain_verified boolean); updateDomainSettingsSchema + DomainStatus + DnsCheckResult adicionados ao validator; Server Actions getDomainStatus, saveDomainSettings (check unicidade + logAudit + reset domain_verified), verifyCustomDomain (Google DNS-over-HTTPS CNAME check + marca domain_verified no banco); middleware proxy.ts refatorado com resolveTenantSlug helper (subdomínio {slug}.koinos.digital via regex + domínio personalizado via anon Supabase query) + bloco de rewrite antes do updateSession; landing-nav.tsx com botão "Acessar sistema" → app.koinos.digital/dashboard; dashboard /landing-page/dominio (page.tsx server + domain-settings.tsx client: card subdomínio padrão, formulário custom domain com RHF+Zod, botão verificar propagação DNS com result panel animado, 2 DnsCards CNAME/A com copy, badge SSL Vercel, aviso propagação, botão remover domínio); landing-editor.tsx com link para /landing-page/dominio; .env.example com NEXT_PUBLIC_APP_DOMAIN=koinos.digital. | supabase/migrations/20260415130000_custom_domain.sql, src/lib/validators/landing-page.ts, src/actions/landing-page.ts, src/proxy.ts, src/app/(dashboard)/landing-page/dominio/page.tsx, src/app/(dashboard)/landing-page/dominio/domain-settings.tsx, src/app/[slug]/landing-nav.tsx, src/app/(dashboard)/landing-page/landing-editor.tsx, .env.example |
 | 4.6 | 2026-05-01 | Gestão de multi-congregações: migration (invite_type em invite_links, is_matrix_church() helper, RLS tenants_select_children + members_matrix_leadership_select, índice parent_tenant_id); AuthUser + getUser() estendidos com parent_tenant_id; onboarding atualizado (parent_tenant_id: null em createChurch JWT, lookup de parent_tenant_id em registerMember, tratamento automático de congregation_pastor invite → role pastor); validators congregacoes.ts (createCongregationSchema, toggleSharedFinancesSchema, CongregationRow); actions/congregacoes.ts (listCongregations, createCongregation, toggleSharedFinances, deactivateCongregation, regenerateCongregationInvite); AppModule configuracoes adicionado ao permissions.ts; listMembers estendido com church_id_filter (valida que é filho da matriz, usa admin client); listEventsInRange estendido com all_units (admin client para cross-congregation); getFinanceBreakdown adicionado ao financeiro.ts (KPIs por unidade para shared_finances); UI /configuracoes/page.tsx (index com cards de seções) + /configuracoes/congregacoes/page.tsx + congregacoes-panel.tsx (AddCongregationDialog, CongregationCard com toggle shared_finances + deactivate + InviteCodeBlock copy/refresh); MembersFilters com pill-filters "Unidade" (dropdown de congregações); MembersList com churchIdFilter prop + badge de unidade selecionada; AgendaView with hasMultipleUnits prop + unitFilter → all_units wired to listEventsInRange; FinanceBreakdown client component (progress bars animados por unidade, grid 3-col); financeiro/page.tsx inclui FinanceBreakdown para matriz; Sidebar: Building2 + Congregações link (pastor/admin). | supabase/migrations/20260501100000_multi_congregation.sql, src/lib/validators/congregacoes.ts, src/lib/auth/session.ts, src/lib/auth/permissions.ts, src/actions/congregacoes.ts, src/actions/onboarding.ts, src/actions/members.ts, src/actions/agenda.ts, src/actions/financeiro.ts, src/app/(dashboard)/configuracoes/page.tsx, src/app/(dashboard)/configuracoes/congregacoes/page.tsx, src/app/(dashboard)/configuracoes/congregacoes/congregacoes-panel.tsx, src/app/(dashboard)/membros/page.tsx, src/app/(dashboard)/membros/members-list.tsx, src/app/(dashboard)/membros/members-filters.tsx, src/app/(dashboard)/agenda/page.tsx, src/app/(dashboard)/agenda/AgendaView.tsx, src/app/(dashboard)/financeiro/page.tsx, src/app/(dashboard)/financeiro/finance-breakdown.tsx, src/components/layout/Sidebar.tsx |
 | 4.7 | 2026-05-01 | Relatórios financeiros avançados (add-on premium): recharts + @react-pdf/renderer instalados; tipos FinancialReport/MonthlyDataPoint/CategoryDataPoint/TopContributor + financialReportSchema adicionados ao validator; Server Actions getFinancialReport (agregação mensal+categorias+top contributors, minRole diácono, top contributors apenas para tesoureiro/pastor/admin) e getTransactionsForExport (sem paginação, até 5000 registros para CSV) adicionados ao financeiro.ts; PremiumGate component (pass-through até billing Fase 5); página /financeiro/relatorios (server, filtros via searchParams: período/conta/datas); ReportsView client (filtros interativos, KPI cards, BarChart receitas×despesas por mês, dois PieCharts categoria receitas/despesas, tabela top 10 contribuintes com barra de %, export CSV client-side com BOM UTF-8, export PDF via fetch GET /api/financeiro/report-pdf); API route GET /api/financeiro/report-pdf (renderToBuffer, auth+role check, FinancialReportPDF component com barras horizontais em @react-pdf/renderer, footer com paginação); shadcn Select instalado; BarChart2 adicionado ao Sidebar para roles financeiro. | src/lib/validators/financeiro.ts, src/actions/financeiro.ts, src/components/ui/premium-gate.tsx, src/components/ui/select.tsx, src/components/layout/Sidebar.tsx, src/app/(dashboard)/financeiro/relatorios/page.tsx, src/app/(dashboard)/financeiro/relatorios/reports-view.tsx, src/app/api/financeiro/report-pdf/route.ts, src/app/api/financeiro/report-pdf/pdf-document.tsx |
+| 5.1 | 2026-05-01 | Liturgia Inteligente (IA) + Base bíblica: migration bible_verses (book, chapter, verse, text, version) com index GIN e JFAA sample seed. Route GET /api/bible para busca textual. Server Action getAIRecommendationsFallback GPT-4V, Zod schema aiRecommendationSchema. UI AISuggestionsDialog e botão de Sugestões com IA adicionado no LiturgyEditor, permitindo input de objetivo do culto, exibindo cânticos sugeridos baseados em repertório local e leituras bíblicas, aceitar/rejeitar. Uso de PremiumGate. Vercel AI SDK instalado. | supabase/migrations/20260501110000_bible_verses_schema.sql, src/app/api/bible/route.ts, src/lib/validators/ai.ts, src/actions/ai.ts, src/app/(dashboard)/eventos/[id]/liturgy-editor.tsx, package.json |
 
 ---
 

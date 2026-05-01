@@ -42,7 +42,7 @@ TAREFAS:
 2. Configure o tsconfig.json com strict: true e path alias "@/" apontando para "src/".
 3. Instale as dependências do projeto:
    - shadcn/ui (CLI v4), zod, react-hook-form, @hookform/resolvers,
-     date-fns, @tanstack/react-query, framer-motion, lucide-react
+     date-fns, @tanstack/react-query, framer-motion, lucide-react, stripe, @stripe/stripe-js
 4. Configure ESLint (flat config, eslint.config.mjs) com:
    - @eslint/js recommended + typescript-eslint strict + eslint-plugin-react + next/core-web-vitals
    - Prettier como formatador (eslint-config-prettier para desativar regras conflitantes)
@@ -52,7 +52,9 @@ TAREFAS:
 7. Crie um arquivo .env.example com as variáveis necessárias:
    - NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY,
      SUPABASE_SERVICE_ROLE_KEY, ENCRYPTION_KEY, RESEND_API_KEY,
-     ABACATEPAY_API_KEY, ABACATEPAY_WEBHOOK_SECRET,
+     STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY,
+     STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_ID_CRESCIMENTO,
+     STRIPE_PRICE_ID_IGREJA, STRIPE_PRICE_ID_CATEDRAL,
      OPENAI_API_KEY, UPSTASH_REDIS_URL, UPSTASH_REDIS_TOKEN
 
 NÃO FAÇA: Não crie componentes, não conecte ao Supabase, não crie páginas.
@@ -1243,33 +1245,85 @@ NÃO FAÇA: Não crie as 3 versões bíblicas completas sem verificar licenciame
 
 ---
 
-## Sessão 5.2 — Sistema de billing (AbacatePay)
+## Sessão 5.2 — Sistema de billing (Stripe)
 
-> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
-
-```
-REFERÊNCIA: PRD seção 4
+CONTEXTO: Features do produto prontas. Agora monetização.
+REFERÊNCIA: PRD seção 4 (planos e preços), BRAIN.md seção 6 (tabelas billing)
 
 TAREFAS:
-1. Crie migrations: subscriptions, feature_flags.
-2. Integração AbacatePay:
-   - Webhook handler em /api/webhooks/abacatepay
-   - Verificação de assinatura HMAC
-   - Criação de cobrança PIX
-   - Atualização de status da subscription
-3. Página /dashboard/configuracoes/plano:
-   - Exibe plano atual com features incluídas
-   - Cards de upgrade com preços
-   - Add-ons disponíveis
-   - Histórico de pagamentos
-4. Feature flags por plano:
-   - Hook useFeatureFlag(featureKey) → boolean
-   - Componente <PremiumGate feature="liturgia_ia"> com CTA de upgrade
-5. Lógica de limites:
-   - Plano Grátis: até 100 membros
-   - Alerta ao se aproximar do limite
 
-NÃO FAÇA: Não implemente downgrade automático. Apenas bloqueie novas adições.
+1. Instale e configure o Stripe:
+   - `stripe` (SDK Node.js) já instalado na sessão 0.1
+   - Crie src/lib/stripe/client.ts com instância do Stripe usando STRIPE_SECRET_KEY
+   - Crie src/lib/stripe/config.ts com mapeamento de planos:
+     {
+     crescimento: { priceId: env.STRIPE_PRICE_ID_CRESCIMENTO, limit: 300 },
+     igreja: { priceId: env.STRIPE_PRICE_ID_IGREJA, limit: 1000 },
+     catedral: { priceId: env.STRIPE_PRICE_ID_CATEDRAL, limit: Infinity }
+     }
+
+2. Crie migrations para: stripe_customers, subscriptions (versão atualizada).
+   - stripe_customers: vincula church_id ao stripe_customer_id
+   - subscriptions: espelha estado do Stripe localmente (source of truth = Stripe)
+   - feature_flags: sem mudança (mesmo esquema)
+
+3. Crie Server Actions em src/actions/billing.ts:
+   - createCheckoutSession(churchId, planKey):
+     → Busca ou cria Stripe Customer (usando email do pastor fundador)
+     → Cria Checkout Session com mode: 'subscription'
+     → Retorna URL do Checkout para redirect
+   - createBillingPortalSession(churchId):
+     → Cria sessão do Stripe Billing Portal
+     → Retorna URL para redirect (gerenciar assinatura, cancelar, trocar plano)
+   - getSubscriptionStatus(churchId):
+     → Busca subscription local + valida com Stripe se necessário
+
+4. Webhook handler em src/app/api/webhooks/stripe/route.ts:
+   - Verificação de assinatura via stripe.webhooks.constructEvent()
+     usando STRIPE_WEBHOOK_SECRET (NÃO use HMAC manual)
+   - Eventos a tratar:
+     → checkout.session.completed → cria/atualiza subscription local
+     → customer.subscription.updated → atualiza plan, status, period
+     → customer.subscription.deleted → marca subscription como cancelada
+     → invoice.payment_failed → notifica pastor via email (Resend)
+     → invoice.paid → atualiza status para ativo
+   - Idempotência: verificar se evento já foi processado (campo stripe_event_id)
+   - Responder sempre com 200 (mesmo em erro interno, logar no audit_log)
+
+5. Página /dashboard/configuracoes/plano:
+   - Exibe plano atual com features incluídas
+   - Se plano Grátis: cards de upgrade com preços em BRL
+     → Botão "Assinar" redireciona para Stripe Checkout
+   - Se plano pago: botão "Gerenciar assinatura" abre Stripe Billing Portal
+     (trocar plano, atualizar cartão, cancelar — tudo gerenciado pelo Stripe)
+   - Badge de status: ativo, trial, past_due, canceled
+   - Alerta se pagamento falhou (invoice.payment_failed)
+
+6. Lógica de limites de membros:
+   - Ao criar membro → verifica count vs limite do plano
+   - Se atingiu limite → bloqueia criação + mostra CTA de upgrade
+   - Não faz downgrade automático (apenas bloqueia novas adições)
+
+7. Crie src/lib/stripe/helpers.ts:
+   - getOrCreateStripeCustomer(churchId, email)
+   - syncSubscriptionFromStripe(stripeSubscriptionId) → atualiza DB local
+   - isFeatureEnabled(churchId, featureKey) → consulta subscription + feature_flags
+
+NÃO FAÇA:
+
+- Não implemente add-ons como assinaturas separadas no MVP. Use feature_flags manuais
+  ativados pelo admin até validar demanda. Add-ons via Stripe virão no pós-MVP.
+- Não crie UI customizada de pagamento. Use Stripe Checkout (hosted page).
+- Não crie UI de gerenciamento de cartão/fatura. Use Stripe Billing Portal.
+- Não implemente trial automático. Plano Grátis já serve como trial infinito.
+
+ENTREGÁVEIS:
+
+- Checkout funcional: pastor clica em "Assinar" → paga no Stripe → volta ao dashboard com plano ativo.
+- Billing Portal funcional: pastor gerencia assinatura sem sair do app.
+- Webhook processando eventos em tempo real.
+- Feature flags bloqueando módulos por plano.
+
 ```
 
 ---
@@ -1277,7 +1331,9 @@ NÃO FAÇA: Não implemente downgrade automático. Apenas bloqueie novas adiçõ
 ## Sessão 5.3 — Feature flags + PremiumGate
 
 ```
+
 TAREFAS:
+
 1. Seed feature_flags com features por plano:
    - Grátis: membros, agenda, eventos, mural, gamificação_basica
    - Crescimento: + ministérios, escalas, grupos_musicais, repertório, recursos
@@ -1287,6 +1343,7 @@ TAREFAS:
    assembleia_votacao, analytics_gamificacao
 3. Aplique <PremiumGate> em todas as rotas/funcionalidades restritas.
 4. Testes: verificar que cada plano vê apenas o que deve ver.
+
 ```
 
 ---
@@ -1294,7 +1351,9 @@ TAREFAS:
 ## Sessão 5.4 — Testes E2E + audit de segurança
 
 ```
+
 TAREFAS:
+
 1. Configure Playwright para testes E2E.
 2. Testes críticos:
    - Signup → criar igreja → dashboard
@@ -1310,6 +1369,7 @@ TAREFAS:
    - Verificar sanitização de inputs
    - Verificar criptografia de dados sensíveis
    - Verificar que admin não vê dados sensíveis de tenants
+
 ```
 
 ---
@@ -1319,7 +1379,9 @@ TAREFAS:
 > **UI:** Use `/frontend-design` para implementar as telas desta sessão.
 
 ```
+
 TAREFAS:
+
 1. Performance:
    - Lighthouse score > 90 em todas as páginas
    - Skeleton loaders em todas as listas
@@ -1348,6 +1410,7 @@ TAREFAS:
      (membros, eventos, posts, transações) para demonstração.
    - NÃO entre em contato com igrejas reais — apenas prepare os dados de demo.
 9. Documentar bugs conhecidos e limitações do MVP em um arquivo KNOWN_ISSUES.md na raiz.
+
 ```
 
 ---
@@ -1357,10 +1420,12 @@ TAREFAS:
 > **UI:** Use `/frontend-design` para implementar as telas desta sessão.
 
 ```
+
 CONTEXTO: Liturgia Inteligente pronta. Agora o add-on de escala automática por IA.
 REFERÊNCIA: PRD seção 4.2 (add-on "Escala Automática por IA" R$ 19)
 
 TAREFAS:
+
 1. Feature flag: escala_ia (disponível a partir do plano Crescimento com add-on).
 2. Na tab Ministério da página do evento (/eventos/[id]), seção de escala:
    - Botão "Sugerir escala com IA" (renderizado apenas se feature habilitada)
@@ -1379,8 +1444,10 @@ TAREFAS:
 5. Wrap completo com <PremiumGate feature="escala_ia"> com CTA de upgrade.
 
 NÃO FAÇA: A IA apenas sugere — nunca salva a escala sem confirmação explícita do líder. Não implemente escala automática sem revisão humana.
+
 ```
 
 ---
 
 _Fim dos prompts. Atualize o BRAIN.md ao concluir cada sessão._
+```
