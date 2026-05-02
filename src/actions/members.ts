@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { withPermission } from "@/lib/auth/with-permission";
 import { logAudit } from "@/actions/audit";
 import { encrypt, decrypt } from "@/lib/encryption/aes";
+import { SUBSCRIPTION_PLANS } from "@/lib/stripe/config";
 import {
   createMemberSchema,
   updateMemberSchema,
@@ -301,6 +302,32 @@ export const createMember = withPermission(
 
     const { cpf, rg, ...rest } = parsed.data;
     const supabase = await createClient();
+
+    // Validar limites do plano
+    const { data: tenant } = await supabase
+      .from("tenants")
+      .select("plan")
+      .eq("id", user.parent_tenant_id || user.church_id) // Usar plano da matriz
+      .single();
+
+    const planKey = (tenant?.plan ||
+      "gratis") as keyof typeof SUBSCRIPTION_PLANS;
+    const limit = SUBSCRIPTION_PLANS[planKey]?.limit || 100; // Padrão 100 gratis
+
+    if (limit !== Infinity) {
+      const { count } = await supabase
+        .from("members")
+        .select("id", { count: "exact", head: true })
+        .eq("church_id", user.church_id)
+        .eq("is_active", true);
+
+      if (count !== null && count >= limit) {
+        return {
+          data: null,
+          error: `Limite do plano atingido (${limit} membros). Upgrade necessário.`,
+        };
+      }
+    }
 
     const encryptedCpf = encrypt(sanitizeCpf(cpf));
     const encryptedRg = rg ? encrypt(rg) : null;

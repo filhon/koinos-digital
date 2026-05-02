@@ -4,6 +4,7 @@ import WelcomeEmail from "@/emails/welcome";
 import InviteEmail from "@/emails/invite";
 import ResetPasswordEmail from "@/emails/reset-password";
 import VoteCodeEmail from "@/emails/vote-code";
+import PaymentFailedEmail from "@/emails/payment-failed";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -36,6 +37,10 @@ type EmailTemplate =
         code: string;
         expiresAt: string;
       };
+    }
+  | {
+      template: "payment-failed";
+      data: { churchName: string; managePlanUrl: string };
     };
 
 type SendEmailParams = {
@@ -60,6 +65,9 @@ export async function sendEmail(params: SendEmailParams): Promise<void> {
       break;
     case "vote-code":
       reactElement = createElement(VoteCodeEmail, data);
+      break;
+    case "payment-failed":
+      reactElement = createElement(PaymentFailedEmail, data);
       break;
   }
 

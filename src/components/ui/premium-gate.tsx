@@ -1,22 +1,32 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Lock } from "lucide-react";
 import { motion } from "framer-motion";
+import { checkFeatureAccess } from "@/actions/billing";
+import Link from "next/link";
 
 interface PremiumGateProps {
-  /** Chave da feature (futuro: verificação via subscriptions/feature_flags). */
+  /** Chave da feature (verificação via subscriptions/feature_flags). */
   feature: string;
   children: React.ReactNode;
 }
 
 /**
- * Protege conteúdo premium. Por ora é pass-through — quando o módulo de
- * billing (Fase 5) for implementado, este componente verificará a assinatura
- * e exibirá o paywall quando necessário.
+ * Protege conteúdo premium. Verifica com server se há acesso.
  */
-export function PremiumGate({ children }: PremiumGateProps) {
-  // TODO (sessão 5.x): verificar subscriptions/feature_flags via useQuery
-  const isPremium = true; // pass-through até billing estar implementado
+export function PremiumGate({ feature, children }: PremiumGateProps) {
+  const [isPremium, setIsPremium] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    checkFeatureAccess(feature).then(setIsPremium);
+  }, [feature]);
+
+  if (isPremium === null) {
+    return (
+      <div className="h-24 flex items-center justify-center animate-pulse bg-muted rounded-xl" />
+    );
+  }
 
   if (!isPremium) {
     return (
@@ -31,8 +41,14 @@ export function PremiumGate({ children }: PremiumGateProps) {
         <div>
           <p className="font-semibold text-foreground">Recurso Premium</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Faça upgrade do seu plano para acessar relatórios avançados.
+            Faça upgrade do seu plano para acessar recursos avançados.
           </p>
+          <Link
+            href="/dashboard/configuracoes/plano"
+            className="mt-4 inline-flex h-9 items-center justify-center rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-amber-700"
+          >
+            Ver Planos
+          </Link>
         </div>
       </motion.div>
     );
