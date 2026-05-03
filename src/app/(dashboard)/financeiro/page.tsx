@@ -11,6 +11,7 @@ import { FinanceKPICards } from "./finance-kpi-cards";
 import { TransactionsPanel } from "./transactions-panel";
 import { FinanceSkeleton } from "./finance-skeleton";
 import { FinanceBreakdown } from "./finance-breakdown";
+import { PremiumGate } from "@/components/ui/premium-gate";
 import type { ListTransactionsInput } from "@/lib/validators/financeiro";
 
 interface FinanceiroPageProps {
@@ -85,20 +86,24 @@ export default async function FinanceiroPage({
         breadcrumbs={[{ label: "Financeiro" }]}
       />
 
-      {/* KPI Cards */}
-      <FinanceKPICards kpis={kpis} />
+      <PremiumGate feature="financeiro_basico">
+        {/* KPI Cards */}
+        <FinanceKPICards kpis={kpis} />
 
-      {/* Breakdown por unidade (apenas matriz com shared_finances) */}
-      {breakdownUnits.length > 0 && <FinanceBreakdown units={breakdownUnits} />}
+        {/* Breakdown por unidade (apenas matriz com shared_finances) */}
+        {breakdownUnits.length > 0 && (
+          <FinanceBreakdown units={breakdownUnits} />
+        )}
 
-      {/* Transações */}
-      <Suspense fallback={<FinanceSkeleton />}>
-        <TransactionsPanel
-          initialFilters={filters}
-          accounts={accounts}
-          canWrite={canWrite}
-        />
-      </Suspense>
+        {/* Transações */}
+        <Suspense fallback={<FinanceSkeleton />}>
+          <TransactionsPanel
+            initialFilters={filters}
+            accounts={accounts}
+            canWrite={canWrite}
+          />
+        </Suspense>
+      </PremiumGate>
     </div>
   );
 }

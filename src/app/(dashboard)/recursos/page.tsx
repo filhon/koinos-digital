@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ResourcesList } from "./resources-list";
 import { ResourcesFilters } from "./resources-filters";
 import { ResourcesSkeleton } from "./resources-skeleton";
+import { PremiumGate } from "@/components/ui/premium-gate";
 import type { ListResourcesInput } from "@/lib/validators/resources";
 
 interface PageProps {
@@ -55,13 +56,15 @@ export default async function RecursosPage({ searchParams }: PageProps) {
         }
       />
 
-      <div className="mt-6 space-y-4">
-        <ResourcesFilters />
+      <PremiumGate feature="recursos">
+        <div className="mt-6 space-y-4">
+          <ResourcesFilters />
 
-        <Suspense fallback={<ResourcesSkeleton />}>
-          <ResourcesList searchParams={filters} />
-        </Suspense>
-      </div>
+          <Suspense fallback={<ResourcesSkeleton />}>
+            <ResourcesList searchParams={filters} />
+          </Suspense>
+        </div>
+      </PremiumGate>
     </div>
   );
 }

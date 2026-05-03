@@ -40,6 +40,7 @@ import {
 } from "lucide-react";
 import { VoteDialog } from "./vote-dialog";
 import { CandidateSearch } from "./candidate-search";
+import { PremiumGate } from "@/components/ui/premium-gate";
 import { ElectionResults } from "./election-results";
 import type {
   ElectionRow,
@@ -316,51 +317,53 @@ export function ElectionPanel({
 
       {/* Vote CTA */}
       {election.status === "aberta" && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <Card
-            className={cn(
-              "border-2",
-              hasVoted
-                ? "border-green-500/30 bg-green-500/5"
-                : "border-primary/40 bg-primary/5"
-            )}
+        <PremiumGate feature="assembleia_votacao">
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
           >
-            <CardContent className="pt-5 pb-5">
-              {hasVoted ? (
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500/15">
-                    <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-green-700 dark:text-green-400">
-                      Voto registrado
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Seu voto anônimo foi contabilizado com sucesso.
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="font-semibold">Votação em andamento</p>
-                    <p className="text-sm text-muted-foreground">
-                      {election.type === "candidatos"
-                        ? "Escolha um candidato para votar."
-                        : "Vote Sim, Não ou Abstenção."}
-                    </p>
-                  </div>
-                  <Button onClick={() => setVoteOpen(true)} size="sm">
-                    Votar agora
-                  </Button>
-                </div>
+            <Card
+              className={cn(
+                "border-2",
+                hasVoted
+                  ? "border-green-500/30 bg-green-500/5"
+                  : "border-primary/40 bg-primary/5"
               )}
-            </CardContent>
-          </Card>
-        </motion.div>
+            >
+              <CardContent className="pt-5 pb-5">
+                {hasVoted ? (
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500/15">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-green-700 dark:text-green-400">
+                        Voto registrado
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Seu voto anônimo foi contabilizado com sucesso.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="font-semibold">Votação em andamento</p>
+                      <p className="text-sm text-muted-foreground">
+                        {election.type === "candidatos"
+                          ? "Escolha um candidato para votar."
+                          : "Vote Sim, Não ou Abstenção."}
+                      </p>
+                    </div>
+                    <Button onClick={() => setVoteOpen(true)} size="sm">
+                      Votar agora
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        </PremiumGate>
       )}
 
       {/* Anonymity notice */}

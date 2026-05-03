@@ -3,6 +3,7 @@ import { getUser } from "@/lib/auth/session";
 import { getDomainStatus } from "@/actions/landing-page";
 import { PageHeader } from "@/components/layout";
 import DomainSettings from "./domain-settings";
+import { PremiumGate } from "@/components/ui/premium-gate";
 
 export default async function DomainPage() {
   const user = await getUser();
@@ -24,7 +25,9 @@ export default async function DomainPage() {
         title="Domínio Personalizado"
         description="Configure o endereço público da sua igreja"
       />
-      <DomainSettings initialStatus={result.data} />
+      <PremiumGate feature="landing_dominio">
+        <DomainSettings initialStatus={result.data} />
+      </PremiumGate>
     </div>
   );
 }

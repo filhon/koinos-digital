@@ -686,7 +686,7 @@ export function LiturgyEditor({ liturgy }: LiturgyEditorProps) {
           </div>
         </button>
 
-        <PremiumGate feature="ai_liturgy">
+        <PremiumGate feature="liturgia_ia">
           <button
             type="button"
             onClick={() => setShowAIDialog(true)}

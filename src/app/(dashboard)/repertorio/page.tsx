@@ -8,6 +8,7 @@ import { listAllGroupsSongs } from "@/actions/songs";
 import { createClient } from "@/lib/supabase/server";
 import { RepertorioView } from "./repertorio-view";
 import { SongsSkeleton } from "./songs-skeleton";
+import { PremiumGate } from "@/components/ui/premium-gate";
 
 interface PageProps {
   searchParams: Promise<{ q?: string; grupo?: string }>;
@@ -85,13 +86,15 @@ export default async function RepertorioPage({ searchParams }: PageProps) {
         }
       />
 
-      <Suspense fallback={<SongsSkeleton />}>
-        <RepertorioContent
-          search={params.q}
-          groupId={params.grupo}
-          canManage={canManage}
-        />
-      </Suspense>
+      <PremiumGate feature="repertorio">
+        <Suspense fallback={<SongsSkeleton />}>
+          <RepertorioContent
+            search={params.q}
+            groupId={params.grupo}
+            canManage={canManage}
+          />
+        </Suspense>
+      </PremiumGate>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { getUser } from "@/lib/auth/session";
 import { MinistriesList } from "./ministries-list";
 import { MinistriesSkeleton } from "./ministries-skeleton";
+import { PremiumGate } from "@/components/ui/premium-gate";
 
 interface PageProps {
   searchParams: Promise<{ q?: string }>;
@@ -41,9 +42,11 @@ export default async function MinistriosPage({ searchParams }: PageProps) {
         }
       />
 
-      <Suspense fallback={<MinistriesSkeleton />}>
-        <MinistriesList search={params.q} />
-      </Suspense>
+      <PremiumGate feature="ministerios">
+        <Suspense fallback={<MinistriesSkeleton />}>
+          <MinistriesList search={params.q} />
+        </Suspense>
+      </PremiumGate>
     </div>
   );
 }

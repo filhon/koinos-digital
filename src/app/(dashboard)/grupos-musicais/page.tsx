@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { getUser } from "@/lib/auth/session";
 import { MusicGroupsList } from "./music-groups-list";
 import { MusicGroupsSkeleton } from "./music-groups-skeleton";
+import { PremiumGate } from "@/components/ui/premium-gate";
 
 interface PageProps {
   searchParams: Promise<{ q?: string }>;
@@ -41,9 +42,11 @@ export default async function GruposMusicaisPage({ searchParams }: PageProps) {
         }
       />
 
-      <Suspense fallback={<MusicGroupsSkeleton />}>
-        <MusicGroupsList search={params.q} />
-      </Suspense>
+      <PremiumGate feature="grupos_musicais">
+        <Suspense fallback={<MusicGroupsSkeleton />}>
+          <MusicGroupsList search={params.q} />
+        </Suspense>
+      </PremiumGate>
     </div>
   );
 }

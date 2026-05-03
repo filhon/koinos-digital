@@ -3,6 +3,7 @@ import { getUser } from "@/lib/auth/session";
 import { listCongregations } from "@/actions/congregacoes";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { CongregacoesPanel } from "./congregacoes-panel";
+import { PremiumGate } from "@/components/ui/premium-gate";
 
 export const metadata = { title: "Congregações — Koinos" };
 
@@ -33,9 +34,11 @@ export default async function CongregacoesPage() {
         ]}
       />
 
-      <div className="mt-6">
-        <CongregacoesPanel initialData={congregations} appUrl={appUrl} />
-      </div>
+      <PremiumGate feature="multi_congregacao">
+        <div className="mt-6">
+          <CongregacoesPanel initialData={congregations} appUrl={appUrl} />
+        </div>
+      </PremiumGate>
     </div>
   );
 }

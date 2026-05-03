@@ -53,9 +53,8 @@ USING (true);
 CREATE TRIGGER subscriptions_updated_at
 BEFORE UPDATE ON subscriptions
 FOR EACH ROW
-EXECUTE FUNCTION trigger_set_timestamp();
+  EXECUTE FUNCTION set_updated_at();
 
--- Webhook event history for idempotency
 CREATE TABLE stripe_webhook_events (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     stripe_event_id TEXT NOT NULL UNIQUE,

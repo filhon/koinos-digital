@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { requireAuth } from "@/lib/auth/session";
 import { listAssemblies } from "@/actions/assembleia";
+import { PremiumGate } from "@/components/ui/premium-gate";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { buttonVariants } from "@/components/ui/button";
 import { AssemblyList } from "./assembly-list";
@@ -34,9 +35,11 @@ export default async function AssembleiaPage() {
         }
       />
 
-      <Suspense fallback={<AssembliaSkeleton />}>
-        <AssemblyList assemblies={assemblies} isPastor={isPastor} />
-      </Suspense>
+      <PremiumGate feature="assembleia">
+        <Suspense fallback={<AssembliaSkeleton />}>
+          <AssemblyList assemblies={assemblies} isPastor={isPastor} />
+        </Suspense>
+      </PremiumGate>
     </div>
   );
 }
