@@ -9,7 +9,16 @@ import {
   type UpsertScaleMemberInput,
   type RemoveScaleMemberInput,
 } from "@/lib/validators/ministries";
+import {
+  scaleSuggestionAISchema,
+  suggestScaleInputSchema,
+  type SuggestScaleInput,
+  type ScaleSuggestionResult,
+} from "@/lib/validators/ai";
 import type { AuthUser } from "@/lib/auth/session";
+import { generateObject } from "ai";
+import { openai } from "@ai-sdk/openai";
+import { google } from "@ai-sdk/google";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -38,6 +47,219 @@ export interface MyScaleMonth {
 }
 
 type ActionResult<T> = { data: T; error: null } | { data: null; error: string };
+
+// ─── suggestScale ─────────────────────────────────────────────────────────────
+
+export const suggestScale = withPermission(
+  async (
+    user: AuthUser,
+    input: SuggestScaleInput
+  ): Promise<ActionResult<ScaleSuggestionResult[]>> => {
+    const parsed = suggestScaleInputSchema.safeParse(input);
+    if (!parsed.success) {
+      return { data: null, error: parsed.error.issues[0].message };
+    }
+
+    const { eventMinistryId, context } = parsed.data;
+    const supabase = await createClient();
+
+    // 1. Busca event_ministry com evento e ministério
+    const { data: em, error: emError } = await supabase
+      .from("event_ministries")
+      .select(
+        `
+        id,
+        ministry_id,
+        event:events!event_ministries_event_id_fkey(id, name, date, description),
+        ministry:ministries!event_ministries_ministry_id_fkey(id, name)
+        `
+      )
+      .eq("id", eventMinistryId)
+      .single();
+
+    if (emError || !em) {
+      return { data: null, error: "Escala não encontrada" };
+    }
+
+    const ministry = (
+      Array.isArray(em.ministry) ? em.ministry[0] : em.ministry
+    ) as { id: string; name: string } | null;
+
+    const event = (Array.isArray(em.event) ? em.event[0] : em.event) as {
+      id: string;
+      name: string;
+      date: string;
+      description: string | null;
+    } | null;
+
+    if (!ministry || !event) {
+      return {
+        data: null,
+        error: "Dados do evento ou ministério não encontrados",
+      };
+    }
+
+    // 2. Busca membros do ministério
+    const { data: mmRows, error: mmError } = await supabase
+      .from("ministry_members")
+      .select(
+        "member:members!ministry_members_member_id_fkey(id, name, avatar_url, is_active)"
+      )
+      .eq("ministry_id", ministry.id);
+
+    if (mmError) {
+      return { data: null, error: "Erro ao buscar componentes do ministério" };
+    }
+
+    type MemberInfo = {
+      id: string;
+      name: string;
+      avatar_url: string | null;
+      is_active: boolean;
+    };
+
+    const members: MemberInfo[] = (mmRows ?? [])
+      .map((mm) => {
+        const m = Array.isArray(mm.member) ? mm.member[0] : mm.member;
+        return m as MemberInfo | null;
+      })
+      .filter((m): m is MemberInfo => m !== null && m.is_active !== false);
+
+    if (!members.length) {
+      return { data: null, error: "Nenhum componente ativo neste ministério" };
+    }
+
+    // 3. Busca últimas 4 escalas do ministério (excluindo a atual)
+    const { data: allEMs } = await supabase
+      .from("event_ministries")
+      .select("id, event:events!event_ministries_event_id_fkey(date)")
+      .eq("ministry_id", ministry.id)
+      .neq("id", eventMinistryId);
+
+    const recentEmIds = (allEMs ?? [])
+      .filter((row) => {
+        const ev = Array.isArray(row.event) ? row.event[0] : row.event;
+        return !!(ev as { date?: string } | null)?.date;
+      })
+      .sort((a, b) => {
+        const dateA =
+          (
+            (Array.isArray(a.event) ? a.event[0] : a.event) as {
+              date: string;
+            } | null
+          )?.date ?? "";
+        const dateB =
+          (
+            (Array.isArray(b.event) ? b.event[0] : b.event) as {
+              date: string;
+            } | null
+          )?.date ?? "";
+        return dateB.localeCompare(dateA);
+      })
+      .slice(0, 4)
+      .map((row) => row.id);
+
+    // 4. Conta participações por membro nos últimos 4 eventos
+    const participationMap = new Map<string, number>(
+      members.map((m) => [m.id, 0])
+    );
+
+    if (recentEmIds.length > 0) {
+      const { data: historicScales } = await supabase
+        .from("scales")
+        .select("member_id")
+        .in("event_ministry_id", recentEmIds);
+
+      (historicScales ?? []).forEach(({ member_id }) => {
+        participationMap.set(
+          member_id,
+          (participationMap.get(member_id) ?? 0) + 1
+        );
+      });
+    }
+
+    // 5. Monta o prompt
+    const membersContext = members
+      .map((m) => {
+        const count = participationMap.get(m.id) ?? 0;
+        return `- ${m.name} (ID: ${m.id}) — escalado ${count} vez(es) nos últimos ${recentEmIds.length} evento(s)`;
+      })
+      .join("\n");
+
+    const prompt = `
+Você é um assistente de gestão ministerial para uma igreja evangélica brasileira.
+Sua tarefa é sugerir quais membros devem ser escalados para servir em um evento, baseando-se no histórico de participação e no princípio de distribuição equitativa do serviço.
+
+EVENTO: "${event.name}" — ${event.date}
+MINISTÉRIO: "${ministry.name}"
+${context ? `CONTEXTO ESPECIAL: "${context}"` : ""}
+${event.description ? `DESCRIÇÃO DO EVENTO: "${event.description}"` : ""}
+
+MEMBROS DISPONÍVEIS (com histórico dos últimos ${recentEmIds.length} evento(s)):
+${membersContext}
+
+CRITÉRIOS:
+1. Priorize membros com MENOS participações recentes para garantir distribuição justa do serviço.
+2. Considere o contexto especial, se fornecido (ex: um culto missionário pode exigir perfil distinto).
+3. Sugira entre 2 e ${Math.min(members.length, 5)} membros.
+4. A justificativa deve ser breve, pastoral e motivacional (máx. 150 caracteres).
+5. Use os IDs exatos conforme listados acima — sem inventar novos IDs.
+`;
+
+    // 6. Chama GPT-4.1 com fallback para Gemini 2.5 Flash
+    let rawSuggestions: { memberId: string; reason: string }[];
+
+    try {
+      const { object } = await generateObject({
+        model: openai("gpt-4o"),
+        schema: scaleSuggestionAISchema,
+        prompt,
+      });
+      rawSuggestions = object.suggestions;
+    } catch (primaryErr) {
+      console.error("[suggestScale] GPT falhou, tentando Gemini:", primaryErr);
+      try {
+        const { object } = await generateObject({
+          model: google("gemini-2.5-flash"),
+          schema: scaleSuggestionAISchema,
+          prompt,
+        });
+        rawSuggestions = object.suggestions;
+      } catch (fallbackErr) {
+        console.error("[suggestScale] Gemini também falhou:", fallbackErr);
+        return {
+          data: null,
+          error:
+            "O serviço de IA está indisponível no momento. Tente novamente.",
+        };
+      }
+    }
+
+    // 7. Valida IDs retornados contra membros reais do ministério
+    const memberMap = new Map(members.map((m) => [m.id, m]));
+    const suggestions: ScaleSuggestionResult[] = rawSuggestions
+      .filter((s) => memberMap.has(s.memberId))
+      .map((s) => {
+        const m = memberMap.get(s.memberId)!;
+        return {
+          memberId: m.id,
+          memberName: m.name,
+          memberAvatar: m.avatar_url,
+          reason: s.reason,
+        };
+      });
+
+    if (!suggestions.length) {
+      return {
+        data: null,
+        error: "A IA não retornou sugestões válidas. Tente novamente.",
+      };
+    }
+
+    return { data: suggestions, error: null };
+  },
+  { module: "escalas", minRole: "líder" }
+);
 
 // ─── getMyScale ───────────────────────────────────────────────────────────────
 

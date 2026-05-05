@@ -1417,7 +1417,7 @@ TAREFAS:
 
 ## Sessão 5.6 — Escala automática por IA (add-on premium)
 
-> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
+> **UI:** Use `/impeccable craft` para implementar as telas desta sessão.
 
 ```
 
@@ -1444,6 +1444,110 @@ TAREFAS:
 5. Wrap completo com <PremiumGate feature="escala_ia"> com CTA de upgrade.
 
 NÃO FAÇA: A IA apenas sugere — nunca salva a escala sem confirmação explícita do líder. Não implemente escala automática sem revisão humana.
+
+```
+
+---
+
+## Sessão 5.7 — Notificações de escala + Analytics de Gamificação (add-on premium)
+
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
+
+```
+
+CONTEXTO: Dois itens pendentes do PRD nunca receberam prompt de implementação.
+
+PARTE A — Notificações de escala (TASK-ESC-01 TEST 6, pendente desde sessão 2.5)
+
+TAREFAS:
+
+1. Em src/actions/scales.ts, na função upsertScaleMember, remova o TODO e implemente:
+   - Após inserir o membro na escala, chame createNotification() para o membro escalado
+   - Conteúdo: "Você foi adicionado à escala de {nome_do_evento} ({nome_do_ministerio})"
+   - Tipo de notificação: "scale_assignment"
+2. Apenas dispare se o membro foi inserido (não em update de registro existente).
+   Use o retorno do upsert para distinguir INSERT de UPDATE.
+
+NÃO FAÇA: Não altere o schema do banco (tabela notifications já existe).
+ENTREGÁVEIS: Membro recebe notificação in-app ao ser escalado.
+
+---
+
+PARTE B — Analytics de Gamificação (PRD Seção 4.2, add-on R$19)
+
+CONTEXTO: A feature flag `analytics_gamificacao` existe em feature_flags mas nenhuma UI foi criada.
+REFERÊNCIA: PRD seção 22 (métricas de engajamento), PRD seção 4.2 (add-on).
+
+TAREFAS:
+
+1. Página /dashboard/gamificacao/analytics (protegida por <PremiumGate feature="analytics_gamificacao">):
+   - Visível apenas para pastor, presbítero e admin.
+2. Server Action getGamificationAnalytics(period: 'month'|'year') em src/actions/gamification.ts:
+   - Membros mais ativos (top 10 por pontuação, com nome e equipe)
+   - Distribuição de pontos por tipo de ação (check-in, convite, leitura, streak) — agregado
+   - Taxa de participação de cada equipe: membros com ao menos 1 ponto / total de membros
+   - Evolução mensal de check-ins (últimos 6 meses) — apenas contagem, sem dados pessoais
+3. UI analytics-view.tsx (client component):
+   - KPI cards: total de pontos distribuídos no período, membros ativos (ao menos 1 score_event)
+   - Gráfico de barras (Recharts): check-ins por mês (últimos 6 meses)
+   - Gráfico de pizza (Recharts): distribuição de pontos por tipo de ação
+   - Tabela: top 10 membros com nome, equipe e pontuação do período (sem CPF/email/phone)
+   - Barras de progresso por equipe: taxa de participação (%)
+4. Link "Analytics" adicionado à página /gamificacao (apenas roles pastor/presbítero/admin).
+
+NÃO FAÇA: Não exponha dados pessoais sensíveis (CPF, telefone, endereço). Apenas nome e pontuação.
+Não use D3.js — apenas Recharts (já instalado).
+ENTREGÁVEIS: Dashboard de analytics de engajamento funcional, bloqueado pelo PremiumGate.
+
+```
+
+---
+
+## Sessão 5.8 — Integração Repertório → Liturgia + Delegação ao líder musical
+
+> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
+
+```
+
+CONTEXTO: O PRD especifica que músicas do repertório devem ser linkadas diretamente
+aos itens de liturgia (US-REP-04), e que o responsável pode delegar a escolha de músicas
+ao líder do grupo musical (US-LIT-04). Nenhuma dessas features foi implementada.
+
+REFERÊNCIA: PRD seções 16.1 (US-LIT-04, US-LIT-05), 18.2 (US-REP-04)
+
+TAREFAS:
+
+1. Tipo de item de liturgia "cântico" (tipo já existe no ENUM liturgy_item_type):
+   - Adicione coluna song_id UUIDv7 nullable (FK para songs) na tabela liturgy_items.
+   - Migration: ALTER TABLE liturgy_items ADD COLUMN song_id uuid REFERENCES songs(id) ON DELETE SET NULL.
+2. Server Actions em src/actions/liturgy.ts:
+   - addSongToLiturgy(liturgyId, songId, order_index): insere liturgy_item do tipo "cântico"
+     com title = songs.name, content = songs.central_message, song_id = songId
+   - Reutiliza a permissão canEditEventLiturgy existente
+3. No LiturgyEditor (src/app/(dashboard)/eventos/[id]/liturgy-editor.tsx):
+   - Quando o usuário clica "Adicionar item" e seleciona tipo "cântico",
+     exibir campo de busca de músicas (debounced, busca no repertório do grupo musical associado)
+   - Se não há grupo musical associado ao evento, busca em todos os grupos do tenant
+   - SongSearchInput: input com autocomplete (lista nome + artista), seleção fecha e preenche o item
+   - Reutilize a API /api/resources/search como modelo para criar /api/songs/search
+     (GET, params: q, event_id opcional para filtrar pelo grupo musical do evento)
+4. Delegação ao líder musical (US-LIT-04):
+   - Adicione coluna music_delegated_to uuid nullable (FK members) na tabela liturgies
+   - Migration: ALTER TABLE liturgies ADD COLUMN music_delegated_to uuid REFERENCES members(id) ON DELETE SET NULL
+   - Server Action delegateMusicSelection(liturgyId, memberId): apenas responsável do evento,
+     define music_delegated_to + cria notificação in-app para o líder musical delegado
+   - Server Action revokeMusicDelegation(liturgyId): remove a delegação
+   - No LiturgyEditor: se o usuário atual = music_delegated_to ou é responsável do evento,
+     exibe banner "Você foi delegado para escolher as músicas deste culto" com badge âmbar
+   - Botão "Delegar músicas" (apenas responsável): abre select de líder musical (filtra por
+     líderes de grupos musicais associados ao evento)
+5. No LiturgyViewer: para itens do tipo "cântico" com song_id,
+   exibir link clicável para a música no repertório (/repertorio/{id}).
+
+NÃO FAÇA: Não refatore o LiturgyEditor além do necessário para essas features.
+Não implemente edição colaborativa em tempo real.
+ENTREGÁVEIS: Liturgia permite buscar e linkar músicas do repertório; responsável pode
+delegar seleção ao líder musical com notificação.
 
 ```
 

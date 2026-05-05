@@ -8,6 +8,7 @@ import { Plus, Trash2, Loader2, Search, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { addEventMinistry, removeEventMinistry } from "@/actions/events";
 import type { EventMinistryRow } from "@/actions/events";
+import { ScaleAISuggest } from "./scale-ai-suggest";
 
 interface MinistrySuggestion {
   id: string;
@@ -225,12 +226,15 @@ interface EventMinistriesPanelProps {
   eventId: string;
   eventMinistries: EventMinistryRow[];
   canManage: boolean;
+  /** Passa para exibir o botão de sugestão de escala com IA. */
+  showAISuggest?: boolean;
 }
 
 export function EventMinistriesPanel({
   eventId,
   eventMinistries,
   canManage,
+  showAISuggest = false,
 }: EventMinistriesPanelProps) {
   const [showAddForm, setShowAddForm] = useState(false);
 
@@ -282,24 +286,36 @@ export function EventMinistriesPanel({
           return (
             <div
               key={em.id}
-              className="flex items-center gap-3 py-2 border-b border-border/40 last:border-0"
+              className="py-2 border-b border-border/40 last:border-0"
             >
-              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <Users className="size-4 text-primary" />
-              </div>
-              <Link
-                href={`/ministerios/${ministry.id}`}
-                className="flex-1 min-w-0 group"
-              >
-                <p className="text-sm font-medium group-hover:text-primary transition-colors truncate">
-                  {ministry.name}
-                </p>
-                <p className="text-[11px] text-muted-foreground">
-                  Escala criada
-                </p>
-              </Link>
+              <div className="flex items-center gap-3">
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                  <Users className="size-4 text-primary" />
+                </div>
+                <Link
+                  href={`/ministerios/${ministry.id}`}
+                  className="flex-1 min-w-0 group"
+                >
+                  <p className="text-sm font-medium group-hover:text-primary transition-colors truncate">
+                    {ministry.name}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Escala criada
+                  </p>
+                </Link>
 
-              {canManage && <RemoveMinistryButton eventMinistryId={em.id} />}
+                {canManage && <RemoveMinistryButton eventMinistryId={em.id} />}
+              </div>
+
+              {/* Sugestão de escala por IA — visível apenas para quem pode gerenciar */}
+              {canManage && showAISuggest && (
+                <div className="ml-11">
+                  <ScaleAISuggest
+                    eventMinistryId={em.id}
+                    ministryName={ministry.name}
+                  />
+                </div>
+              )}
             </div>
           );
         })}

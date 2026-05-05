@@ -5,9 +5,9 @@
  * Busca membros com is_active = false há mais de 30 dias sem anonimização prévia,
  * substitui dados pessoais por hashes SHA-256, preserva dados financeiros e audit_logs.
  *
- * Schedule no config.toml:
- *   [functions.anonymize-members]
- *   schedule = "0 2 * * *"
+ * Agendamento:
+ *   Criar via pg_cron + pg_net no banco. A CLI Supabase nao aceita
+ *   `schedule` em [functions.*] no config.toml.
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";

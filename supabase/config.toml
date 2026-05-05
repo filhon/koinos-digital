@@ -403,5 +403,5 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":80,\"commaStyle\":\"trailing\"}"
 
 [functions.anonymize-members]
-# Cron diário às 02h UTC — anonimização LGPD de membros inativos há +30 dias
-schedule = "0 2 * * *"
+# Agendamento deve ser criado no banco via pg_cron + pg_net.
+# A CLI Supabase nao aceita `schedule` em [functions.*].

@@ -240,6 +240,7 @@ export function EventDetails({
           eventId={event.id}
           eventMinistries={eventMinistries}
           canManage={isLeadership}
+          showAISuggest={isLeadership}
         />
       )}
 
