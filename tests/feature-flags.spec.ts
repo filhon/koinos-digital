@@ -16,9 +16,10 @@ import { test, expect, type Page } from "@playwright/test";
 async function login(page: Page, email: string, password: string) {
   await page.goto("/login");
   await page.getByLabel("E-mail").fill(email);
-  await page.getByLabel("Senha").fill(password);
+  await page.locator("#password").fill(password);
+  await page.waitForTimeout(1500);
   await page.getByRole("button", { name: /entrar/i }).click();
-  await page.waitForURL("**/dashboard");
+  await page.waitForURL("**/dashboard", { timeout: 20_000 });
 }
 
 /** Verifica que a rota exibe o PremiumGate (ícone de cadeado). */
@@ -67,6 +68,10 @@ const users = {
 
 test.describe("Plano Grátis", () => {
   test.beforeEach(async ({ page }) => {
+    test.skip(
+      !users.gratis.email || !users.gratis.password,
+      "TEST_USER_GRATIS_EMAIL / _PASSWORD não configurados."
+    );
     await login(page, users.gratis.email, users.gratis.password);
   });
 
@@ -123,6 +128,10 @@ test.describe("Plano Grátis", () => {
 
 test.describe("Plano Crescimento", () => {
   test.beforeEach(async ({ page }) => {
+    test.skip(
+      !users.crescimento.email || !users.crescimento.password,
+      "TEST_USER_CRESCIMENTO_EMAIL / _PASSWORD não configurados."
+    );
     await login(page, users.crescimento.email, users.crescimento.password);
   });
 
@@ -159,6 +168,10 @@ test.describe("Plano Crescimento", () => {
 
 test.describe("Plano Igreja", () => {
   test.beforeEach(async ({ page }) => {
+    test.skip(
+      !users.igreja.email || !users.igreja.password,
+      "TEST_USER_IGREJA_EMAIL / _PASSWORD não configurados."
+    );
     await login(page, users.igreja.email, users.igreja.password);
   });
 
@@ -183,6 +196,10 @@ test.describe("Plano Igreja", () => {
 
 test.describe("Plano Catedral", () => {
   test.beforeEach(async ({ page }) => {
+    test.skip(
+      !users.catedral.email || !users.catedral.password,
+      "TEST_USER_CATEDRAL_EMAIL / _PASSWORD não configurados."
+    );
     await login(page, users.catedral.email, users.catedral.password);
   });
 

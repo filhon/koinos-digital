@@ -4,7 +4,10 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { validateCheckin } from "@/actions/checkin";
+import {
+  validateCheckin,
+  validateCheckinTokenForVisitor,
+} from "@/actions/checkin";
 import {
   visitorCheckinSchema,
   type VisitorCheckinInput,
@@ -28,7 +31,7 @@ interface VisitorCheckinProps {
 type PageState = "form" | "loading" | "success" | "error";
 
 export function VisitorCheckin({ shortToken, memberId }: VisitorCheckinProps) {
-  const [state, setState] = useState<PageState>("form");
+  const [state, setState] = useState<PageState>("loading");
   const [resultMessage, setResultMessage] = useState("");
   const [geoLat, setGeoLat] = useState<number | undefined>();
   const [geoLng, setGeoLng] = useState<number | undefined>();
@@ -46,11 +49,23 @@ export function VisitorCheckin({ shortToken, memberId }: VisitorCheckinProps) {
 
   // Se membro logado → auto check-in
   useEffect(() => {
-    if (memberId && state === "form") {
+    if (memberId) {
       handleLoggedInCheckin();
+      return;
     }
+
+    let isActive = true;
+    validateCheckinTokenForVisitor(shortToken).then((result) => {
+      if (!isActive) return;
+      setResultMessage(result.message);
+      setState(result.success ? "form" : "error");
+    });
+
+    return () => {
+      isActive = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [memberId]);
+  }, [memberId, shortToken]);
 
   async function handleLoggedInCheckin() {
     setState("loading");

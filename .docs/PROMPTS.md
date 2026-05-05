@@ -1376,7 +1376,7 @@ TAREFAS:
 
 ## Sessão 5.5 — Polish + soft launch
 
-> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
+> **UI:** Use `/impeccable craft` para implementar as telas desta sessão.
 
 ```
 

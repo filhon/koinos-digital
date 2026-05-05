@@ -61,55 +61,117 @@ SELECT gen_random_uuid(), id, 'termos_gerais', true, '127.0.0.1', '1.0.0'
 FROM public.members
 WHERE church_id = '11111111-1111-1111-1111-111111111111';
 
--- 7. 12 Equipes (Tribos de Israel) para a Igreja Teste
--- O trigger cria automaticamente para novos tenants;
--- para o tenant de seed precisamos inserir diretamente.
-INSERT INTO public.teams (id, church_id, name, tribe_name, color) VALUES
-('a1000000-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', 'Rúben',    'Rúben',    '#DC2626'),
-('a1000000-0000-0000-0000-000000000002', '11111111-1111-1111-1111-111111111111', 'Simeão',   'Simeão',   '#EA580C'),
-('a1000000-0000-0000-0000-000000000003', '11111111-1111-1111-1111-111111111111', 'Levi',     'Levi',     '#CA8A04'),
-('a1000000-0000-0000-0000-000000000004', '11111111-1111-1111-1111-111111111111', 'Judá',     'Judá',     '#16A34A'),
-('a1000000-0000-0000-0000-000000000005', '11111111-1111-1111-1111-111111111111', 'Dã',       'Dã',       '#0891B2'),
-('a1000000-0000-0000-0000-000000000006', '11111111-1111-1111-1111-111111111111', 'Naftali',  'Naftali',  '#2563EB'),
-('a1000000-0000-0000-0000-000000000007', '11111111-1111-1111-1111-111111111111', 'Gade',     'Gade',     '#7C3AED'),
-('a1000000-0000-0000-0000-000000000008', '11111111-1111-1111-1111-111111111111', 'Aser',     'Aser',     '#DB2777'),
-('a1000000-0000-0000-0000-000000000009', '11111111-1111-1111-1111-111111111111', 'Issacar',  'Issacar',  '#0D9488'),
-('a1000000-0000-0000-0000-000000000010', '11111111-1111-1111-1111-111111111111', 'Zebulom',  'Zebulom',  '#4F46E5'),
-('a1000000-0000-0000-0000-000000000011', '11111111-1111-1111-1111-111111111111', 'José',     'José',     '#D97706'),
-('a1000000-0000-0000-0000-000000000012', '11111111-1111-1111-1111-111111111111', 'Benjamim', 'Benjamim', '#65A30D')
-ON CONFLICT (church_id, name) DO NOTHING;
+-- 7. Cores das tribos — o trigger já criou as 12 tribos ao inserir o tenant;
+-- aqui apenas garantimos as cores corretas por nome.
+UPDATE public.teams SET color = '#DC2626' WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Rúben';
+UPDATE public.teams SET color = '#EA580C' WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Simeão';
+UPDATE public.teams SET color = '#CA8A04' WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Levi';
+UPDATE public.teams SET color = '#16A34A' WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Judá';
+UPDATE public.teams SET color = '#0891B2' WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Dã';
+UPDATE public.teams SET color = '#2563EB' WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Naftali';
+UPDATE public.teams SET color = '#7C3AED' WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Gade';
+UPDATE public.teams SET color = '#DB2777' WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Aser';
+UPDATE public.teams SET color = '#0D9488' WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Issacar';
+UPDATE public.teams SET color = '#4F46E5' WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Zebulom';
+UPDATE public.teams SET color = '#D97706' WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'José';
+UPDATE public.teams SET color = '#65A30D' WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Benjamim';
 
--- 8. Atribuição de membros às tribos (distribuição manual para o seed)
-INSERT INTO public.member_teams (id, church_id, member_id, team_id) VALUES
-(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', 'a1000000-0000-0000-0000-000000000004'), -- Pastor → Judá
-(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '33333333-3333-3333-3333-333333333333', 'a1000000-0000-0000-0000-000000000006'), -- Presbítero → Naftali
-(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '44444444-4444-4444-4444-444444444444', 'a1000000-0000-0000-0000-000000000004'), -- Diácono → Judá
-(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '55555555-5555-5555-5555-555555555555', 'a1000000-0000-0000-0000-000000000007'), -- Tesoureira → Gade
-(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '66666666-6666-6666-6666-666666666666', 'a1000000-0000-0000-0000-000000000001'), -- Líder → Rúben
-(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '77777777-7777-7777-7777-777777777777', 'a1000000-0000-0000-0000-000000000009'), -- Membro → Issacar
-(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '88888888-8888-8888-8888-888888888888', 'a1000000-0000-0000-0000-000000000011'), -- Visitante 1 → José
-(gen_random_uuid(), '11111111-1111-1111-1111-111111111111', '99999999-9999-9999-9999-999999999999', 'a1000000-0000-0000-0000-000000000003')  -- Visitante 2 → Levi
-ON CONFLICT (member_id) DO NOTHING;
+-- 8. Atribuição de membros às tribos — lookup por nome (IDs gerados pelo trigger)
+-- O trigger members_assign_team já atribui automaticamente ao inserir membros,
+-- mas pode ter ido para tribos diferentes; garantimos a distribuição desejada.
+INSERT INTO public.member_teams (church_id, member_id, team_id)
+SELECT '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', id
+FROM public.teams WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Judá'
+ON CONFLICT (member_id) DO UPDATE SET team_id = EXCLUDED.team_id;
 
--- 9. Pontos de demonstração para o placar
-INSERT INTO public.score_events (church_id, member_id, team_id, points, action_type) VALUES
--- Judá (Pastor + Diácono) — líder
-('11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', 'a1000000-0000-0000-0000-000000000004', 10, 'checkin'),
-('11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', 'a1000000-0000-0000-0000-000000000004', 10, 'checkin'),
-('11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', 'a1000000-0000-0000-0000-000000000004', 50, 'invite'),
-('11111111-1111-1111-1111-111111111111', '44444444-4444-4444-4444-444444444444', 'a1000000-0000-0000-0000-000000000004', 10, 'checkin'),
+INSERT INTO public.member_teams (church_id, member_id, team_id)
+SELECT '11111111-1111-1111-1111-111111111111', '33333333-3333-3333-3333-333333333333', id
+FROM public.teams WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Naftali'
+ON CONFLICT (member_id) DO UPDATE SET team_id = EXCLUDED.team_id;
+
+INSERT INTO public.member_teams (church_id, member_id, team_id)
+SELECT '11111111-1111-1111-1111-111111111111', '44444444-4444-4444-4444-444444444444', id
+FROM public.teams WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Judá'
+ON CONFLICT (member_id) DO UPDATE SET team_id = EXCLUDED.team_id;
+
+INSERT INTO public.member_teams (church_id, member_id, team_id)
+SELECT '11111111-1111-1111-1111-111111111111', '55555555-5555-5555-5555-555555555555', id
+FROM public.teams WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Gade'
+ON CONFLICT (member_id) DO UPDATE SET team_id = EXCLUDED.team_id;
+
+INSERT INTO public.member_teams (church_id, member_id, team_id)
+SELECT '11111111-1111-1111-1111-111111111111', '66666666-6666-6666-6666-666666666666', id
+FROM public.teams WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Rúben'
+ON CONFLICT (member_id) DO UPDATE SET team_id = EXCLUDED.team_id;
+
+INSERT INTO public.member_teams (church_id, member_id, team_id)
+SELECT '11111111-1111-1111-1111-111111111111', '77777777-7777-7777-7777-777777777777', id
+FROM public.teams WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Issacar'
+ON CONFLICT (member_id) DO UPDATE SET team_id = EXCLUDED.team_id;
+
+INSERT INTO public.member_teams (church_id, member_id, team_id)
+SELECT '11111111-1111-1111-1111-111111111111', '88888888-8888-8888-8888-888888888888', id
+FROM public.teams WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'José'
+ON CONFLICT (member_id) DO UPDATE SET team_id = EXCLUDED.team_id;
+
+INSERT INTO public.member_teams (church_id, member_id, team_id)
+SELECT '11111111-1111-1111-1111-111111111111', '99999999-9999-9999-9999-999999999999', id
+FROM public.teams WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Levi'
+ON CONFLICT (member_id) DO UPDATE SET team_id = EXCLUDED.team_id;
+
+-- 9. Pontos de demonstração — lookup de team_id por nome da tribo
+-- Judá (Pastor + Diácono)
+INSERT INTO public.score_events (church_id, member_id, team_id, points, action_type)
+SELECT '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', id, 10, 'checkin'
+FROM public.teams WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Judá';
+
+INSERT INTO public.score_events (church_id, member_id, team_id, points, action_type)
+SELECT '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', id, 10, 'checkin'
+FROM public.teams WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Judá';
+
+INSERT INTO public.score_events (church_id, member_id, team_id, points, action_type)
+SELECT '11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', id, 50, 'invite'
+FROM public.teams WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Judá';
+
+INSERT INTO public.score_events (church_id, member_id, team_id, points, action_type)
+SELECT '11111111-1111-1111-1111-111111111111', '44444444-4444-4444-4444-444444444444', id, 10, 'checkin'
+FROM public.teams WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Judá';
+
 -- Naftali (Presbítero)
-('11111111-1111-1111-1111-111111111111', '33333333-3333-3333-3333-333333333333', 'a1000000-0000-0000-0000-000000000006', 10, 'checkin'),
-('11111111-1111-1111-1111-111111111111', '33333333-3333-3333-3333-333333333333', 'a1000000-0000-0000-0000-000000000006', 10, 'checkin'),
-('11111111-1111-1111-1111-111111111111', '33333333-3333-3333-3333-333333333333', 'a1000000-0000-0000-0000-000000000006', 10, 'checkin'),
+INSERT INTO public.score_events (church_id, member_id, team_id, points, action_type)
+SELECT '11111111-1111-1111-1111-111111111111', '33333333-3333-3333-3333-333333333333', id, 10, 'checkin'
+FROM public.teams WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Naftali';
+
+INSERT INTO public.score_events (church_id, member_id, team_id, points, action_type)
+SELECT '11111111-1111-1111-1111-111111111111', '33333333-3333-3333-3333-333333333333', id, 10, 'checkin'
+FROM public.teams WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Naftali';
+
+INSERT INTO public.score_events (church_id, member_id, team_id, points, action_type)
+SELECT '11111111-1111-1111-1111-111111111111', '33333333-3333-3333-3333-333333333333', id, 10, 'checkin'
+FROM public.teams WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Naftali';
+
 -- Gade (Tesoureira)
-('11111111-1111-1111-1111-111111111111', '55555555-5555-5555-5555-555555555555', 'a1000000-0000-0000-0000-000000000007', 50, 'invite'),
-('11111111-1111-1111-1111-111111111111', '55555555-5555-5555-5555-555555555555', 'a1000000-0000-0000-0000-000000000007', 10, 'checkin'),
+INSERT INTO public.score_events (church_id, member_id, team_id, points, action_type)
+SELECT '11111111-1111-1111-1111-111111111111', '55555555-5555-5555-5555-555555555555', id, 50, 'invite'
+FROM public.teams WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Gade';
+
+INSERT INTO public.score_events (church_id, member_id, team_id, points, action_type)
+SELECT '11111111-1111-1111-1111-111111111111', '55555555-5555-5555-5555-555555555555', id, 10, 'checkin'
+FROM public.teams WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Gade';
+
 -- Issacar (Membro)
-('11111111-1111-1111-1111-111111111111', '77777777-7777-7777-7777-777777777777', 'a1000000-0000-0000-0000-000000000009', 5, 'daily_reading'),
-('11111111-1111-1111-1111-111111111111', '77777777-7777-7777-7777-777777777777', 'a1000000-0000-0000-0000-000000000009', 5, 'daily_reading'),
+INSERT INTO public.score_events (church_id, member_id, team_id, points, action_type)
+SELECT '11111111-1111-1111-1111-111111111111', '77777777-7777-7777-7777-777777777777', id, 5, 'daily_reading'
+FROM public.teams WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Issacar';
+
+INSERT INTO public.score_events (church_id, member_id, team_id, points, action_type)
+SELECT '11111111-1111-1111-1111-111111111111', '77777777-7777-7777-7777-777777777777', id, 5, 'daily_reading'
+FROM public.teams WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Issacar';
+
 -- Rúben (Líder)
-('11111111-1111-1111-1111-111111111111', '66666666-6666-6666-6666-666666666666', 'a1000000-0000-0000-0000-000000000001', 10, 'checkin');
+INSERT INTO public.score_events (church_id, member_id, team_id, points, action_type)
+SELECT '11111111-1111-1111-1111-111111111111', '66666666-6666-6666-6666-666666666666', id, 10, 'checkin'
+FROM public.teams WHERE church_id = '11111111-1111-1111-1111-111111111111' AND name = 'Rúben';
 
 -- 10. Leituras diárias — primeiros 90 dias (Gn 1–50, Êx 1–40), início 2026-04-10
 -- Seed incremental: NÃO inclui os 1.189 capítulos inteiros.
@@ -207,3 +269,202 @@ INSERT INTO public.daily_readings (date, book, chapter) VALUES
 ('2026-07-07', 'Êxodo', 39),
 ('2026-07-08', 'Êxodo', 40)
 ON CONFLICT (date) DO NOTHING;
+
+-- ============================================================================
+-- Dados E2E — Sessão 5.4
+-- Dependem dos tenants/membros inseridos acima; por isso ficam no seed (não migration).
+-- ============================================================================
+
+-- ─── Upgrade Tenant A para "catedral" (acessa todos os módulos nos testes) ───
+UPDATE public.tenants
+SET plan = 'catedral'
+WHERE id = '11111111-1111-1111-1111-111111111111';
+
+-- ─── Tenant B (Igreja Beta E2E) — cross-tenant RLS ───────────────────────────
+INSERT INTO public.tenants (id, name, slug, shared_finances, plan)
+VALUES ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Igreja Beta E2E', 'beta-e2e', false, 'crescimento')
+ON CONFLICT (id) DO NOTHING;
+
+-- Auth user do pastor do Tenant B (senha: Senha123)
+INSERT INTO auth.users (
+  id, instance_id, aud, role, email, encrypted_password,
+  email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
+  created_at, updated_at, is_super_admin
+)
+VALUES (
+  'bbbbbbbb-0000-0000-0000-bbbbbbbbbbbb',
+  '00000000-0000-0000-0000-000000000000',
+  'authenticated', 'authenticated',
+  'pastor@beta.com',
+  crypt('Senha123', gen_salt('bf')),
+  now(),
+  '{"provider":"email","providers":["email"]}',
+  '{"church_id":"bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb","role":"pastor"}',
+  now(), now(), false
+)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO auth.identities (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+VALUES (
+  gen_random_uuid(),
+  'bbbbbbbb-0000-0000-0000-bbbbbbbbbbbb',
+  'bbbbbbbb-0000-0000-0000-bbbbbbbbbbbb',
+  '{"sub":"bbbbbbbb-0000-0000-0000-bbbbbbbbbbbb","email":"pastor@beta.com"}',
+  'email', now(), now(), now()
+)
+ON CONFLICT DO NOTHING;
+
+-- Membro no Tenant B (CPF mock — substituído pelo setup-e2e.ts se necessário)
+INSERT INTO public.members (id, church_id, name, cpf, email, birth_date, role, is_active, phone)
+VALUES (
+  'bbbbbbbb-0000-0000-0000-bbbbbbbbbbbb',
+  'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+  'Pastor Beta',
+  '00000000000000000000000000000000:00000000000000000000000000000000:00000000000000000000000000000000',
+  'pastor@beta.com',
+  '1985-01-01',
+  'pastor',
+  true,
+  '(11) 99999-9999'
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- 12 Tribos para Tenant B (copia as tribos do Tenant A)
+INSERT INTO public.teams (church_id, name, tribe_name, color)
+SELECT 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', name, tribe_name, color
+FROM public.teams
+WHERE church_id = '11111111-1111-1111-1111-111111111111'
+ON CONFLICT (church_id, name) DO NOTHING;
+
+-- Atribui pastor B à primeira tribo do Tenant B
+INSERT INTO public.member_teams (church_id, member_id, team_id)
+SELECT 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+       'bbbbbbbb-0000-0000-0000-bbbbbbbbbbbb',
+       id
+FROM public.teams
+WHERE church_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
+ORDER BY name
+LIMIT 1
+ON CONFLICT (member_id) DO NOTHING;
+
+-- Recurso no Tenant B (para isolar do Tenant A nos testes de RLS)
+INSERT INTO public.resources (id, church_id, name, responsible_id, status, value)
+VALUES (
+  'bbbbbbbb-0000-0000-0000-000000000001',
+  'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+  'Datashow Beta',
+  'bbbbbbbb-0000-0000-0000-bbbbbbbbbbbb',
+  'disponível',
+  1500.00
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- ─── Evento E2E (Tenant A) — UUID fixo para testes de check-in ───────────────
+INSERT INTO public.events (
+  id, church_id, name, responsible_id, date, start_time, end_time,
+  modality, location, is_recurring
+)
+VALUES (
+  'eeeeeeee-0000-0000-0000-000000000001',
+  '11111111-1111-1111-1111-111111111111',
+  'Culto E2E Test',
+  '22222222-2222-2222-2222-222222222222',
+  CURRENT_DATE + INTERVAL '7 days',
+  '19:00',
+  '21:00',
+  'presencial',
+  'Templo Principal',
+  false
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- ─── Assembléia E2E (Tenant A) ────────────────────────────────────────────────
+INSERT INTO public.assemblies (
+  id, church_id, name, date, start_time, location, reason, has_election
+)
+VALUES (
+  'aaaaaaaa-0000-0000-0000-000000000001',
+  '11111111-1111-1111-1111-111111111111',
+  'Assembléia E2E Test',
+  CURRENT_DATE + INTERVAL '14 days',
+  '18:00',
+  'Salão da Igreja',
+  'Aprovação de orçamento anual',
+  true
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- Eleição em estado "aberta" para testes de votação e anonimidade
+INSERT INTO public.elections (
+  id, assembly_id, church_id, name, description,
+  quorum, allow_remote_vote, status,
+  active_members_at_open, opened_at
+)
+VALUES (
+  'ffffffff-0000-0000-0000-000000000001',
+  'aaaaaaaa-0000-0000-0000-000000000001',
+  '11111111-1111-1111-1111-111111111111',
+  'Eleição E2E — Sim/Não',
+  'Aprovação do orçamento de 2027',
+  50,
+  true,
+  'aberta',
+  8,
+  now()
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- Salt da eleição (necessário para voter_hash funcionar)
+INSERT INTO public.election_salts (election_id, salt)
+VALUES (
+  'ffffffff-0000-0000-0000-000000000001',
+  encode(gen_random_bytes(32), 'hex')
+)
+ON CONFLICT (election_id) DO NOTHING;
+
+-- ─── Convite com CPF para teste de matching ───────────────────────────────────
+-- Vinculado ao membro Ana (77777777); CPF real inserido pelo setup-e2e.ts
+INSERT INTO public.invite_links (id, church_id, member_id, code, active)
+VALUES (
+  'cccccccc-0000-0000-0000-000000000001',
+  '11111111-1111-1111-1111-111111111111',
+  '77777777-7777-7777-7777-777777777777',
+  'CPFMATCH2026',
+  true
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- ─── Conta bancária E2E (Tenant A) ───────────────────────────────────────────
+-- account_number mock; substituído pelo setup-e2e.ts com criptografia real
+INSERT INTO public.accounts (
+  id, church_id, name, description, bank, agency,
+  account_number, initial_balance, current_balance
+)
+VALUES (
+  'dddddddd-0000-0000-0000-000000000001',
+  '11111111-1111-1111-1111-111111111111',
+  'Conta E2E Test',
+  'Conta para testes automatizados',
+  'Banco do Brasil',
+  '0001',
+  '00000000000000000000000000000000:00000000000000000000000000000000:00000000000000000000000000000000',
+  1000.00,
+  1000.00
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- Transação de demonstração (para testar imutabilidade — sem botão editar/excluir)
+INSERT INTO public.transactions (
+  id, church_id, account_id, type, date, description, category, value
+)
+VALUES (
+  'dddddddd-0000-0000-0000-000000000002',
+  '11111111-1111-1111-1111-111111111111',
+  'dddddddd-0000-0000-0000-000000000001',
+  'entrada',
+  CURRENT_DATE,
+  'Dízimo E2E — imutabilidade',
+  'dízimo',
+  200.00
+)
+ON CONFLICT (id) DO NOTHING;

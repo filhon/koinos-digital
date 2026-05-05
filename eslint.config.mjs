@@ -13,6 +13,8 @@ export default tseslint.config(
       "node_modules/**/*",
       "dist/**/*",
       "public/**/*",
+      ".agents/skills/impeccable/**/*",
+      ".claude/skills/impeccable/**/*",
       "components.json",
     ],
   },

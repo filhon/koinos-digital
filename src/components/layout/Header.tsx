@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -113,18 +114,20 @@ export function Header({ userEmail, userName, userAvatar }: HeaderProps) {
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align="end" className="w-52">
-            <DropdownMenuLabel className="font-normal">
-              <div className="flex flex-col gap-0.5">
-                {userName && (
-                  <span className="text-sm font-medium text-foreground">
-                    {userName}
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col gap-0.5">
+                  {userName && (
+                    <span className="text-sm font-medium text-foreground">
+                      {userName}
+                    </span>
+                  )}
+                  <span className="text-xs text-muted-foreground truncate">
+                    {userEmail}
                   </span>
-                )}
-                <span className="text-xs text-muted-foreground truncate">
-                  {userEmail}
-                </span>
-              </div>
-            </DropdownMenuLabel>
+                </div>
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="gap-2 cursor-pointer"

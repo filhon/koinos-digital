@@ -1,43 +1,87 @@
 import { getUser } from "@/lib/auth/session";
-import { signOut } from "@/actions/auth";
 import { getTodayReading } from "@/actions/devotion";
-import { DailyReadingWidget } from "./daily-reading-widget";
+import { listEvents } from "@/actions/events";
+import { getLeaderboard, getMyTeam } from "@/actions/gamification";
+import { createClient } from "@/lib/supabase/server";
+import { HomeContent } from "./home-content";
+
+async function getMemberData(
+  churchId: string,
+  email: string | undefined
+): Promise<{ count: number; name: string | null }> {
+  const supabase = await createClient();
+
+  const [countResult, nameResult] = await Promise.all([
+    supabase
+      .from("members")
+      .select("id", { count: "exact", head: true })
+      .eq("church_id", churchId)
+      .eq("is_active", true),
+    email
+      ? supabase
+          .from("members")
+          .select("name")
+          .eq("church_id", churchId)
+          .eq("email", email)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+
+  return {
+    count: countResult.count ?? 0,
+    name: (nameResult.data?.name as string | null) ?? null,
+  };
+}
 
 export default async function DashboardPage() {
   const user = await getUser();
-  const devotionResult = await getTodayReading();
+  if (!user) return null;
+
+  const [
+    devotionResult,
+    eventsResult,
+    leaderboardResult,
+    myTeamResult,
+    memberData,
+  ] = await Promise.all([
+    getTodayReading(),
+    listEvents({ upcoming: true, pageSize: 5 }),
+    getLeaderboard({ period: "monthly" }),
+    getMyTeam(),
+    getMemberData(user.church_id, user.email),
+  ]);
 
   const devotionData =
     devotionResult && "data" in devotionResult && devotionResult.data
       ? devotionResult.data
       : null;
 
+  const upcomingEvents =
+    eventsResult && "data" in eventsResult && eventsResult.data
+      ? eventsResult.data.events
+      : [];
+
+  const teamRanking =
+    leaderboardResult && "data" in leaderboardResult && leaderboardResult.data
+      ? leaderboardResult.data.teams
+      : [];
+
+  const myTeam =
+    myTeamResult && "data" in myTeamResult && myTeamResult.data
+      ? myTeamResult.data
+      : null;
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
-      <div className="w-full max-w-sm space-y-4">
-        <div className="text-center">
-          <h1 className="text-3xl font-semibold text-gray-900">Koinos</h1>
-          <p className="mt-2 text-gray-500">
-            Dashboard em construção — Phase 1
-          </p>
-          {user?.email && (
-            <p className="mt-1 text-sm text-gray-400">
-              Logado como {user.email}
-            </p>
-          )}
-        </div>
-
-        {devotionData && <DailyReadingWidget initialData={devotionData} />}
-
-        <form action={signOut} className="flex justify-center">
-          <button
-            type="submit"
-            className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:border-gray-400 hover:text-gray-900 transition-colors"
-          >
-            Sair
-          </button>
-        </form>
-      </div>
-    </main>
+    <div className="px-4 py-6 sm:px-6">
+      <HomeContent
+        userName={memberData.name}
+        userRole={user.role}
+        memberCount={memberData.count}
+        upcomingEvents={upcomingEvents}
+        myTeam={myTeam}
+        teamRanking={teamRanking}
+        devotionData={devotionData}
+      />
+    </div>
   );
 }

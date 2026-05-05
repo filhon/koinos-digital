@@ -157,6 +157,54 @@ const tokenMemoryCache = new Map<
   { payload: CheckinPayload; expiresAt: number }
 >();
 
+async function getStoredCheckinPayload(
+  shortToken: string
+): Promise<CheckinPayload | null> {
+  const redis = getRedis();
+  if (redis) {
+    const raw = await redis.get<string>(`checkin:token:${shortToken}`);
+    if (raw) {
+      return typeof raw === "string" ? JSON.parse(raw) : raw;
+    }
+    return null;
+  }
+
+  const cached = tokenMemoryCache.get(shortToken);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.payload;
+  }
+  return null;
+}
+
+export async function validateCheckinTokenForVisitor(
+  shortToken: string
+): Promise<CheckinResult> {
+  if (!/^[A-Za-z0-9_-]{12}$/.test(shortToken)) {
+    return { success: false, message: "QR Code inválido." };
+  }
+
+  const payload = await getStoredCheckinPayload(shortToken);
+  if (!payload) {
+    return { success: false, message: "QR Code expirado ou inválido." };
+  }
+
+  const { signature, ...payloadWithoutSig } = payload;
+  const isValid = verifyPayload(JSON.stringify(payloadWithoutSig), signature);
+  if (!isValid) {
+    return { success: false, message: "Token inválido." };
+  }
+
+  const age = Date.now() - payload.timestamp;
+  if (age > 60_000) {
+    return {
+      success: false,
+      message: "QR Code expirado. Aguarde a próxima rotação.",
+    };
+  }
+
+  return { success: true, message: "QR Code válido." };
+}
+
 // ─── validateCheckin ───────────────────────────────────────────────────────
 
 export async function validateCheckin(
@@ -173,20 +221,7 @@ export async function validateCheckin(
   const { shortToken, method, geoLat, geoLng } = parsed.data;
 
   // Busca payload do token
-  let payload: CheckinPayload | null = null;
-
-  const redis = getRedis();
-  if (redis) {
-    const raw = await redis.get<string>(`checkin:token:${shortToken}`);
-    if (raw) {
-      payload = typeof raw === "string" ? JSON.parse(raw) : raw;
-    }
-  } else {
-    const cached = tokenMemoryCache.get(shortToken);
-    if (cached && cached.expiresAt > Date.now()) {
-      payload = cached.payload;
-    }
-  }
+  const payload = await getStoredCheckinPayload(shortToken);
 
   if (!payload) {
     return { success: false, message: "QR Code expirado ou inválido." };
@@ -207,6 +242,8 @@ export async function validateCheckin(
       message: "QR Code expirado. Aguarde a próxima rotação.",
     };
   }
+
+  const redis = getRedis();
 
   // Verifica nonce single-use
   if (memberId) {

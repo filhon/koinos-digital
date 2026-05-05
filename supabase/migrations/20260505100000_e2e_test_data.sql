@@ -1,0 +1,2 @@
+-- E2E test data foi movido para supabase/seed.sql (sessão 5.4).
+-- Migrations rodam antes do seed; dados que dependem do seed ficam no seed.sql.

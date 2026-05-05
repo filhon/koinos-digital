@@ -1,7 +1,11 @@
-export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <h1 className="text-4xl font-bold">Bem-vindo ao Koinos!</h1>
-    </main>
-  );
+import { SaasLanding } from "./saas-landing";
+
+export const metadata = {
+  title: "Koinos — Gestão completa para igrejas",
+  description:
+    "SaaS de gestão para igrejas evangélicas. Membros, agenda, eventos, financeiro, mural, gamificação e muito mais. Plano gratuito para sempre.",
+};
+
+export default function HomePage() {
+  return <SaasLanding />;
 }
