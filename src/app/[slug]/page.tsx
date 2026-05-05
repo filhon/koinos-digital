@@ -23,13 +23,33 @@ export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const data = await getLandingPageBySlug(slug);
   if (!data) return { title: "Página não encontrada" };
+
+  const description = data.slogan ?? `Conheça a ${data.name}`;
+  const imageUrl = data.hero_image_url ?? undefined;
+
   return {
     title: data.name,
-    description: data.slogan ?? `Conheça a ${data.name}`,
+    description,
+    keywords: `${data.name}, igreja evangélica, ${slug}`,
     openGraph: {
+      type: "website" as const,
+      locale: "pt_BR",
       title: data.name,
-      description: data.slogan ?? `Conheça a ${data.name}`,
-      images: data.hero_image_url ? [data.hero_image_url] : [],
+      description,
+      siteName: data.name,
+      images: imageUrl
+        ? [{ url: imageUrl, width: 1200, height: 630, alt: data.name }]
+        : [],
+    },
+    twitter: {
+      card: "summary_large_image" as const,
+      title: data.name,
+      description,
+      images: imageUrl ? [imageUrl] : [],
+    },
+    robots: {
+      index: true,
+      follow: true,
     },
   };
 }
@@ -40,5 +60,31 @@ export default async function TenantLandingPage({ params }: Props) {
 
   if (!data || !data.is_published) notFound();
 
-  return <LandingPageClient data={data} />;
+  // Structured data JSON-LD para Igreja (ReligiousOrganization)
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ReligiousOrganization",
+    name: data.name,
+    description: data.slogan ?? data.about_us ?? undefined,
+    url: `${process.env.NEXT_PUBLIC_APP_DOMAIN ? `https://${slug}.${process.env.NEXT_PUBLIC_APP_DOMAIN}` : ""}`,
+    image: data.hero_image_url ?? undefined,
+    address: data.address_text
+      ? {
+          "@type": "PostalAddress",
+          streetAddress: data.address_text,
+          addressCountry: "BR",
+        }
+      : undefined,
+    ...(data.streaming_url ? { sameAs: [data.streaming_url] } : {}),
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <LandingPageClient data={data} />
+    </>
+  );
 }

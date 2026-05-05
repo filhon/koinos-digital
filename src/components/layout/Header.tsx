@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "@/actions/auth";
 import { NotificationBell } from "./NotificationBell";
+import { GlobalSearch } from "./GlobalSearch";
 
 interface HeaderProps {
   userEmail?: string;
@@ -60,6 +61,9 @@ export function Header({ userEmail, userName, userAvatar }: HeaderProps) {
 
       {/* Ações direita */}
       <div className="flex items-center gap-1">
+        {/* Busca global */}
+        <GlobalSearch />
+
         {/* Notificações */}
         <NotificationBell />
 

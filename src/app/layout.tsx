@@ -21,8 +21,43 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Koinos",
-  description: "Sistema de gestão para igrejas",
+  title: {
+    default: "Koinos — Sistema de Gestão para Igrejas",
+    template: "%s — Koinos",
+  },
+  description:
+    "Plataforma SaaS 360° de gestão para igrejas evangélicas brasileiras. Membros, agenda, financeiro, liturgia, gamificação e muito mais em um único sistema.",
+  keywords:
+    "gestão de igrejas, sistema para igrejas, SaaS igreja, controle de membros, agenda eclesiástica",
+  authors: [{ name: "Koinos" }],
+  creator: "Koinos",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_DOMAIN
+      ? `https://app.${process.env.NEXT_PUBLIC_APP_DOMAIN}`
+      : "http://localhost:3000"
+  ),
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    siteName: "Koinos",
+    title: "Koinos — Sistema de Gestão para Igrejas",
+    description:
+      "Plataforma SaaS 360° de gestão para igrejas evangélicas brasileiras.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Koinos — Sistema de Gestão para Igrejas",
+    description: "Plataforma SaaS 360° de gestão para igrejas evangélicas.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+    },
+  },
 };
 
 export default async function RootLayout({
