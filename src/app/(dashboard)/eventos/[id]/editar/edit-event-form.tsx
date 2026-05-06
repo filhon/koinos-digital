@@ -407,7 +407,7 @@ export function EditEventForm({
             >
               <Input
                 {...register("location")}
-                placeholder="Rua das Flores, 123 — Recife/PE"
+                placeholder="Rua das Flores, 123, Recife/PE"
                 autoComplete="street-address"
               />
             </Field>
@@ -510,7 +510,7 @@ export function EditEventForm({
                     />
                     <span className="text-sm text-foreground">{opt.label}</span>
                     <span className="text-xs text-muted-foreground">
-                      — {opt.description}
+                      ({opt.description})
                     </span>
                   </label>
                 ))}

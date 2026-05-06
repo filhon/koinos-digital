@@ -16,7 +16,7 @@ export default function PastorSection({ data }: Props) {
   return (
     <div
       ref={ref}
-      className="py-28 px-6"
+      className="py-24 px-6"
       style={{ background: "oklch(0.12 0.03 250)" }}
     >
       <div className="max-w-5xl mx-auto">

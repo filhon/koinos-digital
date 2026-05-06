@@ -41,7 +41,7 @@ export default function LandingNav({ churchName }: Props) {
         <div className="flex items-center gap-3">
           <a
             href={`${APP_URL}/dashboard`}
-            className="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
+            className="inline-flex items-center min-h-[44px] px-4 rounded-full text-sm font-medium transition-all duration-200 hover:text-[oklch(0.92_0.02_250)] hover:border-[oklch(0.55_0.04_250/0.8)] focus-visible:outline-2 focus-visible:outline-[oklch(0.78_0.13_55)] focus-visible:outline-offset-2"
             style={{
               color: "oklch(0.75 0.04 250)",
               border: "1px solid oklch(0.35 0.02 250 / 0.6)",
@@ -51,7 +51,7 @@ export default function LandingNav({ churchName }: Props) {
           </a>
           <a
             href="#cta"
-            className="px-5 py-2 rounded-full text-sm font-medium transition-all duration-200"
+            className="inline-flex items-center min-h-[44px] px-5 rounded-full text-sm font-medium transition-all duration-200 hover:brightness-110 active:scale-95 focus-visible:outline-2 focus-visible:outline-[oklch(0.78_0.13_55)] focus-visible:outline-offset-2"
             style={{
               background: "oklch(0.78 0.13 55)",
               color: "oklch(0.13 0.025 250)",

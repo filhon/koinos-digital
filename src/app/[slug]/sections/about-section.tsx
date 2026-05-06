@@ -15,7 +15,7 @@ export default function AboutSection({ data }: Props) {
   return (
     <div
       ref={ref}
-      className="py-28 px-6"
+      className="py-36 px-6"
       style={{ background: "oklch(0.97 0.005 250)" }}
     >
       <div className="max-w-4xl mx-auto">
@@ -34,7 +34,7 @@ export default function AboutSection({ data }: Props) {
 
           {/* Drop-cap text */}
           <div
-            className="text-lg sm:text-xl leading-relaxed"
+            className="text-lg sm:text-xl leading-relaxed max-w-[72ch]"
             style={{ color: "oklch(0.28 0.03 250)" }}
           >
             {data.about_us?.split("\n\n").map((paragraph, i) => (

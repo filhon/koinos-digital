@@ -16,7 +16,7 @@ export default async function SegurancaPage() {
     factors?.totp?.find((f) => f.status === "verified") ?? null;
 
   return (
-    <div className="mx-auto max-w-xl px-4 py-8">
+    <div className="max-w-3xl mx-auto">
       <PageHeader
         title="Segurança"
         description="Gerencie a autenticação em dois fatores da sua conta"

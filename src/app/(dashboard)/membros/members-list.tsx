@@ -53,28 +53,30 @@ export async function MembersList({
 
   return (
     <div className="space-y-4">
-      <MembersFilters
-        search={search}
-        role={role}
-        status={status}
-        churchIdFilter={churchIdFilter}
-        congregations={congregations}
-      />
+      <div className="space-y-2">
+        <MembersFilters
+          search={search}
+          role={role}
+          status={status}
+          churchIdFilter={churchIdFilter}
+          congregations={congregations}
+        />
 
-      {data && (
-        <div className="flex items-center gap-2">
-          <p className="text-xs text-muted-foreground">
-            {data.total} membro{data.total !== 1 ? "s" : ""}
-            {data.families.length > 0 &&
-              ` · ${data.families.length} famíl${data.families.length !== 1 ? "ias" : "ia"}`}
-          </p>
-          {unitLabel && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 font-medium">
-              {unitLabel}
-            </span>
-          )}
-        </div>
-      )}
+        {data && (
+          <div className="flex items-center gap-2">
+            <p className="text-xs text-muted-foreground">
+              {data.total} membro{data.total !== 1 ? "s" : ""}
+              {data.families.length > 0 &&
+                ` · ${data.families.length} famíl${data.families.length !== 1 ? "ias" : "ia"}`}
+            </p>
+            {unitLabel && (
+              <span className="text-xs px-2 py-0.5 rounded-full bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 font-medium">
+                {unitLabel}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
 
       {"error" in (result ?? {}) && !!(result as { error: string }).error && (
         <div className="rounded-lg bg-error-light border border-error/20 p-4 text-sm text-error-dark">

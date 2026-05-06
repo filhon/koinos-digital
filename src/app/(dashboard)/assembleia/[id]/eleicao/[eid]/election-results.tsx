@@ -76,7 +76,7 @@ export function ElectionResults({
           )}
           {quorum_reached
             ? `Quórum atingido (mín. ${quorum})`
-            : `Quórum não atingido — faltam ${Math.max(quorum - total_votes, 0)} votos`}
+            : `Quórum não atingido: faltam ${Math.max(quorum - total_votes, 0)} votos`}
         </div>
       </div>
 
@@ -97,7 +97,7 @@ export function ElectionResults({
                   </span>
                   {candidate.position && (
                     <span className="text-xs text-muted-foreground truncate">
-                      — {candidate.position}
+                      ({candidate.position})
                     </span>
                   )}
                 </div>

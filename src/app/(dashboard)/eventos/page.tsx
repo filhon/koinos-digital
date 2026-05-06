@@ -19,7 +19,7 @@ export default async function EventosPage({ searchParams }: PageProps) {
   const params = await searchParams;
 
   return (
-    <div className="px-4 py-6 lg:px-8 lg:py-8 max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       <PageHeader
         title="Eventos"
         description="Gerencie os eventos e cultos da sua igreja"

@@ -182,7 +182,7 @@ export function Sidebar() {
           if (visibleItems.length === 0) return null;
 
           return (
-            <div key={group.group} className="mb-4">
+            <div key={group.group} className="mb-6">
               <AnimatePresence mode="popLayout" initial={false}>
                 {!collapsed && (
                   <motion.p
@@ -191,7 +191,7 @@ export function Sidebar() {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.12 }}
-                    className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/50"
+                    className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/50"
                   >
                     {group.group}
                   </motion.p>

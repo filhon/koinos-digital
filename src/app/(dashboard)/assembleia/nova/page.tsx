@@ -6,7 +6,7 @@ export default async function NovaAssembleiaPage() {
   await requireRole(["admin", "pastor"]);
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="max-w-2xl mx-auto space-y-6">
       <PageHeader
         title="Nova Assembléia"
         description="Registre uma nova assembléia da igreja."

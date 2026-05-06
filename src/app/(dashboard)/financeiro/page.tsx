@@ -79,7 +79,7 @@ export default async function FinanceiroPage({
       : [];
 
   return (
-    <div className="space-y-6 pb-20 md:pb-6">
+    <div className="max-w-5xl mx-auto space-y-6">
       <PageHeader
         title="Financeiro"
         description="Gestão de contas e fluxo de caixa"

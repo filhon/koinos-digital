@@ -590,16 +590,16 @@ export function ReportsView({
                             key={c.member_id}
                             className="border-b border-border/30 transition-colors last:border-0 hover:bg-muted/30"
                           >
-                            <td className="py-2.5 pr-3 tabular-nums text-muted-foreground">
+                            <td className="py-3 pr-3 tabular-nums text-muted-foreground">
                               {idx + 1}
                             </td>
-                            <td className="py-2.5 font-medium">
+                            <td className="py-3 font-medium">
                               {c.member_name}
                             </td>
-                            <td className="py-2.5 text-right tabular-nums font-semibold text-emerald-500">
+                            <td className="py-3 text-right tabular-nums font-semibold text-emerald-500">
                               {formatCurrency(c.total)}
                             </td>
-                            <td className="py-2.5 pl-4 text-right">
+                            <td className="py-3 pl-4 text-right">
                               <div className="flex items-center justify-end gap-2">
                                 <div className="relative h-1.5 w-16 overflow-hidden rounded-full bg-muted">
                                   <div

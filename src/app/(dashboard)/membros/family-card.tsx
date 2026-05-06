@@ -21,7 +21,7 @@ function FamilyMemberRow({ member }: { member: MemberRow }) {
   return (
     <Link
       href={`/membros/${member.id}`}
-      className="group flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-muted/60 transition-colors duration-150"
+      className="group flex items-center gap-3 rounded-lg px-3 py-3 hover:bg-muted/60 transition-colors duration-150"
     >
       <Avatar size="default" className="shrink-0">
         {member.avatar_url && (

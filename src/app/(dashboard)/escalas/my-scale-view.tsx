@@ -91,8 +91,8 @@ export function MyScaleView({ entries }: MyScaleViewProps) {
                   href={`/eventos/${entry.event.id}`}
                   className="group flex items-stretch gap-0 rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-sm transition-all duration-150 overflow-hidden"
                 >
-                  {/* Date strip */}
-                  <div className="flex w-14 shrink-0 flex-col items-center justify-center gap-0.5 bg-primary/5 border-r border-border px-2 py-3 group-hover:bg-primary/10 transition-colors duration-150">
+                  {/* Date column */}
+                  <div className="flex w-14 shrink-0 flex-col items-center justify-center gap-0.5 px-2 py-3">
                     <span className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground">
                       {weekday}
                     </span>

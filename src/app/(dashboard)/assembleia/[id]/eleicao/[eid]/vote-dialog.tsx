@@ -124,7 +124,7 @@ export function VoteDialog({
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Votar — {election.name}</DialogTitle>
+          <DialogTitle>Votar: {election.name}</DialogTitle>
           <DialogDescription className="flex items-center gap-1.5">
             <Shield className="h-3.5 w-3.5" />
             Voto anônimo e irreversível
@@ -401,11 +401,12 @@ export function VoteDialog({
                     {candidates.find((c) => c.id === selectedCandidateId)
                       ?.position && (
                       <span className="ml-2 text-sm font-normal text-muted-foreground">
-                        —{" "}
+                        (
                         {
                           candidates.find((c) => c.id === selectedCandidateId)
                             ?.position
                         }
+                        )
                       </span>
                     )}
                   </p>

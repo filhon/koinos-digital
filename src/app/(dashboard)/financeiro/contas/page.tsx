@@ -17,7 +17,7 @@ export default async function ContasPage() {
   const accounts = result && "data" in result && result.data ? result.data : [];
 
   return (
-    <div className="space-y-6 pb-20 md:pb-6">
+    <div className="max-w-5xl mx-auto space-y-6">
       <PageHeader
         title="Contas"
         description="Gerencie as contas bancárias e caixas da igreja"

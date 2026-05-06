@@ -314,7 +314,7 @@ export function EventForm({ leadershipMembers }: EventFormProps) {
           >
             <Input
               {...register("location")}
-              placeholder="Rua das Flores, 123 — Recife/PE"
+              placeholder="Rua das Flores, 123, Recife/PE"
               autoComplete="street-address"
             />
           </Field>
@@ -375,7 +375,7 @@ export function EventForm({ leadershipMembers }: EventFormProps) {
                       })
                     }
                     className={cn(
-                      "rounded-lg border-2 px-3 py-2.5 text-sm font-medium transition-all duration-150 capitalize",
+                      "rounded-lg border-2 px-3 py-2 text-sm font-medium transition-all duration-150 capitalize",
                       frequency === freq
                         ? "border-primary bg-primary/5 text-primary"
                         : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground"
@@ -512,7 +512,7 @@ export function EventForm({ leadershipMembers }: EventFormProps) {
 
             {/* Preview */}
             {preview && (
-              <div className="flex items-start gap-2 rounded-lg bg-primary/5 border border-primary/20 px-3 py-2.5">
+              <div className="flex items-start gap-2 rounded-lg bg-primary/5 border border-primary/20 px-3 py-2">
                 <Info className="size-3.5 text-primary shrink-0 mt-0.5" />
                 <p className="text-xs text-primary">
                   Este evento se repetirá{" "}

@@ -86,7 +86,7 @@ export function MuralFeed({
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-4">
+    <div className="flex flex-col gap-4">
       {/* Compose form */}
       <PostForm
         authorName={currentUserName}
@@ -95,58 +95,60 @@ export function MuralFeed({
       />
 
       {/* Feed */}
-      <AnimatePresence mode="popLayout">
-        {posts.length === 0 && !isFetching ? (
-          <motion.div
-            key="empty"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="rounded-2xl border border-dashed border-border bg-card/50 py-16 text-center"
-          >
-            <Rss className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground">
-              Nenhum post ainda. Seja o primeiro!
-            </p>
-          </motion.div>
-        ) : (
-          posts.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              currentMemberId={currentMemberId}
-              currentUserRole={currentUserRole}
-              currentUserName={currentUserName}
-              currentUserAvatar={currentUserAvatar}
-              onDeleted={handlePostDeleted}
-              onPinChanged={handlePinChanged}
-            />
-          ))
+      <div className="flex flex-col gap-3">
+        <AnimatePresence mode="popLayout">
+          {posts.length === 0 && !isFetching ? (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="rounded-2xl border border-dashed border-border bg-card/50 py-16 text-center"
+            >
+              <Rss className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground">
+                Nenhum post ainda. Seja o primeiro!
+              </p>
+            </motion.div>
+          ) : (
+            posts.map((post) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                currentMemberId={currentMemberId}
+                currentUserRole={currentUserRole}
+                currentUserName={currentUserName}
+                currentUserAvatar={currentUserAvatar}
+                onDeleted={handlePostDeleted}
+                onPinChanged={handlePinChanged}
+              />
+            ))
+          )}
+        </AnimatePresence>
+
+        {/* Infinite scroll sentinel */}
+        <div ref={sentinelRef} className="h-1" />
+
+        {/* Loading more indicator */}
+        <AnimatePresence>
+          {isFetching && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex justify-center py-4"
+            >
+              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground/50" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* End of feed */}
+        {!hasMore && posts.length > 0 && (
+          <p className="text-center text-xs text-muted-foreground/40 py-4">
+            Você chegou ao fim do mural.
+          </p>
         )}
-      </AnimatePresence>
-
-      {/* Infinite scroll sentinel */}
-      <div ref={sentinelRef} className="h-1" />
-
-      {/* Loading more indicator */}
-      <AnimatePresence>
-        {isFetching && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex justify-center py-4"
-          >
-            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground/50" />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* End of feed */}
-      {!hasMore && posts.length > 0 && (
-        <p className="text-center text-xs text-muted-foreground/40 py-4">
-          Você chegou ao fim do mural.
-        </p>
-      )}
+      </div>
     </div>
   );
 }

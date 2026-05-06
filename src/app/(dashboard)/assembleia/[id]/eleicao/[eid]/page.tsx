@@ -38,7 +38,7 @@ export default async function EleicaoDetailPage({ params }: Props) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-3xl mx-auto space-y-6">
       <PageHeader
         title={election.name}
         description={election.description ?? undefined}

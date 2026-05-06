@@ -5,7 +5,7 @@ export const metadata = { title: "Novo membro — Koinos" };
 
 export default function NovoMembroPage() {
   return (
-    <div className="px-4 py-6 lg:px-8 lg:py-8 max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto">
       <PageHeader
         title="Novo membro"
         description="Cadastre um membro manualmente"
@@ -15,7 +15,9 @@ export default function NovoMembroPage() {
           { label: "Novo" },
         ]}
       />
-      <MemberForm />
+      <div className="mt-6">
+        <MemberForm />
+      </div>
     </div>
   );
 }

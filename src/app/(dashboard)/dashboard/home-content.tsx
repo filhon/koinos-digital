@@ -6,7 +6,6 @@ import {
   CalendarDays,
   Users,
   MessageSquare,
-  ChevronRight,
   Clock,
   MapPin,
   Video,
@@ -73,16 +72,13 @@ function StatCard({
   href?: string;
 }) {
   const content = (
-    <div className="group rounded-2xl border border-border bg-card p-4 hover:border-primary/20 hover:shadow-md transition-all">
+    <div className="group rounded-xl border border-border bg-card p-4 shadow-[0_2px_4px_oklch(0.32_0.096_224_/_0.06),_0_4px_12px_oklch(0.32_0.096_224_/_0.05)] hover:border-primary/20 hover:shadow-[0_4px_6px_oklch(0.32_0.096_224_/_0.08),_0_2px_8px_oklch(0.32_0.096_224_/_0.06)] transition-all">
       <div className="flex items-center justify-between mb-3">
         <div className="w-9 h-9 rounded-xl bg-primary/8 flex items-center justify-center">
           <Icon className="w-4.5 h-4.5 text-primary" strokeWidth={1.75} />
         </div>
-        {href && (
-          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-        )}
       </div>
-      <p className="text-2xl font-bold text-foreground leading-none mb-1">
+      <p className="text-2xl font-semibold text-foreground leading-none mb-1">
         {value}
       </p>
       <p className="text-xs text-muted-foreground">{label}</p>
@@ -135,9 +131,9 @@ function formatEventDate(dateStr: string, timeStr: string): string {
 function UpcomingEventsCard({ events }: { events: EventWithResponsible[] }) {
   if (events.length === 0) {
     return (
-      <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="rounded-xl border border-border bg-card p-4 shadow-[0_2px_4px_oklch(0.32_0.096_224_/_0.06),_0_4px_12px_oklch(0.32_0.096_224_/_0.05)]">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display text-lg text-foreground">
+          <h2 className="font-display font-medium text-[1.375rem] tracking-[-0.01em] text-foreground">
             Próximos eventos
           </h2>
           <Link
@@ -164,9 +160,9 @@ function UpcomingEventsCard({ events }: { events: EventWithResponsible[] }) {
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5">
+    <div className="rounded-xl border border-border bg-card p-4 shadow-[0_2px_4px_oklch(0.32_0.096_224_/_0.06),_0_4px_12px_oklch(0.32_0.096_224_/_0.05)]">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="font-display text-lg text-foreground">
+        <h2 className="font-display font-medium text-[1.375rem] tracking-[-0.01em] text-foreground">
           Próximos eventos
         </h2>
         <Link
@@ -260,9 +256,11 @@ function TeamCard({
     : null;
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5">
+    <div className="rounded-xl border border-border bg-card p-4 shadow-[0_2px_4px_oklch(0.32_0.096_224_/_0.06),_0_4px_12px_oklch(0.32_0.096_224_/_0.05)]">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="font-display text-lg text-foreground">Minha tribo</h2>
+        <h2 className="font-display font-medium text-[1.375rem] tracking-[-0.01em] text-foreground">
+          Minha tribo
+        </h2>
         <Link
           href="/gamificacao"
           className="text-xs text-primary font-medium hover:underline flex items-center gap-1"
@@ -274,7 +272,7 @@ function TeamCard({
       {myTeam ? (
         <div className="flex items-center gap-4 mb-5">
           <div
-            className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shrink-0"
+            className="w-12 h-12 rounded-full flex items-center justify-center text-[oklch(0.97_0.006_220)] font-bold text-lg shrink-0"
             style={{ backgroundColor: myTeam.team_color }}
           >
             {myTeam.team_name.charAt(0)}
@@ -338,7 +336,7 @@ const quickActions = [
   { label: "Eventos", href: "/eventos", icon: CalendarDays },
   { label: "Ministérios", href: "/ministerios", icon: ListTodo },
   { label: "Financeiro", href: "/financeiro", icon: Banknote },
-  { label: "Assembléia", href: "/assembleia", icon: Vote },
+  { label: "Assembleia", href: "/assembleia", icon: Vote },
 ];
 
 function QuickActions({ role }: { role: MemberRole }) {
@@ -360,24 +358,24 @@ function QuickActions({ role }: { role: MemberRole }) {
   });
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5">
-      <h2 className="font-display text-lg text-foreground mb-4">Atalhos</h2>
-      <div className="grid grid-cols-3 gap-2">
+    <div className="rounded-xl border border-border bg-card p-4 shadow-[0_2px_4px_oklch(0.32_0.096_224_/_0.06),_0_4px_12px_oklch(0.32_0.096_224_/_0.05)]">
+      <h2 className="font-display font-medium text-[1.375rem] tracking-[-0.01em] text-foreground mb-4">
+        Atalhos
+      </h2>
+      <div className="grid grid-cols-2 gap-0.5">
         {visible.map((action) => {
           const Icon = action.icon;
           return (
             <Link
               key={action.href}
               href={action.href}
-              className="group flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-primary/8 transition-colors"
+              className="group flex items-center gap-2.5 px-3 py-3 rounded-xl hover:bg-secondary/60 transition-colors"
             >
-              <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center group-hover:bg-primary/15 transition-colors">
-                <Icon
-                  className="w-4.5 h-4.5 text-primary/70 group-hover:text-primary transition-colors"
-                  strokeWidth={1.75}
-                />
-              </div>
-              <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors text-center leading-tight">
+              <Icon
+                className="w-4 h-4 text-primary/60 group-hover:text-primary transition-colors shrink-0"
+                strokeWidth={1.75}
+              />
+              <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
                 {action.label}
               </span>
             </Link>
@@ -407,18 +405,18 @@ export function HomeContent({
       variants={staggerContainer}
       initial="hidden"
       animate="show"
-      className="max-w-2xl mx-auto space-y-4 pb-8"
+      className="max-w-5xl mx-auto flex flex-col gap-5 pb-10"
     >
       {/* Header greeting */}
-      <motion.div variants={staggerItem} className="pt-1">
+      <motion.div variants={staggerItem} className="pt-4 pb-1">
         <p className="text-sm text-muted-foreground">
           {greeting}
           {firstName ? `, ${firstName}` : ""}
         </p>
-        <h1 className="font-display text-2xl text-foreground leading-tight mt-0.5">
+        <h1 className="font-display text-[1.75rem] tracking-[-0.015em] text-foreground leading-tight mt-1">
           Bem-vindo ao Koinos
         </h1>
-        <span className="inline-flex items-center mt-1 px-2.5 py-0.5 rounded-full bg-secondary text-[11px] font-medium text-muted-foreground">
+        <span className="inline-flex items-center mt-2 px-2.5 py-0.5 rounded-full bg-secondary text-[11px] font-medium text-muted-foreground">
           {getRoleLabel(userRole)}
         </span>
       </motion.div>
@@ -433,43 +431,39 @@ export function HomeContent({
         />
         <StatCard
           label="Próximos eventos"
-          value={upcomingEvents.length > 0 ? upcomingEvents.length : "—"}
+          value={upcomingEvents.length}
           icon={CalendarDays}
           href="/agenda"
         />
       </motion.div>
 
-      {/* Daily reading */}
-      {devotionData && (
-        <motion.div variants={staggerItem}>
-          <DailyReadingWidget initialData={devotionData} />
-        </motion.div>
-      )}
+      {/* Two-column body on desktop */}
+      <motion.div
+        variants={staggerItem}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-5"
+      >
+        {/* Left: reading + events */}
+        <div className="flex flex-col gap-5">
+          {devotionData ? (
+            <DailyReadingWidget initialData={devotionData} />
+          ) : (
+            <Link href="/mural">
+              <div className="rounded-xl border border-border bg-card p-4 flex items-center gap-3 shadow-[0_2px_4px_oklch(0.32_0.096_224_/_0.06),_0_4px_12px_oklch(0.32_0.096_224_/_0.05)] hover:border-primary/20 hover:shadow-[0_4px_6px_oklch(0.32_0.096_224_/_0.08),_0_2px_8px_oklch(0.32_0.096_224_/_0.06)] transition-all">
+                <BookOpen className="w-5 h-5 text-muted-foreground/60 shrink-0" />
+                <p className="text-sm text-muted-foreground">
+                  Nenhuma leitura programada hoje; visite o mural.
+                </p>
+              </div>
+            </Link>
+          )}
+          <UpcomingEventsCard events={upcomingEvents} />
+        </div>
 
-      {/* No reading today */}
-      {!devotionData && (
-        <motion.div variants={staggerItem}>
-          <Link href="/mural">
-            <div className="rounded-2xl border border-border bg-card p-4 flex items-center gap-3 hover:border-primary/20 transition-colors">
-              <BookOpen className="w-5 h-5 text-muted-foreground/60 shrink-0" />
-              <p className="text-sm text-muted-foreground">
-                Nenhuma leitura programada hoje — visite o mural.
-              </p>
-              <ChevronRight className="w-4 h-4 text-muted-foreground/50 ml-auto shrink-0" />
-            </div>
-          </Link>
-        </motion.div>
-      )}
-
-      {/* Upcoming events */}
-      <motion.div variants={staggerItem}>
-        <UpcomingEventsCard events={upcomingEvents} />
-      </motion.div>
-
-      {/* Team + quick actions side by side on wide mobile / tablet */}
-      <motion.div variants={staggerItem} className="grid sm:grid-cols-2 gap-4">
-        <TeamCard myTeam={myTeam} ranking={teamRanking} />
-        <QuickActions role={userRole} />
+        {/* Right: team + quick actions */}
+        <div className="flex flex-col gap-5">
+          <TeamCard myTeam={myTeam} ranking={teamRanking} />
+          <QuickActions role={userRole} />
+        </div>
       </motion.div>
     </motion.div>
   );

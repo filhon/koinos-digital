@@ -92,7 +92,7 @@ export function MinistryDetails({
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium shrink-0 border-b-2 transition-colors duration-150",
+                "flex items-center gap-1.5 px-4 py-2 text-xs font-medium shrink-0 border-b-2 transition-colors duration-150",
                 isActive
                   ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"

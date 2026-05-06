@@ -205,7 +205,7 @@ function IndividualRow({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: rank * 0.05 }}
       className={cn(
-        "flex items-center gap-3 rounded-xl px-3 py-2.5",
+        "flex items-center gap-3 rounded-xl px-3 py-3",
         isTop3
           ? "bg-gradient-to-r from-accent-50/60 to-transparent dark:from-accent-900/20"
           : "hover:bg-muted/50"
@@ -378,7 +378,7 @@ export function GamificationView({ initialData }: GamificationViewProps) {
             <div className="mb-4 flex items-center gap-2">
               <Users className="h-4 w-4 text-accent-500" />
               <h2 className="text-sm font-semibold uppercase tracking-wider text-foreground/60">
-                Placar Completo — Tribos
+                Placar Completo: Tribos
               </h2>
             </div>
 
@@ -405,7 +405,7 @@ export function GamificationView({ initialData }: GamificationViewProps) {
             <div className="mb-4 flex items-center gap-2">
               <Star className="h-4 w-4 text-accent-500" />
               <h2 className="text-sm font-semibold uppercase tracking-wider text-foreground/60">
-                Top 10 — Membros
+                Top 10: Membros
               </h2>
             </div>
 

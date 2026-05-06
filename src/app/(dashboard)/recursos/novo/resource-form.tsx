@@ -92,7 +92,7 @@ export function ResourceForm({ responsibleOptions }: ResourceFormProps) {
           <option value="">Sem responsável</option>
           {responsibleOptions.map((m) => (
             <option key={m.id} value={m.id}>
-              {m.name} — {m.role}
+              {m.name} ({m.role})
             </option>
           ))}
         </select>

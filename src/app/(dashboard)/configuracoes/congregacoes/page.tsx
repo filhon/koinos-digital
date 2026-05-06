@@ -23,7 +23,7 @@ export default async function CongregacoesPage() {
     process.env.NEXT_PUBLIC_APP_URL ?? "https://app.koinos.digital";
 
   return (
-    <div className="px-4 py-6 lg:px-8 lg:py-8 max-w-3xl mx-auto">
+    <div className="max-w-3xl mx-auto">
       <PageHeader
         title="Congregações"
         description="Gerencie as congregações vinculadas à sua Igreja Matriz"

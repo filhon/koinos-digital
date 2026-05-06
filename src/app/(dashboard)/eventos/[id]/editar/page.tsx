@@ -51,7 +51,7 @@ export default async function EditarEventoPage({ params }: PageProps) {
       : [];
 
   return (
-    <div className="px-4 py-6 lg:px-8 lg:py-8 max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto">
       <PageHeader
         title="Editar evento"
         breadcrumbs={[
@@ -61,11 +61,13 @@ export default async function EditarEventoPage({ params }: PageProps) {
           { label: "Editar" },
         ]}
       />
-      <EditEventForm
-        event={event}
-        leadershipMembers={leadershipMembers}
-        isRecurringSeries={isRecurringSeries}
-      />
+      <div className="mt-6">
+        <EditEventForm
+          event={event}
+          leadershipMembers={leadershipMembers}
+          isRecurringSeries={isRecurringSeries}
+        />
+      </div>
     </div>
   );
 }

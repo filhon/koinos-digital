@@ -24,7 +24,7 @@ export default async function PerfilPage() {
 
   if (!result.success) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="max-w-3xl mx-auto flex flex-col gap-6">
         <PageHeader title="Meu Perfil" />
         <p className="text-sm text-destructive">{result.error}</p>
       </div>
@@ -37,7 +37,7 @@ export default async function PerfilPage() {
       : [];
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="max-w-3xl mx-auto flex flex-col gap-6">
       <PageHeader
         title="Meu Perfil"
         description="Gerencie suas informações pessoais e foto."

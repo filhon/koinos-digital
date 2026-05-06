@@ -54,7 +54,7 @@ export function ResourceDetails({
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-2.5 text-xs font-medium border-b-2 -mb-px transition-colors",
+                "inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-2 text-xs font-medium border-b-2 -mb-px transition-colors",
                 activeTab === tab.id
                   ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground"
@@ -74,58 +74,50 @@ export function ResourceDetails({
 
       {/* Informações */}
       {activeTab === "info" && (
-        <div className="space-y-4">
-          {/* Status card */}
-          <div className="rounded-xl border border-border bg-card p-5 space-y-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Status
-            </h3>
-            <div className="flex items-center gap-3">
-              <div
-                className={cn(
-                  "flex size-8 items-center justify-center rounded-lg",
-                  isAvailable
-                    ? "bg-success-light dark:bg-success-dark/20"
-                    : "bg-destructive/10"
-                )}
-              >
-                <Package
-                  className={cn(
-                    "size-4",
-                    isAvailable
-                      ? "text-success-dark dark:text-success-light"
-                      : "text-destructive"
-                  )}
-                />
-              </div>
-              <Badge
-                variant="outline"
-                className={cn(
-                  "text-xs font-medium border",
-                  isAvailable
-                    ? "border-success-dark/30 text-success-dark bg-success-light/50 dark:border-success-light/30 dark:text-success-light dark:bg-success-dark/20"
-                    : "border-destructive/30 text-destructive bg-destructive/10"
-                )}
-              >
-                {isAvailable ? "Disponível" : "Indisponível"}
-              </Badge>
-              {!isAvailable && (
-                <p className="text-xs text-muted-foreground">
-                  Alocado a {allocations.length} evento
-                  {allocations.length !== 1 ? "s" : ""}
-                </p>
+        <div className="rounded-xl border border-border bg-card divide-y divide-border/60">
+          {/* Status */}
+          <div className="flex items-center gap-3 px-5 py-4">
+            <div
+              className={cn(
+                "flex size-8 shrink-0 items-center justify-center rounded-lg",
+                isAvailable
+                  ? "bg-success-light dark:bg-success-dark/20"
+                  : "bg-destructive/10"
               )}
+            >
+              <Package
+                className={cn(
+                  "size-4",
+                  isAvailable
+                    ? "text-success-dark dark:text-success-light"
+                    : "text-destructive"
+                )}
+              />
             </div>
+            <Badge
+              variant="outline"
+              className={cn(
+                "text-xs font-medium border",
+                isAvailable
+                  ? "border-success-dark/30 text-success-dark bg-success-light/50 dark:border-success-light/30 dark:text-success-light dark:bg-success-dark/20"
+                  : "border-destructive/30 text-destructive bg-destructive/10"
+              )}
+            >
+              {isAvailable ? "Disponível" : "Indisponível"}
+            </Badge>
+            {!isAvailable && (
+              <p className="text-xs text-muted-foreground">
+                Alocado a {allocations.length} evento
+                {allocations.length !== 1 ? "s" : ""}
+              </p>
+            )}
           </div>
 
           {/* Responsável */}
-          <div className="rounded-xl border border-border bg-card p-5 space-y-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Responsável
-            </h3>
+          <div className="flex items-center gap-3 px-5 py-4">
             {resource.responsible ? (
-              <div className="flex items-center gap-3">
-                <Avatar className="shrink-0">
+              <>
+                <Avatar size="sm" className="shrink-0">
                   {resource.responsible.avatar_url && (
                     <AvatarImage
                       src={resource.responsible.avatar_url}
@@ -147,31 +139,28 @@ export function ResourceDetails({
                     {resource.responsible.role}
                   </p>
                 </div>
-                <div className="ml-auto flex size-8 items-center justify-center rounded-lg bg-muted">
+              </>
+            ) : (
+              <>
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted">
                   <User className="size-4 text-muted-foreground" />
                 </div>
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground italic">
-                Sem responsável definido
-              </p>
+                <p className="text-sm text-muted-foreground italic">
+                  Sem responsável definido
+                </p>
+              </>
             )}
           </div>
 
           {/* Valor estimado */}
           {resource.value !== null && (
-            <div className="rounded-xl border border-border bg-card p-5 space-y-3">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Valor estimado
-              </h3>
-              <div className="flex items-center gap-2">
-                <div className="flex size-8 items-center justify-center rounded-lg bg-muted">
-                  <DollarSign className="size-4 text-muted-foreground" />
-                </div>
-                <p className="text-sm font-medium text-foreground">
-                  {formatCurrency(resource.value)}
-                </p>
+            <div className="flex items-center gap-3 px-5 py-4">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted">
+                <DollarSign className="size-4 text-muted-foreground" />
               </div>
+              <p className="text-sm font-medium text-foreground">
+                {formatCurrency(resource.value)}
+              </p>
             </div>
           )}
         </div>

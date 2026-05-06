@@ -18,7 +18,7 @@ export default async function PrivacidadePage() {
 
   if (!profileResult.success || !consentsResult.success) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="max-w-3xl mx-auto flex flex-col gap-6">
         <PageHeader title="Privacidade" />
         <p className="text-sm text-destructive">
           {!profileResult.success
@@ -32,7 +32,7 @@ export default async function PrivacidadePage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="max-w-3xl mx-auto flex flex-col gap-6">
       <div className="flex items-center gap-2">
         <Link
           href="/perfil"

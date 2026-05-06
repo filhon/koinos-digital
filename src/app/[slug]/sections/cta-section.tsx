@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
+import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -117,7 +118,7 @@ export default function CtaSection({ data }: Props) {
                 <input
                   {...register("name")}
                   placeholder="Seu nome completo *"
-                  className="w-full px-5 py-4 rounded-xl text-base outline-none transition-all"
+                  className="w-full px-5 py-4 rounded-xl text-base outline-none transition-all focus:ring-2 focus:ring-[oklch(0.12_0.04_250/0.5)] placeholder:text-[oklch(0.35_0.04_250/0.7)]"
                   style={{
                     background: "oklch(0.12 0.04 250 / 0.12)",
                     border: errors.name
@@ -143,7 +144,7 @@ export default function CtaSection({ data }: Props) {
                   {...register("phone")}
                   placeholder="WhatsApp (opcional)"
                   type="tel"
-                  className="w-full px-5 py-4 rounded-xl text-base outline-none transition-all"
+                  className="w-full px-5 py-4 rounded-xl text-base outline-none transition-all focus:ring-2 focus:ring-[oklch(0.12_0.04_250/0.5)] placeholder:text-[oklch(0.35_0.04_250/0.7)]"
                   style={{
                     background: "oklch(0.12 0.04 250 / 0.12)",
                     border: errors.phone
@@ -169,7 +170,7 @@ export default function CtaSection({ data }: Props) {
                   {...register("email")}
                   placeholder="E-mail (opcional)"
                   type="email"
-                  className="w-full px-5 py-4 rounded-xl text-base outline-none transition-all"
+                  className="w-full px-5 py-4 rounded-xl text-base outline-none transition-all focus:ring-2 focus:ring-[oklch(0.12_0.04_250/0.5)] placeholder:text-[oklch(0.35_0.04_250/0.7)]"
                   style={{
                     background: "oklch(0.12 0.04 250 / 0.12)",
                     border: errors.email
@@ -207,7 +208,14 @@ export default function CtaSection({ data }: Props) {
                   color: "oklch(0.88 0.1 55)",
                 }}
               >
-                {isSubmitting ? "Enviando..." : "Quero participar"}
+                {isSubmitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="size-4 animate-spin" />
+                    Enviando...
+                  </span>
+                ) : (
+                  "Quero participar"
+                )}
               </button>
             </form>
           )}

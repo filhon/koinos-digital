@@ -15,7 +15,7 @@ export default function AddressSection({ data }: Props) {
   return (
     <div
       ref={ref}
-      className="py-28 px-6"
+      className="py-24 px-6"
       style={{ background: "oklch(0.14 0.03 250)" }}
     >
       <div className="max-w-5xl mx-auto">
@@ -74,7 +74,7 @@ export default function AddressSection({ data }: Props) {
               title="Localização"
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
-              className="w-full h-full border-0 grayscale"
+              className="w-full h-full border-0"
               style={{
                 filter:
                   "invert(90%) hue-rotate(180deg) saturate(0.4) brightness(0.8)",

@@ -43,7 +43,7 @@ export default async function MembrosPage({ searchParams }: PageProps) {
   }
 
   return (
-    <div className="px-4 py-6 lg:px-8 lg:py-8 max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       <PageHeader
         title="Membros"
         description="Gerencie os membros e famílias da sua igreja"
@@ -63,16 +63,18 @@ export default async function MembrosPage({ searchParams }: PageProps) {
         }
       />
 
-      <Suspense fallback={<MembersListSkeleton />}>
-        <MembersList
-          search={params.q}
-          role={params.role}
-          status={params.status}
-          page={params.page ? Number(params.page) : 1}
-          churchIdFilter={params.unit}
-          congregations={congregations}
-        />
-      </Suspense>
+      <div className="mt-6">
+        <Suspense fallback={<MembersListSkeleton />}>
+          <MembersList
+            search={params.q}
+            role={params.role}
+            status={params.status}
+            page={params.page ? Number(params.page) : 1}
+            churchIdFilter={params.unit}
+            congregations={congregations}
+          />
+        </Suspense>
+      </div>
     </div>
   );
 }

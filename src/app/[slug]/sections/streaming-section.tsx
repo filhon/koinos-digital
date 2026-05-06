@@ -39,7 +39,7 @@ export default function StreamingSection({ data }: Props) {
   return (
     <div
       ref={ref}
-      className="py-28 px-6"
+      className="py-20 px-6"
       style={{ background: "oklch(0.97 0.005 250)" }}
     >
       <div className="max-w-4xl mx-auto">

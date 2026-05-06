@@ -1451,7 +1451,7 @@ NÃO FAÇA: A IA apenas sugere — nunca salva a escala sem confirmação explí
 
 ## Sessão 5.7 — Notificações de escala + Analytics de Gamificação (add-on premium)
 
-> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
+> **UI:** Use `/impeccable craft` para implementar as telas desta sessão.
 
 ```
 

@@ -40,7 +40,7 @@ export default async function MembroPage({ params }: PageProps) {
   const canChangeRole = user?.role === "pastor" || user?.role === "admin";
 
   return (
-    <div className="px-4 py-6 lg:px-8 lg:py-8 max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto">
       <PageHeader
         title={member.name}
         breadcrumbs={[
@@ -63,7 +63,7 @@ export default async function MembroPage({ params }: PageProps) {
         }
       />
 
-      <div className="space-y-6">
+      <div className="mt-6 space-y-6">
         <MemberProfile member={member} isLeadership={isLeadership} />
         {canChangeRole && (
           <RoleSection

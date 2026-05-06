@@ -6,14 +6,7 @@ import { format, parseISO, isPast } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { staggerContainer, staggerItem } from "@/lib/motion";
 import { Badge } from "@/components/ui/badge";
-import {
-  Calendar,
-  MapPin,
-  Vote,
-  ChevronRight,
-  Gavel,
-  ClipboardList,
-} from "lucide-react";
+import { Calendar, MapPin, Vote, Gavel, ClipboardList } from "lucide-react";
 import type { AssemblyRow } from "@/lib/validators/assembleia";
 
 interface AssemblyListProps {
@@ -115,8 +108,6 @@ function AssemblyCard({ assembly }: { assembly: AssemblyRow }) {
               </p>
             )}
           </div>
-
-          <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0 self-center opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
       </Link>
     </motion.div>

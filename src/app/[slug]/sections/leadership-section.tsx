@@ -22,7 +22,7 @@ export default function LeadershipSection({ data }: Props) {
   return (
     <div
       ref={ref}
-      className="py-28 px-6"
+      className="py-20 px-6"
       style={{ background: "oklch(0.97 0.005 250)" }}
     >
       <div className="max-w-5xl mx-auto">
@@ -49,7 +49,7 @@ export default function LeadershipSection({ data }: Props) {
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
           {data.leadership.map((leader, i) => (
             <motion.div
               key={leader.id}

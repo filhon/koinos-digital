@@ -90,7 +90,7 @@ export default function EventsSection({ data }: Props) {
                     <div className="flex items-start gap-4">
                       {/* Date badge */}
                       <div
-                        className="flex-shrink-0 rounded-lg px-3 py-2 text-center min-w-[52px]"
+                        className="shrink-0 rounded-lg px-3 py-2 text-center min-w-[52px]"
                         style={{ background: "oklch(0.78 0.13 55 / 0.12)" }}
                       >
                         <p

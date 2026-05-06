@@ -22,7 +22,7 @@ export default async function NovoEventoPage() {
       : [];
 
   return (
-    <div className="px-4 py-6 lg:px-8 lg:py-8 max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto">
       <PageHeader
         title="Novo evento"
         description="Crie um evento para a sua igreja"
@@ -32,7 +32,9 @@ export default async function NovoEventoPage() {
           { label: "Novo" },
         ]}
       />
-      <EventForm leadershipMembers={leadershipMembers} />
+      <div className="mt-6">
+        <EventForm leadershipMembers={leadershipMembers} />
+      </div>
     </div>
   );
 }

@@ -1,0 +1,370 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-05T00:00:00Z",
+  "title": "Design System: Koinos",
+  "extensions": {
+    "colorMeta": {
+      "petroleum-dusk": {
+        "role": "primary",
+        "displayName": "Petroleum Dusk",
+        "canonical": "oklch(0.32 0.096 224)",
+        "tonalRamp": [
+          "oklch(0.15 0.054 220)",
+          "oklch(0.24 0.076 222)",
+          "oklch(0.32 0.096 224)",
+          "oklch(0.40 0.112 226)",
+          "oklch(0.52 0.118 228)",
+          "oklch(0.64 0.102 232)",
+          "oklch(0.76 0.082 234)",
+          "oklch(0.93 0.028 238)"
+        ]
+      },
+      "petroleum-dusk-bright": {
+        "role": "primary-dark-mode",
+        "displayName": "Petroleum Dusk (Dark Mode)",
+        "canonical": "oklch(0.64 0.102 232)",
+        "tonalRamp": [
+          "oklch(0.15 0.054 220)",
+          "oklch(0.24 0.076 222)",
+          "oklch(0.32 0.096 224)",
+          "oklch(0.40 0.112 226)",
+          "oklch(0.52 0.118 228)",
+          "oklch(0.64 0.102 232)",
+          "oklch(0.76 0.082 234)",
+          "oklch(0.93 0.028 238)"
+        ]
+      },
+      "bronze-bell": {
+        "role": "secondary",
+        "displayName": "Bronze Bell",
+        "canonical": "oklch(0.62 0.148 58)",
+        "tonalRamp": [
+          "oklch(0.26 0.068 45)",
+          "oklch(0.35 0.094 47)",
+          "oklch(0.44 0.118 50)",
+          "oklch(0.53 0.138 54)",
+          "oklch(0.62 0.148 58)",
+          "oklch(0.70 0.136 62)",
+          "oklch(0.79 0.112 65)",
+          "oklch(0.93 0.042 70)"
+        ]
+      },
+      "parchment-warm": {
+        "role": "neutral-bg",
+        "displayName": "Parchment Warm",
+        "canonical": "oklch(0.982 0.004 80)",
+        "tonalRamp": [
+          "oklch(0.18 0.012 80)",
+          "oklch(0.30 0.010 80)",
+          "oklch(0.45 0.008 78)",
+          "oklch(0.60 0.006 78)",
+          "oklch(0.75 0.006 78)",
+          "oklch(0.87 0.006 75)",
+          "oklch(0.93 0.004 75)",
+          "oklch(0.982 0.004 80)"
+        ]
+      },
+      "surface-card": {
+        "role": "neutral-surface-1",
+        "displayName": "Surface Card",
+        "canonical": "oklch(0.99 0.003 75)",
+        "tonalRamp": [
+          "oklch(0.18 0.012 80)",
+          "oklch(0.30 0.010 80)",
+          "oklch(0.45 0.008 78)",
+          "oklch(0.60 0.006 78)",
+          "oklch(0.75 0.006 78)",
+          "oklch(0.87 0.006 75)",
+          "oklch(0.93 0.004 75)",
+          "oklch(0.99 0.003 75)"
+        ]
+      },
+      "slate-ink": {
+        "role": "neutral-fg",
+        "displayName": "Slate Ink",
+        "canonical": "oklch(0.18 0.012 230)",
+        "tonalRamp": [
+          "oklch(0.18 0.012 230)",
+          "oklch(0.28 0.016 228)",
+          "oklch(0.38 0.016 225)",
+          "oklch(0.48 0.016 222)",
+          "oklch(0.58 0.014 220)",
+          "oklch(0.68 0.012 220)",
+          "oklch(0.78 0.010 220)",
+          "oklch(0.90 0.006 220)"
+        ]
+      },
+      "success": {
+        "role": "semantic-success",
+        "displayName": "Success Green",
+        "canonical": "oklch(0.55 0.118 148)",
+        "tonalRamp": [
+          "oklch(0.20 0.060 148)",
+          "oklch(0.30 0.080 148)",
+          "oklch(0.38 0.092 148)",
+          "oklch(0.46 0.108 148)",
+          "oklch(0.55 0.118 148)",
+          "oklch(0.65 0.110 148)",
+          "oklch(0.78 0.080 148)",
+          "oklch(0.94 0.048 148)"
+        ]
+      },
+      "error": {
+        "role": "semantic-error",
+        "displayName": "Terracotta Error",
+        "canonical": "oklch(0.55 0.148 28)",
+        "tonalRamp": [
+          "oklch(0.22 0.072 28)",
+          "oklch(0.30 0.092 28)",
+          "oklch(0.38 0.108 28)",
+          "oklch(0.46 0.128 28)",
+          "oklch(0.55 0.148 28)",
+          "oklch(0.65 0.132 28)",
+          "oklch(0.78 0.092 28)",
+          "oklch(0.94 0.048 28)"
+        ]
+      },
+      "warning": {
+        "role": "semantic-warning",
+        "displayName": "Amber Warning",
+        "canonical": "oklch(0.68 0.152 74)",
+        "tonalRamp": [
+          "oklch(0.26 0.068 70)",
+          "oklch(0.35 0.092 70)",
+          "oklch(0.44 0.114 72)",
+          "oklch(0.54 0.132 72)",
+          "oklch(0.62 0.148 58)",
+          "oklch(0.68 0.152 74)",
+          "oklch(0.78 0.120 74)",
+          "oklch(0.95 0.058 82)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Page titles and hero headings only. Instrument Serif with tight negative tracking."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section headings, modal titles. Instrument Serif."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card titles, sub-section labels. Instrument Serif. Often set at medium weight (500) inside cards."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "All prose content. DM Sans. Max line length 65-75ch at layout level."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Button labels, form labels, navigation items, badge text. DM Sans medium. The UI workhorse."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card-ambient",
+        "value": "0 2px 4px oklch(0.32 0.096 224 / 0.06), 0 4px 12px oklch(0.32 0.096 224 / 0.05)",
+        "purpose": "Card resting shadow. Always present; signals layer above page, not interactive state."
+      },
+      {
+        "name": "shadow-sm",
+        "value": "0 1px 2px oklch(0.32 0.096 224 / 0.08), 0 1px 3px oklch(0.32 0.096 224 / 0.06)",
+        "purpose": "Tight utility shadow for small floated elements: tooltips, inline chips."
+      },
+      {
+        "name": "shadow-md",
+        "value": "0 4px 6px oklch(0.32 0.096 224 / 0.08), 0 2px 8px oklch(0.32 0.096 224 / 0.06)",
+        "purpose": "Dropdown panels, floating action areas."
+      },
+      {
+        "name": "shadow-lg",
+        "value": "0 8px 16px oklch(0.32 0.096 224 / 0.10), 0 4px 24px oklch(0.32 0.096 224 / 0.08)",
+        "purpose": "Drawers, expanded panels."
+      },
+      {
+        "name": "shadow-xl",
+        "value": "0 16px 32px oklch(0.32 0.096 224 / 0.12), 0 8px 40px oklch(0.32 0.096 224 / 0.08)",
+        "purpose": "Modals, dialogs. Maximum elevation."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out-fast",
+        "value": "cubic-bezier(0.0, 0.0, 0.2, 1)",
+        "duration": "150ms",
+        "purpose": "Button hover, color state changes. Snappy feedback."
+      },
+      {
+        "name": "ease-out-standard",
+        "value": "cubic-bezier(0.0, 0.0, 0.2, 1)",
+        "duration": "200ms",
+        "purpose": "Fade in, page transitions. Default easing."
+      },
+      {
+        "name": "ease-out-medium",
+        "value": "cubic-bezier(0.0, 0.0, 0.2, 1)",
+        "duration": "300ms",
+        "purpose": "Slide-up reveals, modal entry."
+      },
+      {
+        "name": "spring-sidebar",
+        "value": "spring(stiffness: 260, damping: 26)",
+        "purpose": "Sidebar collapse/expand. Spring, not duration-based."
+      },
+      {
+        "name": "spring-interactive",
+        "value": "spring(stiffness: 320, damping: 30)",
+        "purpose": "Card hover scale (1.02), interactive surface lift."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main CTA and confirmation actions. Petroleum Dusk fill, light foreground.",
+      "html": "<button class=\"ds-btn-primary\">Confirmar</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 12px; background: oklch(0.32 0.096 224); color: oklch(0.97 0.006 220); border: 1px solid transparent; border-radius: 12px; font-family: 'DM Sans', ui-sans-serif, sans-serif; font-size: 14px; font-weight: 500; white-space: nowrap; cursor: pointer; transition: filter 150ms ease-out, transform 150ms ease-out; outline: none; } .ds-btn-primary:hover { filter: brightness(0.9); } .ds-btn-primary:active { transform: scale(0.97); } .ds-btn-primary:focus-visible { outline: 2px solid oklch(0.52 0.118 228); outline-offset: 2px; border-radius: 14px; } .ds-btn-primary:disabled { pointer-events: none; opacity: 0.5; }"
+    },
+    {
+      "name": "Accent Button",
+      "kind": "button",
+      "refersTo": "button-accent",
+      "description": "Single most important action per screen. Bronze Bell fill. Never paired with Primary at equal weight.",
+      "html": "<button class=\"ds-btn-accent\">Começar agora</button>",
+      "css": ".ds-btn-accent { display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 12px; background: oklch(0.62 0.148 58); color: oklch(0.97 0.008 70); border: 1px solid transparent; border-radius: 12px; font-family: 'DM Sans', ui-sans-serif, sans-serif; font-size: 14px; font-weight: 500; white-space: nowrap; cursor: pointer; transition: filter 150ms ease-out, transform 150ms ease-out; outline: none; } .ds-btn-accent:hover { filter: brightness(0.9); } .ds-btn-accent:active { transform: scale(0.97); } .ds-btn-accent:focus-visible { outline: 2px solid oklch(0.52 0.118 228); outline-offset: 2px; border-radius: 14px; } .ds-btn-accent:disabled { pointer-events: none; opacity: 0.5; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary actions. Transparent with subtle border; fills muted on hover.",
+      "html": "<button class=\"ds-btn-outline\">Cancelar</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 12px; background: transparent; color: oklch(0.18 0.012 230); border: 1px solid oklch(0.88 0.01 220); border-radius: 12px; font-family: 'DM Sans', ui-sans-serif, sans-serif; font-size: 14px; font-weight: 500; white-space: nowrap; cursor: pointer; transition: background 150ms ease-out, transform 150ms ease-out; outline: none; } .ds-btn-outline:hover { background: oklch(0.94 0.006 75); } .ds-btn-outline:active { transform: scale(0.97); } .ds-btn-outline:focus-visible { outline: 2px solid oklch(0.52 0.118 228); outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Tertiary actions, toolbar icons, navigation icon-buttons. No border at rest.",
+      "html": "<button class=\"ds-btn-ghost\">Ver mais</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 12px; background: transparent; color: oklch(0.18 0.012 230); border: 1px solid transparent; border-radius: 12px; font-family: 'DM Sans', ui-sans-serif, sans-serif; font-size: 14px; font-weight: 500; white-space: nowrap; cursor: pointer; transition: background 150ms ease-out; outline: none; } .ds-btn-ghost:hover { background: oklch(0.94 0.006 75); } .ds-btn-ghost:focus-visible { outline: 2px solid oklch(0.52 0.118 228); outline-offset: 2px; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Primary container surface. Ambient petroleum-tinted shadow, subtle border, rounded-xl corners.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-header\"><div class=\"ds-card-title\">Membros ativos</div><div class=\"ds-card-description\">Congregação principal</div></div><div class=\"ds-card-content\">Conteúdo do card aqui.</div></div>",
+      "css": ".ds-card { display: flex; flex-direction: column; gap: 16px; overflow: hidden; border-radius: 20px; background: oklch(0.99 0.003 75); padding: 16px 0; color: oklch(0.18 0.012 230); font-size: 14px; border: 1px solid oklch(0.88 0.01 220 / 0.6); box-shadow: 0 2px 4px oklch(0.32 0.096 224 / 0.06), 0 4px 12px oklch(0.32 0.096 224 / 0.05); } .ds-card-header { display: grid; gap: 4px; padding: 0 16px; } .ds-card-title { font-family: 'Instrument Serif', Georgia, serif; font-size: 16px; font-weight: 500; line-height: 1.3; letter-spacing: -0.01em; } .ds-card-description { font-family: 'DM Sans', ui-sans-serif, sans-serif; font-size: 14px; color: oklch(0.52 0.016 220); } .ds-card-content { padding: 0 16px; }"
+    },
+    {
+      "name": "Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Text field with subtle border at rest, Bronze Bell focus ring — the system's signature tactile signal.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Nome do membro\" />",
+      "css": ".ds-input { height: 40px; width: 100%; min-width: 0; border-radius: 12px; border: 1px solid oklch(0.88 0.01 220 / 0.8); background: oklch(0.99 0.003 75); padding: 8px 12px; font-family: 'DM Sans', ui-sans-serif, sans-serif; font-size: 14px; color: oklch(0.18 0.012 230); transition: border-color 150ms ease-out; outline: none; box-sizing: border-box; } .ds-input::placeholder { color: oklch(0.52 0.016 220); } .ds-input:focus { border-color: oklch(0.62 0.148 58); box-shadow: 0 0 0 2px oklch(0.62 0.148 58 / 0.2); } .ds-input:disabled { pointer-events: none; opacity: 0.5; background: oklch(0.94 0.006 75 / 0.5); cursor: not-allowed; }"
+    },
+    {
+      "name": "Badge Primary",
+      "kind": "chip",
+      "refersTo": "badge-primary",
+      "description": "Status label and role indicator. Petroleum Dusk pill. Full pill radius, compact height.",
+      "html": "<span class=\"ds-badge-primary\">Pastor</span>",
+      "css": ".ds-badge-primary { display: inline-flex; align-items: center; justify-content: center; height: 20px; padding: 2px 8px; background: oklch(0.32 0.096 224); color: oklch(0.97 0.006 220); border: 1px solid transparent; border-radius: 9999px; font-family: 'DM Sans', ui-sans-serif, sans-serif; font-size: 12px; font-weight: 500; white-space: nowrap; }"
+    },
+    {
+      "name": "Badge Outline",
+      "kind": "chip",
+      "refersTo": "badge-outline",
+      "description": "Neutral metadata tag. Transparent fill with border. Unselected filter pills.",
+      "html": "<span class=\"ds-badge-outline\">Ministerio de Louvor</span>",
+      "css": ".ds-badge-outline { display: inline-flex; align-items: center; justify-content: center; height: 20px; padding: 2px 8px; background: transparent; color: oklch(0.18 0.012 230); border: 1px solid oklch(0.88 0.01 220); border-radius: 9999px; font-family: 'DM Sans', ui-sans-serif, sans-serif; font-size: 12px; font-weight: 500; white-space: nowrap; }"
+    },
+    {
+      "name": "Sidebar Nav Item",
+      "kind": "nav",
+      "refersTo": null,
+      "description": "Navigation item in the collapsible sidebar. Active state uses Petroleum Dusk tint background — no left border stripe.",
+      "html": "<a class=\"ds-nav-item ds-nav-item--active\" href=\"#\"><svg class=\"ds-nav-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"7\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"7\"/><rect x=\"14\" y=\"14\" width=\"7\" height=\"7\"/><rect x=\"3\" y=\"14\" width=\"7\" height=\"7\"/></svg>Início</a>",
+      "css": ".ds-nav-item { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 8px; font-family: 'DM Sans', ui-sans-serif, sans-serif; font-size: 14px; font-weight: 500; color: oklch(0.22 0.014 228); text-decoration: none; transition: background 150ms ease-out, color 150ms ease-out; } .ds-nav-item:hover { background: oklch(0.92 0.012 220); color: oklch(0.28 0.068 224); } .ds-nav-item--active { background: oklch(0.92 0.012 220); color: oklch(0.28 0.068 224); } .ds-nav-icon { width: 16px; height: 16px; flex-shrink: 0; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Parish Register",
+    "overview": "Koinos is built around the metaphor of an official parish register — not a software dashboard, but a dignified institutional record that a congregation trusts completely. The system is structured, legible, and warm: not warm in the decorative sense of gradients and rounded corners, but warm in the sense of a well-lit vestry, cream paper, and ink that doesn't bleed. Every screen should feel as if someone who cared deeply about the institution designed it, because they did.\n\nThe typography is the first handshake: Instrument Serif carries headings with quiet authority, the way official documents announce themselves without shouting. DM Sans takes the body — functional, contemporary, unhurried at 1.6 line-height. Together they span the congregation: legible for the 60-year-old pastor, modern enough for the 22-year-old worship coordinator. Color serves structure, not mood. Petroleum Dusk anchors interactive elements and navigation; Bronze Bell marks moments of attention with restrained warmth. The rest of the screen is Parchment Warm — a surface that reads as material, not void.\n\nThis system explicitly rejects four failure modes: static and outdated design reminiscent of Eklésia and its kind; heavy gospel aesthetics (gold, doves, religious iconography); the generic translated American SaaS look (identical rounded cards, blue gradients, vague copy); and anything that makes the non-technical user feel underestimated.",
+    "keyCharacteristics": [
+      "Serif display + sans body pairing with tight negative tracking on headings",
+      "Three-tier tonal surface system (page → card → elevated) with warm temperature",
+      "Petroleum-tinted shadows — never black, never flat",
+      "Bronze Bell used sparingly: the accent earns its place through rarity",
+      "Motion via spring and ease-out only; no bounce, no elastic, no layout animation",
+      "WCAG AA contrast across all surfaces; multigenerational legibility is not optional"
+    ],
+    "rules": [
+      {
+        "name": "The Bronze Bell Scarcity Rule",
+        "body": "Bronze Bell appears on at most two elements per screen: one interactive focus state and one highlighted action or status. Its warmth is only persuasive when it's rare. If it appears on three elements, rework one.",
+        "section": "colors"
+      },
+      {
+        "name": "The No-Black Rule",
+        "body": "Pure black (#000, oklch(0 0 0)) is never used. Every dark value carries the blue-teal lean of the primary hue (hue ~220–230). Check shadows, overlays, and icon fills.",
+        "section": "colors"
+      },
+      {
+        "name": "The One-Font-Per-Role Rule",
+        "body": "Instrument Serif is for headings (h1, h2, h3, .font-display). DM Sans is for everything else. Never use Instrument Serif at label or body scale; never set a heading in DM Sans.",
+        "section": "typography"
+      },
+      {
+        "name": "The Negative-Tracking Rule",
+        "body": "Headings always carry negative letter-spacing (−0.01em to −0.02em). At display sizes, default tracking reads as loose and informal. Tight tracking is the editorial signature.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tinted Shadow Rule",
+        "body": "Shadows are never black. Every shadow value carries the Petroleum Dusk hue. If a shadow uses rgba(0,0,0,...) or #000, replace it with the petroleum tint.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Ambient-Not-Active Rule",
+        "body": "Shadow depth does not increase on hover for informational cards. Reserve shadow escalation for interactive surfaces that lift. A shadow appearing where it didn't exist is a stronger affordance signal than a deepening shadow.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use Instrument Serif for h1, h2, h3, and .font-display elements.",
+      "Do keep Bronze Bell to at most two appearances per screen.",
+      "Do tint every shadow value toward Petroleum Dusk.",
+      "Do use the three-surface staircase (page → card → elevated) to communicate depth.",
+      "Do use negative letter-spacing on all display and headline text (−0.01em to −0.02em).",
+      "Do support both light and dark modes with separately designed token sets.",
+      "Do respect prefers-reduced-motion via the safe() variant wrapper.",
+      "Do write every label, button, and heading in Portuguese Brazilian."
+    ],
+    "donts": [
+      "Don't use border-left or border-right greater than 1px as a colored accent stripe.",
+      "Don't use background-clip: text with a gradient.",
+      "Don't use glassmorphism as a default surface treatment.",
+      "Don't use pure black in shadows, overlays, or foreground colors.",
+      "Don't build the hero section as a big metric number, small label, supporting stats, gradient accent.",
+      "Don't design identical card grids with the same icon + heading + text structure repeated.",
+      "Don't reach for a modal as the first solution.",
+      "Don't import gospel aesthetic references: no gold as primary or accent, no dove iconography.",
+      "Don't reproduce the Eklésia design pattern: static pages, outdated visual language, no motion feedback.",
+      "Don't ship the generic translated American SaaS look: identical rounded cards, flat blue gradient headers, vague copy.",
+      "Don't underestimate the non-technical user: no technical vocabulary, no prior SaaS experience required."
+    ]
+  }
+}

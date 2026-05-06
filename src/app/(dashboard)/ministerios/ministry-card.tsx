@@ -15,34 +15,17 @@ function getInitials(name: string): string {
     .join("");
 }
 
-/** Gera uma classe de accent baseada no primeiro char do nome */
-function getAccentClass(name: string): string {
-  const colors = [
-    "border-l-primary",
-    "border-l-amber-500",
-    "border-l-emerald-500",
-    "border-l-violet-500",
-    "border-l-rose-500",
-    "border-l-sky-500",
-  ];
-  const idx = name.charCodeAt(0) % colors.length;
-  return colors[idx];
-}
-
 interface MinistryCardProps {
   ministry: MinistryWithRelations;
 }
 
 export function MinistryCard({ ministry }: MinistryCardProps) {
-  const accent = getAccentClass(ministry.name);
-
   return (
     <Link
       href={`/ministerios/${ministry.id}`}
       className={cn(
         "group flex flex-col gap-3 rounded-xl border border-border bg-card px-5 py-4",
-        "border-l-4 hover:shadow-sm hover:border-t-border/80 transition-all duration-150",
-        accent
+        "hover:shadow-sm hover:bg-muted/30 transition-all duration-150"
       )}
     >
       {/* Header */}
@@ -109,23 +92,6 @@ export function MinistryCard({ ministry }: MinistryCardProps) {
             Sem conselheiro ou líder definido
           </p>
         )}
-      </div>
-
-      {/* Chevron */}
-      <div className="flex justify-end">
-        <svg
-          viewBox="0 0 16 16"
-          className="size-3.5 text-muted-foreground/30 group-hover:text-primary/40 transition-colors duration-150"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M6 12l4-4-4-4"
-          />
-        </svg>
       </div>
     </Link>
   );

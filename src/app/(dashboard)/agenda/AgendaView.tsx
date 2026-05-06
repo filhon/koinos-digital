@@ -150,117 +150,118 @@ export function AgendaView({
   const isEmpty = events.length === 0 && !isPending;
 
   return (
-    <div className="space-y-4">
-      {/* ── Toolbar ─────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-2 justify-between">
-        {/* Navegação de período */}
-        <div className="flex items-center gap-1">
-          <Button variant="outline" size="icon-sm" onClick={navigatePrev}>
-            <ChevronLeft className="size-4" />
-          </Button>
+    <div className="flex flex-col gap-4">
+      {/* ── Toolbar + Indicador de carregamento ─────────────── */}
+      <div className="space-y-1">
+        <div className="flex flex-wrap items-center gap-2 justify-between">
+          {/* Navegação de período */}
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="icon-sm" onClick={navigatePrev}>
+              <ChevronLeft className="size-4" />
+            </Button>
 
-          <button
-            onClick={navigateToday}
-            className="px-3 py-1.5 rounded-lg text-sm font-semibold capitalize text-foreground hover:bg-muted transition-colors min-w-37 text-center"
-          >
-            {periodLabel}
-          </button>
-
-          <Button variant="outline" size="icon-sm" onClick={navigateNext}>
-            <ChevronRight className="size-4" />
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={navigateToday}
-            className="ml-1 text-xs text-muted-foreground"
-          >
-            Hoje
-          </Button>
-        </div>
-
-        {/* Filtros e toggle de visualização */}
-        <div className="flex items-center gap-2">
-          {/* Filtro de unidade — visível apenas para matrizes com congregações */}
-          {hasMultipleUnits && (
-            <div
-              className="hidden sm:flex rounded-lg overflow-hidden border border-border text-xs"
-              role="group"
-              aria-label="Filtrar por unidade"
-            >
-              {(["minha-unidade", "todos"] as UnitFilter[]).map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setUnitFilter(f)}
-                  className={cn(
-                    "px-3 py-1.5 transition-colors",
-                    unitFilter === f
-                      ? "bg-primary-500 text-white font-medium"
-                      : "bg-card text-muted-foreground hover:bg-muted"
-                  )}
-                >
-                  {f === "todos" ? "Todas as unidades" : "Minha unidade"}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Toggle de visualização */}
-          <div
-            className="flex rounded-lg overflow-hidden border border-border"
-            role="group"
-            aria-label="Tipo de visualização"
-          >
             <button
-              onClick={() => setView("mensal")}
-              title="Visualização mensal"
-              className={cn(
-                "flex items-center gap-1.5 px-2.5 py-1.5 text-xs transition-colors",
-                view === "mensal"
-                  ? "bg-primary-500 text-white font-medium"
-                  : "bg-card text-muted-foreground hover:bg-muted"
-              )}
+              onClick={navigateToday}
+              className="px-3 py-1.5 rounded-lg text-sm font-semibold capitalize text-foreground hover:bg-muted transition-colors min-w-37 text-center"
             >
-              <CalendarDays className="size-3.5" />
-              <span className="hidden sm:inline">Mês</span>
+              {periodLabel}
             </button>
-            <button
-              onClick={() => setView("semanal")}
-              title="Visualização semanal"
-              className={cn(
-                "flex items-center gap-1.5 px-2.5 py-1.5 text-xs transition-colors",
-                view === "semanal"
-                  ? "bg-primary-500 text-white font-medium"
-                  : "bg-card text-muted-foreground hover:bg-muted"
-              )}
+
+            <Button variant="outline" size="icon-sm" onClick={navigateNext}>
+              <ChevronRight className="size-4" />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={navigateToday}
+              className="ml-1 text-xs text-muted-foreground"
             >
-              <Clock3 className="size-3.5" />
-              <span className="hidden sm:inline">Semana</span>
-            </button>
+              Hoje
+            </Button>
           </div>
 
-          {isLeadership && (
-            <Button
-              render={<Link href="/eventos/novo" />}
-              nativeButton={false}
-              size="sm"
-            >
-              <Plus className="size-4" />
-              <span className="hidden sm:inline">Novo evento</span>
-            </Button>
-          )}
-        </div>
-      </div>
+          {/* Filtros e toggle de visualização */}
+          <div className="flex items-center gap-2">
+            {/* Filtro de unidade — visível apenas para matrizes com congregações */}
+            {hasMultipleUnits && (
+              <div
+                className="hidden sm:flex rounded-lg overflow-hidden border border-border text-xs"
+                role="group"
+                aria-label="Filtrar por unidade"
+              >
+                {(["minha-unidade", "todos"] as UnitFilter[]).map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setUnitFilter(f)}
+                    className={cn(
+                      "px-3 py-1.5 transition-colors",
+                      unitFilter === f
+                        ? "bg-primary-500 text-white font-medium"
+                        : "bg-card text-muted-foreground hover:bg-muted"
+                    )}
+                  >
+                    {f === "todos" ? "Todas as unidades" : "Minha unidade"}
+                  </button>
+                ))}
+              </div>
+            )}
 
-      {/* ── Indicador de carregamento ─────────────────────── */}
-      <div
-        className={cn(
-          "h-0.5 w-full overflow-hidden rounded-full transition-opacity duration-300",
-          isPending ? "opacity-100" : "opacity-0"
-        )}
-      >
-        <div className="h-full bg-primary-400 animate-[shimmer_1.2s_ease-in-out_infinite] rounded-full w-1/3" />
+            {/* Toggle de visualização */}
+            <div
+              className="flex rounded-lg overflow-hidden border border-border"
+              role="group"
+              aria-label="Tipo de visualização"
+            >
+              <button
+                onClick={() => setView("mensal")}
+                title="Visualização mensal"
+                className={cn(
+                  "flex items-center gap-1.5 px-2.5 py-1.5 text-xs transition-colors",
+                  view === "mensal"
+                    ? "bg-primary-500 text-white font-medium"
+                    : "bg-card text-muted-foreground hover:bg-muted"
+                )}
+              >
+                <CalendarDays className="size-3.5" />
+                <span className="hidden sm:inline">Mês</span>
+              </button>
+              <button
+                onClick={() => setView("semanal")}
+                title="Visualização semanal"
+                className={cn(
+                  "flex items-center gap-1.5 px-2.5 py-1.5 text-xs transition-colors",
+                  view === "semanal"
+                    ? "bg-primary-500 text-white font-medium"
+                    : "bg-card text-muted-foreground hover:bg-muted"
+                )}
+              >
+                <Clock3 className="size-3.5" />
+                <span className="hidden sm:inline">Semana</span>
+              </button>
+            </div>
+
+            {isLeadership && (
+              <Button
+                render={<Link href="/eventos/novo" />}
+                nativeButton={false}
+                size="sm"
+              >
+                <Plus className="size-4" />
+                <span className="hidden sm:inline">Novo evento</span>
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <div
+          className={cn(
+            "h-0.5 w-full overflow-hidden rounded-full transition-opacity duration-300",
+            isPending ? "opacity-100" : "opacity-0"
+          )}
+        >
+          <div className="h-full bg-primary-400 animate-[shimmer_1.2s_ease-in-out_infinite] rounded-full w-1/3" />
+        </div>
       </div>
 
       {/* ── Calendário ───────────────────────────────────── */}
@@ -371,17 +372,16 @@ export function AgendaView({
                       key={event.id}
                       href={`/eventos/${event.id}`}
                       className={cn(
-                        "flex items-stretch gap-3 rounded-lg p-3 border transition-all",
+                        "flex items-center gap-3 rounded-lg p-3 border transition-all",
                         "hover:shadow-sm hover:border-opacity-80",
                         event.modality === "presencial"
                           ? "border-primary-200 bg-primary-50/50 hover:border-primary-300 dark:bg-primary-900/10 dark:border-primary-800 dark:hover:border-primary-700"
                           : "border-accent-200 bg-accent-50/50 hover:border-accent-300 dark:bg-accent-900/10 dark:border-accent-800 dark:hover:border-accent-700"
                       )}
                     >
-                      {/* Barra lateral colorida */}
                       <div
                         className={cn(
-                          "w-1 rounded-full shrink-0 self-stretch",
+                          "size-2 rounded-full shrink-0",
                           event.modality === "presencial"
                             ? "bg-primary-500"
                             : "bg-accent-500"

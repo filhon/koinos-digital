@@ -72,16 +72,14 @@ export default async function DashboardPage() {
       : null;
 
   return (
-    <div className="px-4 py-6 sm:px-6">
-      <HomeContent
-        userName={memberData.name}
-        userRole={user.role}
-        memberCount={memberData.count}
-        upcomingEvents={upcomingEvents}
-        myTeam={myTeam}
-        teamRanking={teamRanking}
-        devotionData={devotionData}
-      />
-    </div>
+    <HomeContent
+      userName={memberData.name}
+      userRole={user.role}
+      memberCount={memberData.count}
+      upcomingEvents={upcomingEvents}
+      myTeam={myTeam}
+      teamRanking={teamRanking}
+      devotionData={devotionData}
+    />
   );
 }

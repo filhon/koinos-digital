@@ -130,7 +130,7 @@ export default function SecurityPanel({ activeFactor }: Props) {
               value={disablePassword}
               onChange={(e) => setDisablePassword(e.target.value)}
               placeholder="Sua senha atual"
-              className="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-100"
+              className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-100"
             />
             {error && (
               <p className="flex items-center gap-1.5 text-xs text-red-600">
@@ -188,7 +188,7 @@ export default function SecurityPanel({ activeFactor }: Props) {
           <button
             onClick={handleStart}
             disabled={isPending}
-            className="flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50"
             style={{ background: "oklch(0.205 0 0)" }}
           >
             {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -249,10 +249,10 @@ export default function SecurityPanel({ activeFactor }: Props) {
               setStep("confirm");
               setError(null);
             }}
-            className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90"
+            className="w-full rounded-lg px-4 py-3 text-sm font-semibold text-white transition-all hover:opacity-90"
             style={{ background: "oklch(0.205 0 0)" }}
           >
-            Já escaneei — continuar
+            Já escaneei, continuar
           </button>
         </div>
       )}
@@ -286,7 +286,7 @@ export default function SecurityPanel({ activeFactor }: Props) {
             <button
               onClick={handleConfirm}
               disabled={isPending || code.length !== 6}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50"
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50"
               style={{ background: "oklch(0.205 0 0)" }}
             >
               {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -294,7 +294,7 @@ export default function SecurityPanel({ activeFactor }: Props) {
             </button>
             <button
               onClick={() => setStep("qr")}
-              className="rounded-lg border border-gray-200 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+              className="rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
             >
               Voltar
             </button>

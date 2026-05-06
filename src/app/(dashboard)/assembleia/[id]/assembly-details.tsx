@@ -16,7 +16,6 @@ import {
   ClipboardList,
   Vote,
   Plus,
-  ChevronRight,
   CheckCircle2,
   Circle,
   XCircle,
@@ -222,8 +221,6 @@ function ElectionCard({
                 )}
               </div>
             </div>
-
-            <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0 self-center opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
         </CardContent>
       </Card>

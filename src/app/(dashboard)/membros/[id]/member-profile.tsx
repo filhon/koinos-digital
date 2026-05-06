@@ -22,7 +22,7 @@ interface InfoRowProps {
 function InfoRow({ label, value }: InfoRowProps) {
   if (!value) return null;
   return (
-    <div className="flex flex-col gap-0.5 py-2.5 border-b border-border/50 last:border-0">
+    <div className="flex flex-col gap-0.5 py-3 border-b border-border/50 last:border-0">
       <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
         {label}
       </span>

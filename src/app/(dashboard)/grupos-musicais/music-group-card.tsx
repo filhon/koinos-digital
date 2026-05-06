@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Users, Crown, Music2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
 import type { MusicGroupWithRelations } from "@/actions/music-groups";
 
 function getInitials(name: string): string {
@@ -15,34 +14,15 @@ function getInitials(name: string): string {
     .join("");
 }
 
-function getAccentClass(name: string): string {
-  const colors = [
-    "border-l-amber-500",
-    "border-l-primary",
-    "border-l-violet-500",
-    "border-l-rose-500",
-    "border-l-emerald-500",
-    "border-l-sky-500",
-  ];
-  const idx = name.charCodeAt(0) % colors.length;
-  return colors[idx];
-}
-
 interface MusicGroupCardProps {
   group: MusicGroupWithRelations;
 }
 
 export function MusicGroupCard({ group }: MusicGroupCardProps) {
-  const accent = getAccentClass(group.name);
-
   return (
     <Link
       href={`/grupos-musicais/${group.id}`}
-      className={cn(
-        "group flex flex-col gap-3 rounded-xl border border-border bg-card px-5 py-4",
-        "border-l-4 hover:shadow-sm transition-all duration-150",
-        accent
-      )}
+      className="group flex flex-col gap-3 rounded-xl border border-border bg-card px-5 py-4 hover:bg-muted/30 transition-colors duration-150"
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
@@ -86,23 +66,6 @@ export function MusicGroupCard({ group }: MusicGroupCardProps) {
             Sem líder definido
           </p>
         )}
-      </div>
-
-      {/* Chevron */}
-      <div className="flex justify-end">
-        <svg
-          viewBox="0 0 16 16"
-          className="size-3.5 text-muted-foreground/30 group-hover:text-primary/40 transition-colors duration-150"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M6 12l4-4-4-4"
-          />
-        </svg>
       </div>
     </Link>
   );

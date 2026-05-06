@@ -60,7 +60,7 @@ export function AssemblyForm() {
             <Label htmlFor="name">Nome da Assembléia *</Label>
             <Input
               id="name"
-              placeholder="Ex: Assembléia Geral Ordinária — Abril 2026"
+              placeholder="Ex: Assembléia Geral Ordinária, Abril 2026"
               {...register("name")}
             />
             {errors.name && (
@@ -93,7 +93,7 @@ export function AssemblyForm() {
             <Label htmlFor="location">Local *</Label>
             <Input
               id="location"
-              placeholder="Ex: Templo principal — Salão principal"
+              placeholder="Ex: Templo principal, Salão principal"
               {...register("location")}
             />
             {errors.location && (

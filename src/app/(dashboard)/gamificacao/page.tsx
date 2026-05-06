@@ -21,10 +21,10 @@ export default async function GamificacaoPage() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 px-4 py-6">
+    <div className="max-w-2xl mx-auto space-y-6">
       <PageHeader
         title="Gamificação"
-        description="Placar das 12 Tribos de Israel — pontuação mensal e anual"
+        description="Placar das 12 Tribos de Israel: pontuação mensal e anual"
       />
       <GamificationView initialData={initialData} />
     </div>

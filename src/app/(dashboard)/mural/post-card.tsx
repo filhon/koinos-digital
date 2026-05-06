@@ -340,7 +340,7 @@ export function PostCard({
       </div>
 
       {/* Footer: reactions + comments */}
-      <div className="px-4 pb-3 flex items-center gap-1 border-t border-border/50 pt-2.5">
+      <div className="px-4 pb-3 flex items-center gap-1 border-t border-border/50 pt-3">
         {/* Orar button */}
         <ReactionButton
           icon={<HandHeart className="w-3.5 h-3.5" />}

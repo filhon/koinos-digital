@@ -22,7 +22,7 @@ export default async function AparenciaPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="max-w-3xl mx-auto flex flex-col gap-6">
       <PageHeader
         title="Aparência"
         description="Controle o tema e o agendamento do modo escuro."

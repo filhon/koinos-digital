@@ -43,7 +43,7 @@ export default async function RecursoPage({ params }: PageProps) {
   );
 
   return (
-    <div className="px-4 py-6 lg:px-8 lg:py-8 max-w-3xl mx-auto">
+    <div className="max-w-3xl mx-auto">
       <PageHeader
         title={resource.name}
         breadcrumbs={[

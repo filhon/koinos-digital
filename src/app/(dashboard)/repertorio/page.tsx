@@ -64,7 +64,7 @@ export default async function RepertorioPage({ searchParams }: PageProps) {
     ["admin", "pastor", "presbítero", "diácono", "líder"].includes(user.role);
 
   return (
-    <div className="px-4 py-6 lg:px-8 lg:py-8 max-w-3xl mx-auto">
+    <div className="max-w-3xl mx-auto">
       <PageHeader
         title="Repertório"
         description="Músicas dos grupos de louvor"

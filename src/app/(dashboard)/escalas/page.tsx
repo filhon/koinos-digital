@@ -10,7 +10,7 @@ export default async function EscalasPage() {
   const entries = "data" in result ? (result.data ?? []) : [];
 
   return (
-    <div className="px-4 py-6 lg:px-8 lg:py-8 max-w-3xl mx-auto">
+    <div className="max-w-3xl mx-auto">
       <PageHeader
         title="Minha Escala"
         description="Veja os eventos em que você está escalado"

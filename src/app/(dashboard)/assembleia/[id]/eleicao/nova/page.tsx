@@ -17,7 +17,7 @@ export default async function NovaEleicaoPage({ params }: Props) {
   if (!assembly) notFound();
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="max-w-2xl mx-auto space-y-6">
       <PageHeader
         title="Nova Eleição"
         description={`Assembléia: ${assembly.name}`}

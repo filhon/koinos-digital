@@ -31,7 +31,7 @@ export default async function AssembleiaDetailPage({ params }: Props) {
   const isPresbítero = ["admin", "pastor", "presbítero"].includes(user.role);
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-5xl mx-auto space-y-6">
       <PageHeader
         title={assembly.name}
         description={assembly.reason}

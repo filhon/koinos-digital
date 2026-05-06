@@ -51,7 +51,7 @@ function DataRow({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 function formatAddress(addr: MemberAddress | null): string {
-  if (!addr) return "—";
+  if (!addr) return "N/D";
   const parts = [
     `${addr.street}, ${addr.number}`,
     addr.complement,
@@ -264,7 +264,7 @@ function ExportTab() {
             className="size-4 shrink-0 text-primary"
             aria-hidden="true"
           />
-          <strong>koinos-dados.json</strong> — perfil completo (nome, e-mail,
+          <strong>koinos-dados.json</strong>: perfil completo (nome, e-mail,
           CPF, endereço, etc.)
         </li>
         <li className="flex items-center gap-2">
@@ -272,7 +272,7 @@ function ExportTab() {
             className="size-4 shrink-0 text-primary"
             aria-hidden="true"
           />
-          <strong>koinos-consentimentos.csv</strong> — histórico completo de
+          <strong>koinos-consentimentos.csv</strong>: histórico completo de
           consentimentos LGPD
         </li>
       </ul>
