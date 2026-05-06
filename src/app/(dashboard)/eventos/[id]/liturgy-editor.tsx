@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
+import { useState, useTransition, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Reorder,
@@ -14,6 +14,7 @@ import {
   Plus,
   BookOpen,
   Music2,
+  Music,
   Heart,
   Mic2,
   Gift,
@@ -26,6 +27,10 @@ import {
   Loader2,
   ChevronDown,
   Sparkles,
+  Search,
+  X,
+  UserCheck,
+  UserX,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -33,15 +38,22 @@ import {
   reorderLiturgyItems,
   addLiturgyItem,
   removeLiturgyItem,
+  addSongToLiturgy,
+  delegateMusicSelection,
+  revokeMusicDelegation,
+  getEventMusicGroupLeaders,
 } from "@/actions/liturgy";
 import { getAIRecommendations } from "@/actions/ai";
 import { PremiumGate } from "@/components/ui/premium-gate";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 import {
   LITURGY_ITEM_TYPES,
   LITURGY_ITEM_TYPE_LABELS,
   type LiturgyRow,
   type LiturgyItemRow,
   type LiturgyItemType,
+  type MusicLeader,
 } from "@/lib/validators/liturgy";
 import { type AIRecommendationResult } from "@/lib/validators/ai";
 import {
@@ -84,7 +96,173 @@ const TYPE_CONFIG: Record<
     color: "text-muted-foreground",
     bg: "bg-muted",
   },
+  cântico: { icon: Music, color: "text-amber-600", bg: "bg-amber-50" },
 };
+
+// ─── SongResult type ──────────────────────────────────────────────────────────
+
+interface SongResult {
+  id: string;
+  name: string;
+  artist: string;
+  central_message: string | null;
+}
+
+// ─── SongSearchInput ──────────────────────────────────────────────────────────
+
+interface SongSearchInputProps {
+  eventId: string;
+  selectedSong: SongResult | null;
+  onSelect: (song: SongResult) => void;
+  onClear: () => void;
+}
+
+function SongSearchInput({
+  eventId,
+  selectedSong,
+  onSelect,
+  onClear,
+}: SongSearchInputProps) {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SongResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined
+  );
+
+  useEffect(() => {
+    if (query.length < 1) {
+      setResults([]);
+      setShowDropdown(false);
+      return;
+    }
+
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `/api/songs/search?q=${encodeURIComponent(query)}&event_id=${encodeURIComponent(eventId)}`
+        );
+        const data = (await res.json()) as { songs?: SongResult[] };
+        setResults(data.songs ?? []);
+        setShowDropdown(true);
+      } catch {
+        setResults([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(debounceRef.current);
+  }, [query, eventId]);
+
+  if (selectedSong) {
+    return (
+      <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
+        <Music className="size-4 mt-0.5 shrink-0 text-amber-600" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-foreground leading-tight">
+            {selectedSong.name}
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {selectedSong.artist}
+          </p>
+          {selectedSong.central_message && (
+            <p className="text-xs text-amber-700 mt-1 italic leading-snug line-clamp-2">
+              {selectedSong.central_message}
+            </p>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            onClear();
+            setQuery("");
+          }}
+          className="shrink-0 flex size-6 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-amber-100 transition-colors"
+          aria-label="Remover seleção"
+        >
+          <X className="size-3.5" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+        <Input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Buscar por nome ou artista..."
+          className="pl-9 pr-9"
+          onFocus={() => results.length > 0 && setShowDropdown(true)}
+          onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+          autoComplete="off"
+        />
+        {loading && (
+          <Loader2 className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 size-4 animate-spin text-muted-foreground" />
+        )}
+      </div>
+
+      <AnimatePresence>
+        {showDropdown && results.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.15 }}
+            className="absolute z-50 w-full top-full mt-1 rounded-xl border border-border bg-popover shadow-lg overflow-hidden"
+          >
+            {results.map((song) => (
+              <button
+                key={song.id}
+                type="button"
+                className="w-full flex items-start gap-3 px-3 py-2.5 text-left hover:bg-muted transition-colors"
+                onMouseDown={() => {
+                  onSelect(song);
+                  setQuery("");
+                  setShowDropdown(false);
+                }}
+              >
+                <Music className="size-4 mt-0.5 shrink-0 text-amber-500" />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{song.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {song.artist}
+                  </p>
+                </div>
+              </button>
+            ))}
+          </motion.div>
+        )}
+
+        {showDropdown &&
+          results.length === 0 &&
+          !loading &&
+          query.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.15 }}
+              className="absolute z-50 w-full top-full mt-1 rounded-xl border border-border bg-popover shadow p-4 text-center"
+            >
+              <p className="text-sm text-muted-foreground">
+                Nenhuma música encontrada.
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Tente outro nome ou artista.
+              </p>
+            </motion.div>
+          )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 // ─── LiturgyItemCard ──────────────────────────────────────────────────────────
 
@@ -285,6 +463,7 @@ interface AddItemDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   liturgyId: string;
+  eventId: string;
   onAdded: (item: LiturgyItemRow) => void;
 }
 
@@ -292,15 +471,41 @@ function AddItemDialog({
   open,
   onOpenChange,
   liturgyId,
+  eventId,
   onAdded,
 }: AddItemDialogProps) {
   const [type, setType] = useState<LiturgyItemType>("texto_livre");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [selectedSong, setSelectedSong] = useState<SongResult | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  const isCântico = type === "cântico";
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    if (isCântico) {
+      if (!selectedSong) return;
+      startTransition(async () => {
+        const result = await addSongToLiturgy({
+          liturgy_id: liturgyId,
+          song_id: selectedSong.id,
+        });
+        if (result && "error" in result && result.error) {
+          toast.error(result.error);
+          return;
+        }
+        if (result && "data" in result && result.data) {
+          onAdded(result.data);
+          setSelectedSong(null);
+          setType("texto_livre");
+          onOpenChange(false);
+        }
+      });
+      return;
+    }
+
     if (!title.trim()) return;
     startTransition(async () => {
       const result = await addLiturgyItem({
@@ -323,6 +528,8 @@ function AddItemDialog({
     });
   }
 
+  const canSubmit = isCântico ? !!selectedSong : !!title.trim();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -336,7 +543,13 @@ function AddItemDialog({
             <Label>Tipo</Label>
             <select
               value={type}
-              onChange={(e) => setType(e.target.value as LiturgyItemType)}
+              onChange={(e) => {
+                const newType = e.target.value as LiturgyItemType;
+                setType(newType);
+                if (newType !== "cântico") {
+                  setSelectedSong(null);
+                }
+              }}
               className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             >
               {LITURGY_ITEM_TYPES.map((t) => (
@@ -347,28 +560,45 @@ function AddItemDialog({
             </select>
           </div>
 
-          <div className="space-y-1.5">
-            <Label>Título *</Label>
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Ex: Oração pelos enfermos"
-              maxLength={200}
-              required
-            />
-          </div>
+          {isCântico ? (
+            <div className="space-y-1.5">
+              <Label>Música do repertório *</Label>
+              <SongSearchInput
+                eventId={eventId}
+                selectedSong={selectedSong}
+                onSelect={setSelectedSong}
+                onClear={() => setSelectedSong(null)}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Busca no repertório dos grupos musicais associados ao evento.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-1.5">
+                <Label>Título *</Label>
+                <Input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Ex: Oração pelos enfermos"
+                  maxLength={200}
+                  required
+                />
+              </div>
 
-          <div className="space-y-1.5">
-            <Label>Descrição (opcional)</Label>
-            <Textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Referência bíblica, letra, notas..."
-              rows={3}
-              maxLength={2000}
-              className="resize-none"
-            />
-          </div>
+              <div className="space-y-1.5">
+                <Label>Descrição (opcional)</Label>
+                <Textarea
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Referência bíblica, letra, notas..."
+                  rows={3}
+                  maxLength={2000}
+                  className="resize-none"
+                />
+              </div>
+            </>
+          )}
 
           <DialogFooter>
             <Button
@@ -378,12 +608,169 @@ function AddItemDialog({
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isPending || !title.trim()}>
+            <Button type="submit" disabled={isPending || !canSubmit}>
               {isPending && <Loader2 className="size-4 animate-spin" />}
               Adicionar
             </Button>
           </DialogFooter>
         </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── DelegateMusicDialog ──────────────────────────────────────────────────────
+
+interface DelegateMusicDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  liturgyId: string;
+  eventId: string;
+  onDelegated: (memberId: string, memberName: string) => void;
+}
+
+function DelegateMusicDialog({
+  open,
+  onOpenChange,
+  liturgyId,
+  eventId,
+  onDelegated,
+}: DelegateMusicDialogProps) {
+  const [leaders, setLeaders] = useState<MusicLeader[]>([]);
+  const [loadingLeaders, setLoadingLeaders] = useState(false);
+  const [selectedLeaderId, setSelectedLeaderId] = useState("");
+  const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    let ignore = false;
+
+    async function loadLeaders() {
+      setLoadingLeaders(true);
+      try {
+        const result = await getEventMusicGroupLeaders(eventId);
+        if (!ignore) {
+          setSelectedLeaderId("");
+          if (result && "data" in result && result.data) {
+            setLeaders(result.data);
+          }
+        }
+      } finally {
+        if (!ignore) setLoadingLeaders(false);
+      }
+    }
+
+    loadLeaders();
+
+    return () => {
+      ignore = true;
+    };
+  }, [open, eventId]);
+
+  function handleDelegate() {
+    if (!selectedLeaderId) return;
+    const leader = leaders.find((l) => l.id === selectedLeaderId);
+    if (!leader) return;
+
+    startTransition(async () => {
+      const result = await delegateMusicSelection({
+        liturgy_id: liturgyId,
+        member_id: selectedLeaderId,
+      });
+      if (result && "error" in result && result.error) {
+        toast.error(result.error);
+        return;
+      }
+      onDelegated(selectedLeaderId, leader.name);
+      onOpenChange(false);
+    });
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="font-display text-lg">
+            Delegar seleção de músicas
+          </DialogTitle>
+        </DialogHeader>
+
+        {loadingLeaders ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="size-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : leaders.length === 0 ? (
+          <div className="py-6 text-center space-y-1">
+            <p className="text-sm text-foreground font-medium">
+              Nenhum grupo musical associado
+            </p>
+            <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+              Adicione um grupo musical ao evento na aba Música para poder
+              delegar a seleção de cânticos.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3 py-1">
+            <p className="text-sm text-muted-foreground">
+              O líder selecionado receberá uma notificação e poderá escolher os
+              cânticos desta liturgia.
+            </p>
+            <div className="space-y-2">
+              {leaders.map((leader) => (
+                <button
+                  key={leader.id}
+                  type="button"
+                  onClick={() => setSelectedLeaderId(leader.id)}
+                  className={cn(
+                    "w-full flex items-center gap-3 rounded-xl border p-3 text-left transition-colors",
+                    selectedLeaderId === leader.id
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:bg-muted/50"
+                  )}
+                >
+                  <Avatar className="size-9 shrink-0">
+                    <AvatarImage src={leader.avatar_url ?? ""} />
+                    <AvatarFallback className="text-xs font-medium">
+                      {leader.name
+                        .split(" ")
+                        .slice(0, 2)
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {leader.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      Líder — {leader.group_name}
+                    </p>
+                  </div>
+                  {selectedLeaderId === leader.id && (
+                    <Check className="size-4 shrink-0 text-primary" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleDelegate}
+            disabled={!selectedLeaderId || isPending || loadingLeaders}
+          >
+            {isPending && <Loader2 className="size-4 animate-spin" />}
+            Delegar
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
@@ -395,7 +782,7 @@ interface AISuggestionsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   liturgyId: string;
-  onAdded: (item: LiturgyItemRow) => void; // Could add multiple items, but we'll just re-use AddItem logic or refresh
+  onAdded: (item: LiturgyItemRow) => void;
 }
 
 function AISuggestionsDialog({
@@ -418,7 +805,7 @@ function AISuggestionsDialog({
       const res = await getAIRecommendations(objective.trim());
       if (res.error) {
         toast.error(res.error);
-        if (res.data) setSuggestions(res.data); // Support fallback
+        if (res.data) setSuggestions(res.data);
         return;
       }
       setSuggestions(res.data);
@@ -569,9 +956,17 @@ function AISuggestionsDialog({
 
 interface LiturgyEditorProps {
   liturgy: LiturgyRow;
+  eventId: string;
+  isResponsible?: boolean;
+  currentMemberId?: string;
 }
 
-export function LiturgyEditor({ liturgy }: LiturgyEditorProps) {
+export function LiturgyEditor({
+  liturgy,
+  eventId,
+  isResponsible = false,
+  currentMemberId,
+}: LiturgyEditorProps) {
   const router = useRouter();
   const [items, setItems] = useState<LiturgyItemRow[]>(liturgy.items);
   const [originalOrder, setOriginalOrder] = useState<string[]>(
@@ -580,11 +975,26 @@ export function LiturgyEditor({ liturgy }: LiturgyEditorProps) {
   const [isSavingOrder, startSaveOrder] = useTransition();
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showAIDialog, setShowAIDialog] = useState(false);
+  const [showDelegateDialog, setShowDelegateDialog] = useState(false);
+  const [isRevoking, startRevoke] = useTransition();
+
+  const [musicDelegatedTo, setMusicDelegatedTo] = useState<string | null>(
+    liturgy.music_delegated_to ?? null
+  );
+  const [delegatedMemberName, setDelegatedMemberName] = useState<string | null>(
+    (liturgy.delegated_member as { id: string; name: string } | null)?.name ??
+      null
+  );
 
   const currentOrder = items.map((i) => i.id);
   const orderChanged =
     currentOrder.length !== originalOrder.length ||
     currentOrder.some((id, idx) => id !== originalOrder[idx]);
+
+  const isDelegatedToMe =
+    !!currentMemberId && currentMemberId === musicDelegatedTo;
+  const showDelegationBanner =
+    !!musicDelegatedTo && (isDelegatedToMe || isResponsible);
 
   function handleReorder(newItems: LiturgyItemRow[]) {
     setItems(newItems);
@@ -621,8 +1031,71 @@ export function LiturgyEditor({ liturgy }: LiturgyEditorProps) {
     toast.success("Item adicionado.");
   }
 
+  function handleDelegated(memberId: string, memberName: string) {
+    setMusicDelegatedTo(memberId);
+    setDelegatedMemberName(memberName);
+    toast.success(`Músicas delegadas para ${memberName}.`);
+  }
+
+  function handleRevoke() {
+    startRevoke(async () => {
+      const result = await revokeMusicDelegation({ liturgy_id: liturgy.id });
+      if (result && "error" in result && result.error) {
+        toast.error(result.error);
+        return;
+      }
+      setMusicDelegatedTo(null);
+      setDelegatedMemberName(null);
+      toast.success("Delegação revogada.");
+    });
+  }
+
   return (
     <div className="space-y-3">
+      {/* Delegation banner */}
+      <AnimatePresence>
+        {showDelegationBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"
+          >
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-amber-100">
+              <UserCheck className="size-4 text-amber-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              {isDelegatedToMe ? (
+                <p className="text-sm font-medium text-amber-800">
+                  Você foi delegado(a) para escolher as músicas deste culto
+                </p>
+              ) : (
+                <p className="text-sm font-medium text-amber-800">
+                  Músicas delegadas para{" "}
+                  <span className="font-semibold">{delegatedMemberName}</span>
+                </p>
+              )}
+            </div>
+            {isResponsible && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleRevoke}
+                disabled={isRevoking}
+                className="shrink-0 h-7 gap-1 text-amber-700 hover:text-amber-900 hover:bg-amber-100"
+              >
+                {isRevoking ? (
+                  <Loader2 className="size-3 animate-spin" />
+                ) : (
+                  <UserX className="size-3" />
+                )}
+                Revogar
+              </Button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Order changed banner */}
       <AnimatePresence>
         {orderChanged && (
@@ -674,6 +1147,7 @@ export function LiturgyEditor({ liturgy }: LiturgyEditorProps) {
         </Reorder.Group>
       )}
 
+      {/* Action buttons */}
       <div className="flex gap-2">
         <button
           type="button"
@@ -701,10 +1175,23 @@ export function LiturgyEditor({ liturgy }: LiturgyEditorProps) {
         </PremiumGate>
       </div>
 
+      {/* Delegate button — only for responsible with no active delegation */}
+      {isResponsible && !musicDelegatedTo && (
+        <button
+          type="button"
+          onClick={() => setShowDelegateDialog(true)}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-amber-300 bg-amber-50/50 py-3 text-sm font-medium text-amber-700 transition-colors hover:border-amber-400 hover:bg-amber-100"
+        >
+          <UserCheck className="size-4" />
+          Delegar músicas
+        </button>
+      )}
+
       <AddItemDialog
         open={showAddDialog}
         onOpenChange={setShowAddDialog}
         liturgyId={liturgy.id}
+        eventId={eventId}
         onAdded={handleItemAdded}
       />
 
@@ -713,6 +1200,14 @@ export function LiturgyEditor({ liturgy }: LiturgyEditorProps) {
         onOpenChange={setShowAIDialog}
         liturgyId={liturgy.id}
         onAdded={handleItemAdded}
+      />
+
+      <DelegateMusicDialog
+        open={showDelegateDialog}
+        onOpenChange={setShowDelegateDialog}
+        liturgyId={liturgy.id}
+        eventId={eventId}
+        onDelegated={handleDelegated}
       />
     </div>
   );

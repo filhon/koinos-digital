@@ -99,6 +99,7 @@ export default async function EventoPage({ params }: PageProps) {
         event={event}
         isLeadership={isLeadership}
         isResponsible={isResponsible}
+        currentMemberId={user?.id}
         allocations={allocations}
         eventMinistries={eventMinistries}
         eventMusicGroups={eventMusicGroups}

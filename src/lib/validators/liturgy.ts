@@ -11,6 +11,7 @@ export const LITURGY_ITEM_TYPES = [
   "comunhao",
   "batismo",
   "texto_livre",
+  "cântico",
 ] as const;
 
 export type LiturgyItemType = (typeof LITURGY_ITEM_TYPES)[number];
@@ -26,6 +27,7 @@ export const LITURGY_ITEM_TYPE_LABELS: Record<LiturgyItemType, string> = {
   comunhao: "Comunhão",
   batismo: "Batismo",
   texto_livre: "Texto Livre",
+  cântico: "Cântico",
 };
 
 // ─── Schemas ──────────────────────────────────────────────────────────────────
@@ -57,6 +59,20 @@ export const removeLiturgyItemSchema = z.object({
   id: z.string().uuid(),
 });
 
+export const addSongToLiturgySchema = z.object({
+  liturgy_id: z.string().uuid(),
+  song_id: z.string().uuid(),
+});
+
+export const delegateMusicSelectionSchema = z.object({
+  liturgy_id: z.string().uuid(),
+  member_id: z.string().uuid(),
+});
+
+export const revokeMusicDelegationSchema = z.object({
+  liturgy_id: z.string().uuid(),
+});
+
 // ─── Input types ──────────────────────────────────────────────────────────────
 
 export type CreateLiturgyInput = z.infer<typeof createLiturgySchema>;
@@ -66,6 +82,13 @@ export type ReorderLiturgyItemsInput = z.infer<
 >;
 export type AddLiturgyItemInput = z.infer<typeof addLiturgyItemSchema>;
 export type RemoveLiturgyItemInput = z.infer<typeof removeLiturgyItemSchema>;
+export type AddSongToLiturgyInput = z.infer<typeof addSongToLiturgySchema>;
+export type DelegateMusicSelectionInput = z.infer<
+  typeof delegateMusicSelectionSchema
+>;
+export type RevokeMusicDelegationInput = z.infer<
+  typeof revokeMusicDelegationSchema
+>;
 
 // ─── Row types ────────────────────────────────────────────────────────────────
 
@@ -76,10 +99,18 @@ export interface LiturgyItemRow {
   type: LiturgyItemType;
   title: string;
   content: string | null;
+  song_id: string | null;
   order_index: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface MusicLeader {
+  id: string;
+  name: string;
+  avatar_url: string | null;
+  group_name: string;
 }
 
 export interface LiturgyRow {
@@ -87,6 +118,8 @@ export interface LiturgyRow {
   event_id: string;
   church_id: string;
   is_active: boolean;
+  music_delegated_to: string | null;
+  delegated_member: { id: string; name: string } | null;
   created_at: string;
   updated_at: string;
   items: LiturgyItemRow[];

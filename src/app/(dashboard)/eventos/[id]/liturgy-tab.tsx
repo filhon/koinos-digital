@@ -14,12 +14,16 @@ interface LiturgyTabProps {
   initialLiturgy: LiturgyRow | null;
   eventId: string;
   canEdit: boolean;
+  isResponsible?: boolean;
+  currentMemberId?: string;
 }
 
 export function LiturgyTab({
   initialLiturgy,
   eventId,
   canEdit,
+  isResponsible = false,
+  currentMemberId,
 }: LiturgyTabProps) {
   const [liturgy, setLiturgy] = useState<LiturgyRow | null>(initialLiturgy);
   const [isCreating, startCreate] = useTransition();
@@ -96,7 +100,12 @@ export function LiturgyTab({
               Arraste para reordenar · Clique no título para editar
             </p>
           </div>
-          <LiturgyEditor liturgy={liturgy} />
+          <LiturgyEditor
+            liturgy={liturgy}
+            eventId={eventId}
+            isResponsible={isResponsible}
+            currentMemberId={currentMemberId}
+          />
         </>
       ) : (
         <LiturgyViewer liturgy={liturgy} />

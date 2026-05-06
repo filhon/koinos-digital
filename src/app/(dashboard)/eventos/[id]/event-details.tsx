@@ -59,6 +59,7 @@ interface EventDetailsProps {
   event: EventWithResponsible;
   isLeadership: boolean;
   isResponsible: boolean;
+  currentMemberId?: string;
   allocations?: EventResourceRow[];
   eventMinistries?: EventMinistryRow[];
   eventMusicGroups?: EventMusicGroupRow[];
@@ -69,6 +70,7 @@ export function EventDetails({
   event,
   isLeadership,
   isResponsible,
+  currentMemberId,
   allocations = [],
   eventMinistries = [],
   eventMusicGroups = [],
@@ -247,6 +249,8 @@ export function EventDetails({
           initialLiturgy={liturgy}
           eventId={event.id}
           canEdit={isLeadership || isResponsible}
+          isResponsible={isResponsible}
+          currentMemberId={currentMemberId}
         />
       )}
 

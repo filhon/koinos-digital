@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import {
   BookOpen,
   Music2,
+  Music,
   Heart,
   Mic2,
   Gift,
@@ -11,6 +13,7 @@ import {
   Droplets,
   FileText,
   HandHeart,
+  ExternalLink,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import type { LiturgyRow, LiturgyItemType } from "@/lib/validators/liturgy";
@@ -72,6 +75,11 @@ const TYPE_CONFIG: Record<
     dot: "bg-muted-foreground",
     label: LITURGY_ITEM_TYPE_LABELS.texto_livre,
   },
+  cântico: {
+    icon: Music,
+    dot: "bg-amber-500",
+    label: LITURGY_ITEM_TYPE_LABELS["cântico"],
+  },
 };
 
 interface LiturgyViewerProps {
@@ -122,9 +130,22 @@ export function LiturgyViewer({ liturgy }: LiturgyViewerProps) {
                   {config.label}
                 </span>
               </div>
-              <p className="text-sm font-semibold text-foreground leading-snug">
-                {item.title}
-              </p>
+
+              {/* Title: link to song page when song_id is set */}
+              {item.type === "cântico" && item.song_id ? (
+                <Link
+                  href={`/repertorio/${item.song_id}`}
+                  className="group inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 leading-snug transition-colors"
+                >
+                  {item.title}
+                  <ExternalLink className="size-3 opacity-50 group-hover:opacity-100 transition-opacity" />
+                </Link>
+              ) : (
+                <p className="text-sm font-semibold text-foreground leading-snug">
+                  {item.title}
+                </p>
+              )}
+
               {item.content && (
                 <p className="mt-1 text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
                   {item.content}
