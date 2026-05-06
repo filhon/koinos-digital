@@ -8,7 +8,6 @@ import {
   Clock,
   MapPin,
   Video,
-  User,
   RefreshCw,
   AlignLeft,
   Users,

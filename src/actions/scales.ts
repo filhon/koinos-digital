@@ -15,6 +15,7 @@ import {
   type SuggestScaleInput,
   type ScaleSuggestionResult,
 } from "@/lib/validators/ai";
+import { createNotification } from "@/actions/notifications";
 import type { AuthUser } from "@/lib/auth/session";
 import { generateObject } from "ai";
 import { openai } from "@ai-sdk/openai";
@@ -369,13 +370,14 @@ export const upsertScaleMember = withPermission(
 
     const supabase = await createClient();
 
-    // Verifica o event_ministry e pega o ministry associado
+    // Verifica o event_ministry, pega event name e ministry name
     const { data: eventMinistry, error: emError } = await supabase
       .from("event_ministries")
       .select(
         `
         id,
-        ministry:ministries!event_ministries_ministry_id_fkey(id, leader_id)
+        event:events!event_ministries_event_id_fkey(id, name),
+        ministry:ministries!event_ministries_ministry_id_fkey(id, name, leader_id)
         `
       )
       .eq("id", parsed.data.eventMinistryId)
@@ -389,7 +391,15 @@ export const upsertScaleMember = withPermission(
       ? eventMinistry.ministry[0]
       : eventMinistry.ministry) as unknown as {
       id: string;
+      name: string;
       leader_id: string | null;
+    } | null;
+
+    const event = (Array.isArray(eventMinistry.event)
+      ? eventMinistry.event[0]
+      : eventMinistry.event) as unknown as {
+      id: string;
+      name: string;
     } | null;
 
     // Se líder, valida que é o líder deste ministério
@@ -409,6 +419,16 @@ export const upsertScaleMember = withPermission(
       }
     }
 
+    // Verifica se já existe (para distinguir INSERT de UPDATE)
+    const { data: existing } = await supabase
+      .from("scales")
+      .select("id")
+      .eq("event_ministry_id", parsed.data.eventMinistryId)
+      .eq("member_id", parsed.data.memberId)
+      .maybeSingle();
+
+    const isNewInsert = !existing;
+
     // Upsert: ignora se já existe
     const { data: row, error } = await supabase
       .from("scales")
@@ -427,7 +447,15 @@ export const upsertScaleMember = withPermission(
       return { data: null, error: error.message };
     }
 
-    // TODO(sessão 2.8): disparar notificação para o membro escalado
+    // Notifica o membro escalado apenas em inserções novas
+    if (isNewInsert && event?.name && ministry?.name) {
+      createNotification({
+        memberId: parsed.data.memberId,
+        churchId: user.church_id,
+        type: "scale_assignment",
+        message: `Você foi adicionado à escala de ${event.name} (${ministry.name})`,
+      }).catch(() => {});
+    }
 
     await logAudit({
       churchId: user.church_id,

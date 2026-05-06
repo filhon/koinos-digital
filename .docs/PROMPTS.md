@@ -1505,7 +1505,7 @@ ENTREGÁVEIS: Dashboard de analytics de engajamento funcional, bloqueado pelo Pr
 
 ## Sessão 5.8 — Integração Repertório → Liturgia + Delegação ao líder musical
 
-> **UI:** Use `/frontend-design` para implementar as telas desta sessão.
+> **UI:** Use `/impeccable craft` para implementar as telas desta sessão.
 
 ```
 
