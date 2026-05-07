@@ -206,7 +206,7 @@ export function TransactionsPanel({
                 size="sm"
                 variant="outline"
                 onClick={() => openForm("saída")}
-                className="border-error/30 text-error-dark hover:bg-error-light"
+                className="border-error/60 text-error-dark bg-error-light/40 hover:bg-error-light"
               >
                 <Minus className="size-3.5 mr-1" />
                 Saída
@@ -214,7 +214,7 @@ export function TransactionsPanel({
               <Button
                 size="sm"
                 onClick={() => openForm("entrada")}
-                className="bg-success text-white hover:bg-success-dark"
+                className="bg-success-light text-success-dark border border-success/40 hover:bg-success-light/70"
               >
                 <Plus className="size-3.5 mr-1" />
                 Entrada

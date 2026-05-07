@@ -198,7 +198,8 @@ export function Sidebar() {
                     aria-label={collapsed ? item.label : undefined}
                     aria-current={isActive ? "page" : undefined}
                     className={cn(
-                      "flex items-center gap-3 rounded-lg px-2 py-2 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-1",
+                      "flex items-center rounded-lg py-2 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-1",
+                      collapsed ? "justify-center px-0" : "gap-3 px-2",
                       isActive
                         ? "bg-sidebar-accent text-sidebar-primary"
                         : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"

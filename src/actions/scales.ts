@@ -18,7 +18,7 @@ import {
 import { createNotification } from "@/actions/notifications";
 import type { AuthUser } from "@/lib/auth/session";
 import { generateObject } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { anthropic } from "@ai-sdk/anthropic";
 import { google } from "@ai-sdk/google";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -207,18 +207,21 @@ CRITÉRIOS:
 5. Use os IDs exatos conforme listados acima — sem inventar novos IDs.
 `;
 
-    // 6. Chama GPT-4.1 com fallback para Gemini 2.5 Flash
+    // 6. Chama Claude com fallback para Gemini 2.5 Flash
     let rawSuggestions: { memberId: string; reason: string }[];
 
     try {
       const { object } = await generateObject({
-        model: openai("gpt-4o"),
+        model: anthropic("claude-sonnet-4-6"),
         schema: scaleSuggestionAISchema,
         prompt,
       });
       rawSuggestions = object.suggestions;
     } catch (primaryErr) {
-      console.error("[suggestScale] GPT falhou, tentando Gemini:", primaryErr);
+      console.error(
+        "[suggestScale] Claude falhou, tentando Gemini:",
+        primaryErr
+      );
       try {
         const { object } = await generateObject({
           model: google("gemini-2.5-flash"),
