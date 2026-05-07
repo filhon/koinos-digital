@@ -1,7 +1,7 @@
+"use client";
+
 import Link from "next/link";
 import { Home, ArrowLeft } from "lucide-react";
-
-export const metadata = { title: "Página não encontrada — Koinos" };
 
 export default function NotFound() {
   return (
@@ -50,14 +50,14 @@ export default function NotFound() {
             <Home className="size-4" aria-hidden="true" />
             Ir para o início
           </Link>
-          <Link
-            href="javascript:history.back()"
+          <button
+            onClick={() => window.history.back()}
             className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
             style={{ color: "var(--foreground)" }}
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
             Voltar
-          </Link>
+          </button>
         </div>
       </div>
 

@@ -92,6 +92,19 @@ export async function syncSubscriptionFromStripe(stripeSubscriptionId: string) {
 
 export async function isFeatureEnabled(churchId: string, featureKey: string) {
   const supabase = createAdminClient();
+
+  // Verifica override por tenant primeiro (admin SaaS pode sobrescrever o plano)
+  const { data: override } = await supabase
+    .from("tenant_feature_overrides")
+    .select("enabled")
+    .eq("tenant_id", churchId)
+    .eq("feature_key", featureKey)
+    .maybeSingle();
+
+  if (override !== null) {
+    return override.enabled;
+  }
+
   const { data: tenant } = await supabase
     .from("tenants")
     .select("plan")
@@ -105,7 +118,7 @@ export async function isFeatureEnabled(churchId: string, featureKey: string) {
     .select("enabled")
     .eq("plan", plan)
     .eq("feature_key", featureKey)
-    .single();
+    .maybeSingle();
 
   return featureFlag?.enabled ?? false;
 }

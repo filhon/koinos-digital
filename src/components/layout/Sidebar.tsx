@@ -10,7 +10,6 @@ import {
   Users,
   Music,
   ListTodo,
-  BookOpen,
   Banknote,
   MessageSquare,
   Trophy,
@@ -21,8 +20,7 @@ import {
   ScanLine,
   Shield,
   Globe,
-  Building2,
-  BarChart2,
+  Package,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { sidebarSpring } from "@/lib/motion";
@@ -59,12 +57,12 @@ const navigation: NavGroup[] = [
       { label: "Escalas", href: "/escalas", icon: CalendarDays },
       { label: "Eventos", href: "/eventos", icon: CalendarDays },
       { label: "Check-in", href: "/checkin", icon: ScanLine },
+      { label: "Recursos", href: "/recursos", icon: Package },
     ],
   },
   {
     group: "Conteúdo",
     items: [
-      { label: "Liturgia", href: "/liturgia", icon: BookOpen },
       { label: "Grupos Musicais", href: "/grupos-musicais", icon: Music },
       { label: "Repertório", href: "/repertorio", icon: Music },
     ],
@@ -76,12 +74,6 @@ const navigation: NavGroup[] = [
         label: "Financeiro",
         href: "/financeiro",
         icon: Banknote,
-        roles: ["admin", "pastor", "presbítero", "diácono", "tesoureiro"],
-      },
-      {
-        label: "Relatórios",
-        href: "/financeiro/relatorios",
-        icon: BarChart2,
         roles: ["admin", "pastor", "presbítero", "diácono", "tesoureiro"],
       },
       { label: "Gamificação", href: "/gamificacao", icon: Trophy },
@@ -96,12 +88,6 @@ const navigation: NavGroup[] = [
         label: "Configurações",
         href: "/configuracoes",
         icon: Cog,
-        roles: ["admin", "pastor"],
-      },
-      {
-        label: "Congregações",
-        href: "/configuracoes/congregacoes",
-        icon: Building2,
         roles: ["admin", "pastor"],
       },
     ],

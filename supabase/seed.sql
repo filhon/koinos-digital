@@ -1,3 +1,6 @@
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
+SET search_path TO public, extensions;
+
 -- 1. Criar o Tenant (Igreja Teste)
 INSERT INTO public.tenants (id, name, slug, shared_finances, plan)
 VALUES ('11111111-1111-1111-1111-111111111111', 'Igreja Teste', 'teste', true, 'gratis')
@@ -418,7 +421,7 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO public.election_salts (election_id, salt)
 VALUES (
   'ffffffff-0000-0000-0000-000000000001',
-  encode(gen_random_bytes(32), 'hex')
+  'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2'
 )
 ON CONFLICT (election_id) DO NOTHING;
 

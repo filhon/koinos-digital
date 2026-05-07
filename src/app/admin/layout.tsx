@@ -8,6 +8,7 @@ import {
   Zap,
   LogOut,
   Shield,
+  Building2,
 } from "lucide-react";
 
 const NAV = [
@@ -15,6 +16,11 @@ const NAV = [
     href: "/admin/dashboard",
     label: "Dashboard",
     icon: LayoutDashboard,
+  },
+  {
+    href: "/admin/igrejas",
+    label: "Igrejas",
+    icon: Building2,
   },
   {
     href: "/admin/gamificacao/equipes",

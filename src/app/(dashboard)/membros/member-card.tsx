@@ -11,6 +11,7 @@ import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -160,7 +161,9 @@ export function MemberCard({
                 <MoreVertical className="size-3.5" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" sideOffset={4}>
-                <DropdownMenuLabel>Alterar papel</DropdownMenuLabel>
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel>Alterar papel</DropdownMenuLabel>
+                </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   disabled={!canPromote}

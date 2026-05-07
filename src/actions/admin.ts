@@ -294,6 +294,114 @@ export async function getScoreConfig(): Promise<
   return { data: (data ?? []) as ScoreConfigRow[], error: null };
 }
 
+// ─── listAdminTenants ─────────────────────────────────────────────────────────
+
+export interface AdminTenant {
+  id: string;
+  name: string;
+  slug: string;
+  plan: string;
+  created_at: string;
+}
+
+export async function listAdminTenants(): Promise<ActionResult<AdminTenant[]>> {
+  const guard = await requireAdmin();
+  if (guard) return { data: null, error: guard.error };
+
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("tenants")
+    .select("id, name, slug, plan, created_at")
+    .order("name");
+
+  if (error) return { data: null, error: error.message };
+  return { data: (data ?? []) as AdminTenant[], error: null };
+}
+
+// ─── getTenantFeatureOverrides ────────────────────────────────────────────────
+
+export interface TenantFeatureOverride {
+  feature_key: string;
+  enabled: boolean;
+}
+
+export async function getTenantFeatureOverrides(
+  tenantId: string
+): Promise<ActionResult<TenantFeatureOverride[]>> {
+  const guard = await requireAdmin();
+  if (guard) return { data: null, error: guard.error };
+
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("tenant_feature_overrides")
+    .select("feature_key, enabled")
+    .eq("tenant_id", tenantId);
+
+  if (error) return { data: null, error: error.message };
+  return { data: (data ?? []) as TenantFeatureOverride[], error: null };
+}
+
+// ─── setTenantFeatureOverride ─────────────────────────────────────────────────
+
+const featureOverrideSchema = z.object({
+  tenant_id: z.string().uuid(),
+  feature_key: z.string().min(1).max(100),
+  enabled: z.boolean(),
+});
+
+export async function setTenantFeatureOverride(input: {
+  tenant_id: string;
+  feature_key: string;
+  enabled: boolean;
+}): Promise<ActionResult<{ feature_key: string }>> {
+  const guard = await requireAdmin();
+  if (guard) return { data: null, error: guard.error };
+
+  const parsed = featureOverrideSchema.safeParse(input);
+  if (!parsed.success)
+    return { data: null, error: parsed.error.issues[0].message };
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("tenant_feature_overrides").upsert(
+    {
+      tenant_id: parsed.data.tenant_id,
+      feature_key: parsed.data.feature_key,
+      enabled: parsed.data.enabled,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "tenant_id,feature_key" }
+  );
+
+  if (error) return { data: null, error: error.message };
+  return { data: { feature_key: parsed.data.feature_key }, error: null };
+}
+
+// ─── removeTenantFeatureOverride ──────────────────────────────────────────────
+
+export async function removeTenantFeatureOverride(input: {
+  tenant_id: string;
+  feature_key: string;
+}): Promise<ActionResult<{ feature_key: string }>> {
+  const guard = await requireAdmin();
+  if (guard) return { data: null, error: guard.error };
+
+  const parsed = z
+    .object({ tenant_id: z.string().uuid(), feature_key: z.string().min(1) })
+    .safeParse(input);
+  if (!parsed.success)
+    return { data: null, error: parsed.error.issues[0].message };
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("tenant_feature_overrides")
+    .delete()
+    .eq("tenant_id", parsed.data.tenant_id)
+    .eq("feature_key", parsed.data.feature_key);
+
+  if (error) return { data: null, error: error.message };
+  return { data: { feature_key: parsed.data.feature_key }, error: null };
+}
+
 // ─── updateScoreConfig ────────────────────────────────────────────────────────
 
 const scoreUpdateSchema = z.object({
