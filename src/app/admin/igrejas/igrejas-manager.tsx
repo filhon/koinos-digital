@@ -181,12 +181,12 @@ export function IgrejasManager({ tenants }: { tenants: AdminTenant[] }) {
         return (
           <div
             key={tenant.id}
-            className="border border-white/[0.06] rounded-xl overflow-hidden"
+            className="border border-white/6 rounded-xl overflow-hidden"
           >
             {/* Header da igreja */}
             <button
               onClick={() => handleExpand(tenant.id)}
-              className="w-full flex items-center gap-4 px-5 py-4 bg-white/[0.02] hover:bg-white/[0.04] transition-colors text-left"
+              className="w-full flex items-center gap-4 px-5 py-4 bg-white/2 hover:bg-white/4 transition-colors text-left"
             >
               {isOpen ? (
                 <ChevronDown className="w-4 h-4 text-white/30 shrink-0" />
@@ -213,7 +213,7 @@ export function IgrejasManager({ tenants }: { tenants: AdminTenant[] }) {
 
             {/* Painel de overrides */}
             {isOpen && (
-              <div className="border-t border-white/[0.06] bg-[#080b11] p-5">
+              <div className="border-t border-white/6 bg-[#080b11] p-5">
                 {loading === tenant.id ? (
                   <div className="flex items-center gap-2 text-white/30 text-sm py-4">
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -233,7 +233,7 @@ export function IgrejasManager({ tenants }: { tenants: AdminTenant[] }) {
                       <button
                         onClick={() => handleClearAll(tenant.id)}
                         disabled={pending}
-                        className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-white/[0.06] text-white/50 hover:text-white/70 hover:bg-white/[0.08] transition-colors disabled:opacity-40"
+                        className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-white/6 text-white/50 hover:text-white/70 hover:bg-white/8 transition-colors disabled:opacity-40"
                       >
                         <RotateCcw className="w-3 h-3" />
                         Remover todos overrides
@@ -329,7 +329,7 @@ function FeatureRow({
           ? isEnabled
             ? "bg-emerald-500/10 border border-emerald-500/20"
             : "bg-red-500/10 border border-red-500/20"
-          : "bg-white/[0.02] border border-transparent"
+          : "bg-white/2 border border-transparent"
       }`}
     >
       <span
@@ -357,7 +357,7 @@ function FeatureRow({
           className={`text-[11px] px-2 py-0.5 rounded transition-colors disabled:opacity-40 ${
             isEnabled
               ? "bg-emerald-500 text-white"
-              : "bg-white/[0.06] text-white/40 hover:text-emerald-400 hover:bg-emerald-500/10"
+              : "bg-white/6 text-white/40 hover:text-emerald-400 hover:bg-emerald-500/10"
           }`}
         >
           On
@@ -368,7 +368,7 @@ function FeatureRow({
           className={`text-[11px] px-2 py-0.5 rounded transition-colors disabled:opacity-40 ${
             isDisabled
               ? "bg-red-500 text-white"
-              : "bg-white/[0.06] text-white/40 hover:text-red-400 hover:bg-red-500/10"
+              : "bg-white/6 text-white/40 hover:text-red-400 hover:bg-red-500/10"
           }`}
         >
           Off

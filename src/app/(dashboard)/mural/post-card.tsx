@@ -334,7 +334,7 @@ export function PostCard({
         </div>
 
         {/* Content */}
-        <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap break-words">
+        <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap wrap-break-word">
           {post.content}
         </p>
       </div>

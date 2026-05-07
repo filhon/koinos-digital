@@ -72,7 +72,7 @@ function StatCard({
   href?: string;
 }) {
   const content = (
-    <div className="group rounded-xl border border-border bg-card p-4 shadow-[0_2px_4px_oklch(0.32_0.096_224_/_0.06),_0_4px_12px_oklch(0.32_0.096_224_/_0.05)] hover:border-primary/20 hover:shadow-[0_4px_6px_oklch(0.32_0.096_224_/_0.08),_0_2px_8px_oklch(0.32_0.096_224_/_0.06)] transition-all">
+    <div className="group rounded-xl border border-border bg-card p-4 shadow-[0_2px_4px_oklch(0.32_0.096_224/0.06),0_4px_12px_oklch(0.32_0.096_224/0.05)] hover:border-primary/20 hover:shadow-md transition-all">
       <div className="flex items-center justify-between mb-3">
         <div className="w-9 h-9 rounded-xl bg-primary/8 flex items-center justify-center">
           <Icon className="w-4.5 h-4.5 text-primary" strokeWidth={1.75} />
@@ -131,7 +131,7 @@ function formatEventDate(dateStr: string, timeStr: string): string {
 function UpcomingEventsCard({ events }: { events: EventWithResponsible[] }) {
   if (events.length === 0) {
     return (
-      <div className="rounded-xl border border-border bg-card p-4 shadow-[0_2px_4px_oklch(0.32_0.096_224_/_0.06),_0_4px_12px_oklch(0.32_0.096_224_/_0.05)]">
+      <div className="rounded-xl border border-border bg-card p-4 shadow-[0_2px_4px_oklch(0.32_0.096_224/0.06),0_4px_12px_oklch(0.32_0.096_224/0.05)]">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-display font-medium text-[1.375rem] tracking-[-0.01em] text-foreground">
             Próximos eventos
@@ -160,7 +160,7 @@ function UpcomingEventsCard({ events }: { events: EventWithResponsible[] }) {
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4 shadow-[0_2px_4px_oklch(0.32_0.096_224_/_0.06),_0_4px_12px_oklch(0.32_0.096_224_/_0.05)]">
+    <div className="rounded-xl border border-border bg-card p-4 shadow-[0_2px_4px_oklch(0.32_0.096_224/0.06),0_4px_12px_oklch(0.32_0.096_224/0.05)]">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-display font-medium text-[1.375rem] tracking-[-0.01em] text-foreground">
           Próximos eventos
@@ -256,7 +256,7 @@ function TeamCard({
     : null;
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4 shadow-[0_2px_4px_oklch(0.32_0.096_224_/_0.06),_0_4px_12px_oklch(0.32_0.096_224_/_0.05)]">
+    <div className="rounded-xl border border-border bg-card p-4 shadow-[0_2px_4px_oklch(0.32_0.096_224/0.06),0_4px_12px_oklch(0.32_0.096_224/0.05)]">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-display font-medium text-[1.375rem] tracking-[-0.01em] text-foreground">
           Minha tribo
@@ -358,7 +358,7 @@ function QuickActions({ role }: { role: MemberRole }) {
   });
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4 shadow-[0_2px_4px_oklch(0.32_0.096_224_/_0.06),_0_4px_12px_oklch(0.32_0.096_224_/_0.05)]">
+    <div className="rounded-xl border border-border bg-card p-4 shadow-[0_2px_4px_oklch(0.32_0.096_224/0.06),0_4px_12px_oklch(0.32_0.096_224/0.05)]">
       <h2 className="font-display font-medium text-[1.375rem] tracking-[-0.01em] text-foreground mb-4">
         Atalhos
       </h2>
@@ -448,7 +448,7 @@ export function HomeContent({
             <DailyReadingWidget initialData={devotionData} />
           ) : (
             <Link href="/mural">
-              <div className="rounded-xl border border-border bg-card p-4 flex items-center gap-3 shadow-[0_2px_4px_oklch(0.32_0.096_224_/_0.06),_0_4px_12px_oklch(0.32_0.096_224_/_0.05)] hover:border-primary/20 hover:shadow-[0_4px_6px_oklch(0.32_0.096_224_/_0.08),_0_2px_8px_oklch(0.32_0.096_224_/_0.06)] transition-all">
+              <div className="rounded-xl border border-border bg-card p-4 flex items-center gap-3 shadow-[0_2px_4px_oklch(0.32_0.096_224/0.06),0_4px_12px_oklch(0.32_0.096_224/0.05)] hover:border-primary/20 hover:shadow-md transition-all">
                 <BookOpen className="w-5 h-5 text-muted-foreground/60 shrink-0" />
                 <p className="text-sm text-muted-foreground">
                   Nenhuma leitura programada hoje; visite o mural.

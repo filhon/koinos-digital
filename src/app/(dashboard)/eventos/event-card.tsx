@@ -101,14 +101,14 @@ export function EventCard({ event }: EventCardProps) {
           </span>
 
           {isOnline && event.meeting_link ? (
-            <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground truncate max-w-[160px]">
+            <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground truncate max-w-40">
               <Video className="size-3 shrink-0" />
               <span className="truncate">
                 {event.meeting_link.replace(/^https?:\/\//, "")}
               </span>
             </span>
           ) : event.location ? (
-            <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground truncate max-w-[160px]">
+            <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground truncate max-w-40">
               <MapPin className="size-3 shrink-0" />
               <span className="truncate">{event.location}</span>
             </span>
