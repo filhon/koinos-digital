@@ -32,10 +32,10 @@ export default async function ConvitePage({ params }: Props) {
           </p>
         </div>
         <Link
-          href="/signup"
+          href="/signup/membro"
           className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-85"
         >
-          Criar conta sem convite
+          Tentar outro código
         </Link>
       </div>
     );

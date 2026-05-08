@@ -80,3 +80,20 @@ export interface GamificationAnalyticsData {
   teamParticipation: TeamParticipationRow[];
   monthlyCheckins: MonthlyCheckinRow[];
 }
+
+// ─── My Progress types ────────────────────────────────────────────────────────
+
+export interface ActionBreakdownItem {
+  action_type: string;
+  points: number;
+  count: number;
+}
+
+export interface MyProgressData {
+  myPoints: number;
+  myRank: number | null;
+  actionBreakdown: ActionBreakdownItem[];
+  currentStreak: number;
+  longestStreak: number;
+  badgeCount: number;
+}

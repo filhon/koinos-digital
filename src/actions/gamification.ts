@@ -17,6 +17,8 @@ import {
   type ActionDistributionRow,
   type TeamParticipationRow,
   type MonthlyCheckinRow,
+  type MyProgressData,
+  type ActionBreakdownItem,
 } from "@/lib/validators/gamification";
 
 type ActionResult<T> = { data: T; error: null } | { data: null; error: string };
@@ -371,6 +373,144 @@ export const getGamificationAnalytics = withPermission(
     };
   },
   { minRole: "presbítero" }
+);
+
+// ─── getMyProgress ────────────────────────────────────────────────────────────
+// Retorna o progresso mensal do membro logado: pontos, ranking, breakdown por
+// tipo de ação, sequência de leitura e contagem de conquistas.
+
+export const getMyProgress = withPermission(
+  async (user: AuthUser): Promise<ActionResult<MyProgressData>> => {
+    const supabase = await createClient();
+
+    const now = new Date();
+    const startDate = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)
+    );
+
+    if (!user.email) {
+      return {
+        data: {
+          myPoints: 0,
+          myRank: null,
+          actionBreakdown: [],
+          currentStreak: 0,
+          longestStreak: 0,
+          badgeCount: 0,
+        },
+        error: null,
+      };
+    }
+
+    // Resolve member_id from email
+    const { data: member } = await supabase
+      .from("members")
+      .select("id")
+      .eq("church_id", user.church_id)
+      .eq("email", user.email)
+      .maybeSingle();
+
+    if (!member) {
+      return {
+        data: {
+          myPoints: 0,
+          myRank: null,
+          actionBreakdown: [],
+          currentStreak: 0,
+          longestStreak: 0,
+          badgeCount: 0,
+        },
+        error: null,
+      };
+    }
+
+    const [myEventsResult, allEventsResult, streakResult, badgesResult] =
+      await Promise.all([
+        // My events this month
+        supabase
+          .from("score_events")
+          .select("action_type, points")
+          .eq("church_id", user.church_id)
+          .eq("member_id", member.id)
+          .gte("created_at", startDate.toISOString()),
+        // All church events this month (for rank calculation)
+        supabase
+          .from("score_events")
+          .select("member_id, points")
+          .eq("church_id", user.church_id)
+          .gte("created_at", startDate.toISOString()),
+        // Reading streak
+        supabase
+          .from("devotion_streaks")
+          .select("current_streak, longest_streak")
+          .eq("member_id", member.id)
+          .maybeSingle(),
+        // Badge count
+        supabase
+          .from("member_badges")
+          .select("id", { count: "exact", head: true })
+          .eq("church_id", user.church_id)
+          .eq("member_id", member.id),
+      ]);
+
+    if (myEventsResult.error)
+      return { data: null, error: myEventsResult.error.message };
+
+    const myEvents = myEventsResult.data ?? [];
+    const allEvents = allEventsResult.data ?? [];
+
+    // ── My points + action breakdown ────────────────────────────────────────
+    const breakdownMap = new Map<string, { points: number; count: number }>();
+    let myPoints = 0;
+    for (const e of myEvents) {
+      if (!e.action_type) continue;
+      const existing = breakdownMap.get(e.action_type) ?? {
+        points: 0,
+        count: 0,
+      };
+      breakdownMap.set(e.action_type, {
+        points: existing.points + (e.points ?? 0),
+        count: existing.count + 1,
+      });
+      myPoints += e.points ?? 0;
+    }
+    const actionBreakdown: ActionBreakdownItem[] = Array.from(
+      breakdownMap.entries()
+    ).map(([action_type, d]) => ({
+      action_type,
+      points: d.points,
+      count: d.count,
+    }));
+
+    // ── Rank among church members ─────────────────────────────────────────
+    const memberPointsMap = new Map<string, number>();
+    for (const e of allEvents) {
+      if (!e.member_id) continue;
+      memberPointsMap.set(
+        e.member_id,
+        (memberPointsMap.get(e.member_id) ?? 0) + (e.points ?? 0)
+      );
+    }
+    const sorted = Array.from(memberPointsMap.entries()).sort(
+      (a, b) => b[1] - a[1]
+    );
+    const rankIdx = sorted.findIndex(([id]) => id === member.id);
+    const myRank =
+      rankIdx >= 0 ? rankIdx + 1 : myPoints > 0 ? sorted.length + 1 : null;
+
+    return {
+      data: {
+        myPoints,
+        myRank,
+        actionBreakdown,
+        currentStreak: streakResult.data?.current_streak ?? 0,
+        longestStreak: streakResult.data?.longest_streak ?? 0,
+        badgeCount: badgesResult.count ?? 0,
+      },
+      error: null,
+    };
+  },
+  { minRole: "visitante" }
 );
 
 // ─── awardInvitePoints ────────────────────────────────────────────────────────

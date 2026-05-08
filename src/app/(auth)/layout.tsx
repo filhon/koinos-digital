@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { slideInLeft, staggerContainer, fadeUp } from "@/lib/motion";
+import { KoinosLogo } from "@/components/ui/koinos-logo";
 
 export default function AuthLayout({
   children,
@@ -50,7 +51,7 @@ export default function AuthLayout({
         />
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col justify-between h-full min-h-[280px] lg:min-h-screen px-10 py-10 lg:px-16 lg:py-16">
+        <div className="relative z-10 flex flex-col justify-between h-full min-h-70 lg:min-h-screen px-10 py-10 lg:px-16 lg:py-16">
           {/* Top: Logo */}
           <motion.div
             variants={staggerContainer}
@@ -58,46 +59,7 @@ export default function AuthLayout({
             animate="show"
           >
             <motion.div variants={fadeUp} className="flex items-center gap-3">
-              {/* Olive branch SVG */}
-              <svg
-                width="36"
-                height="36"
-                viewBox="0 0 36 36"
-                fill="none"
-                className="opacity-80"
-                aria-hidden="true"
-              >
-                <path
-                  d="M18 32 C18 32, 8 24, 8 14 C8 8.5 12.5 4 18 4 C23.5 4 28 8.5 28 14 C28 24 18 32 18 32Z"
-                  fill="none"
-                  stroke="oklch(0.25 0.05 60)"
-                  strokeWidth="1.5"
-                  opacity="0.6"
-                />
-                <path
-                  d="M18 16 C15 13, 11 14, 10 17"
-                  stroke="oklch(0.25 0.05 60)"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                  fill="none"
-                  opacity="0.5"
-                />
-                <path
-                  d="M18 20 C21 17, 25 18, 26 21"
-                  stroke="oklch(0.25 0.05 60)"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                  fill="none"
-                  opacity="0.5"
-                />
-                <circle
-                  cx="18"
-                  cy="18"
-                  r="2.5"
-                  fill="oklch(0.30 0.08 55)"
-                  opacity="0.7"
-                />
-              </svg>
+              <KoinosLogo size={36} />
 
               <span
                 className="text-5xl lg:text-6xl tracking-tight"
@@ -216,7 +178,7 @@ export default function AuthLayout({
 
       {/* ── Form Panel ── */}
       <div className="flex-1 lg:w-1/2 flex items-center justify-center bg-white px-6 py-12 lg:px-16">
-        <div className="w-full max-w-[420px]">{children}</div>
+        <div className="w-full max-w-105">{children}</div>
       </div>
     </div>
   );

@@ -143,6 +143,7 @@ export const createChurchSchema = z.object({
   personal: personalDataSchema,
   consents: consentSchema,
   church: churchDataSchema,
+  turnstileToken: z.string(),
 });
 
 export type PersonalDataInput = z.infer<typeof personalDataSchema>;
@@ -177,6 +178,7 @@ export const registerMemberSchema = z.object({
       message: "O consentimento de cadastro é obrigatório.",
     }),
   termsVersion: z.string(),
+  turnstileToken: z.string(),
 });
 
 export type RegisterMemberInput = z.infer<typeof registerMemberSchema>;

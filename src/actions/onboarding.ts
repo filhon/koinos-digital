@@ -12,6 +12,7 @@ import {
 import { encrypt, decrypt } from "@/lib/encryption/aes";
 import { logAudit } from "@/actions/audit";
 import { requireAuth } from "@/lib/auth/session";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 export type ActionResult =
   | { success: true; message?: string; redirectTo?: string }
@@ -20,6 +21,49 @@ export type ActionResult =
       error: string;
       existingChurch?: { id: string; name: string };
     };
+
+// ─── Title case helper ────────────────────────────────────────────────────────
+
+const PT_CONNECTORS = new Set([
+  "da",
+  "de",
+  "do",
+  "das",
+  "dos",
+  "dum",
+  "duma",
+  "a",
+  "o",
+  "as",
+  "os",
+  "e",
+  "ou",
+  "em",
+  "na",
+  "no",
+  "nas",
+  "nos",
+  "por",
+  "para",
+  "com",
+  "sem",
+  "sob",
+  "sobre",
+  "que",
+  "se",
+]);
+
+function toTitleCase(str: string): string {
+  return str
+    .toLowerCase()
+    .split(" ")
+    .map((word, i) => {
+      if (!word) return word;
+      if (i !== 0 && PT_CONNECTORS.has(word)) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(" ");
+}
 
 // ─── Slug helper ──────────────────────────────────────────────────────────────
 
@@ -64,6 +108,93 @@ function randomCode(length = 12): string {
   return result;
 }
 
+// ─── Check church existence (pre-validation) ─────────────────────────────────
+
+export interface CnpjPrefill {
+  churchName: string;
+  cnpj: string;
+  address: {
+    street: string;
+    number: string;
+    complement: string;
+    neighborhood: string;
+    city: string;
+    state: string;
+    zip: string;
+  };
+}
+
+export type CnpjLookupResult =
+  | { status: "invalid_format" }
+  | { status: "not_found" }
+  | { status: "api_error" }
+  | { status: "already_registered"; churchName: string }
+  | { status: "ok"; prefill: CnpjPrefill };
+
+export async function lookupCnpj(cnpj: string): Promise<CnpjLookupResult> {
+  const digits = cnpj.replace(/\D/g, "");
+  if (digits.length !== 14) return { status: "invalid_format" };
+
+  // 1. Validate against Receita Federal via cnpja open API
+  let apiData: Record<string, unknown>;
+  try {
+    const res = await fetch(`https://open.cnpja.com/office/${digits}`, {
+      next: { revalidate: 0 },
+    });
+    if (res.status === 404) return { status: "not_found" };
+    if (!res.ok) return { status: "api_error" };
+    apiData = await res.json();
+  } catch {
+    return { status: "api_error" };
+  }
+
+  // 2. Check if already registered in Koinos
+  const admin = createAdminClient();
+  const { data: existing } = await admin
+    .from("tenants")
+    .select("id, name")
+    .eq("cnpj", digits)
+    .maybeSingle();
+
+  if (existing)
+    return { status: "already_registered", churchName: existing.name };
+
+  // 3. Map API response to prefill shape
+  const addr = apiData.address as Record<string, unknown> | undefined;
+  const company = apiData.company as Record<string, unknown> | undefined;
+  const alias = (apiData.alias as string | undefined)?.trim();
+  const companyName = (company?.name as string | undefined)?.trim() ?? "";
+  const rawName = alias && alias.length > 2 ? alias : companyName;
+  const churchName = toTitleCase(rawName);
+
+  const zipRaw = String(addr?.zip ?? "").replace(/\D/g, "");
+  const zip =
+    zipRaw.length === 8 ? `${zipRaw.slice(0, 5)}-${zipRaw.slice(5)}` : zipRaw;
+
+  const city =
+    ((addr?.city as Record<string, unknown> | undefined)?.name as string) ?? "";
+  const state =
+    ((addr?.state as Record<string, unknown> | undefined)?.code as string) ??
+    "";
+
+  return {
+    status: "ok",
+    prefill: {
+      churchName,
+      cnpj: digits,
+      address: {
+        street: String(addr?.street ?? ""),
+        number: String(addr?.number ?? ""),
+        complement: String(addr?.details ?? ""),
+        neighborhood: String(addr?.district ?? ""),
+        city,
+        state,
+        zip,
+      },
+    },
+  };
+}
+
 // ─── Server Action ────────────────────────────────────────────────────────────
 
 export async function createChurch(
@@ -75,7 +206,14 @@ export async function createChurch(
     return { success: false, error: parsed.error.issues[0].message };
   }
 
-  const { personal, consents, church } = parsed.data;
+  const { personal, consents, church, turnstileToken } = parsed.data;
+
+  if (!(await verifyTurnstile(turnstileToken))) {
+    return {
+      success: false,
+      error: "Verificação de segurança falhou. Tente novamente.",
+    };
+  }
 
   const headerStore = await headers();
   const ip =
@@ -306,7 +444,15 @@ export async function registerMember(
     inviteCode,
     consents,
     termsVersion,
+    turnstileToken,
   } = parsed.data;
+
+  if (!(await verifyTurnstile(turnstileToken))) {
+    return {
+      success: false,
+      error: "Verificação de segurança falhou. Tente novamente.",
+    };
+  }
 
   const headerStore = await headers();
   const ip =

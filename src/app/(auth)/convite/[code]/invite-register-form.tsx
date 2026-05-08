@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertCircle,
+  ArrowLeft,
   ArrowRight,
   Check,
   Eye,
@@ -21,6 +22,7 @@ import {
   type RegisterMemberInput,
 } from "@/lib/validators/onboarding";
 import { registerMember } from "@/actions/onboarding";
+import { Turnstile } from "@marsidev/react-turnstile";
 import { formatCPF, formatPhone } from "@/lib/utils/cpf";
 import { staggerContainer, staggerItem } from "@/lib/motion";
 
@@ -51,16 +53,19 @@ interface Props {
 
 export function InviteRegisterForm({ inviteCode }: Props) {
   const router = useRouter();
+  const [step, setStep] = useState<1 | 2>(1);
   const [showPw, setShowPw] = useState(false);
   const [consents, setConsents] = useState<Record<string, boolean>>(
     Object.fromEntries(LGPD_PURPOSES.map((p) => [p, false]))
   );
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const turnstileToken = useRef<string>("");
 
   const {
     register,
     handleSubmit,
+    trigger,
     setValue,
     formState: { errors },
   } = useForm({
@@ -79,6 +84,11 @@ export function InviteRegisterForm({ inviteCode }: Props) {
     },
   });
 
+  async function goToStep2() {
+    const valid = await trigger(["name", "cpf", "email", "password", "phone"]);
+    if (valid) setStep(2);
+  }
+
   function toggleConsent(purpose: string) {
     const next = !consents[purpose];
     setConsents((prev) => ({ ...prev, [purpose]: next }));
@@ -87,9 +97,16 @@ export function InviteRegisterForm({ inviteCode }: Props) {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function onSubmit(data: any) {
+    if (!turnstileToken.current) {
+      setServerError("Complete a verificação de segurança antes de continuar.");
+      return;
+    }
     setServerError(null);
     startTransition(async () => {
-      const result = await registerMember(data as RegisterMemberInput);
+      const result = await registerMember({
+        ...(data as RegisterMemberInput),
+        turnstileToken: turnstileToken.current,
+      });
       if (!result.success) {
         setServerError(result.error);
         return;
@@ -100,207 +117,291 @@ export function InviteRegisterForm({ inviteCode }: Props) {
   }
 
   return (
+    // eslint-disable-next-line react-hooks/refs
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
       {/* Hidden fields */}
       <input type="hidden" {...register("inviteCode")} />
       <input type="hidden" {...register("termsVersion")} />
 
-      <motion.div
-        variants={staggerContainer}
-        initial="hidden"
-        animate="show"
-        className="space-y-5"
-      >
-        {/* Nome */}
-        <motion.div variants={staggerItem}>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700">
-            Nome completo
-          </label>
-          <input
-            type="text"
-            autoComplete="name"
-            placeholder="João da Silva"
-            {...register("name")}
-            className={inputCls(!!errors.name)}
-          />
-          <FieldError message={errors.name?.message} />
-        </motion.div>
-
-        {/* CPF */}
-        <motion.div variants={staggerItem}>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700">
-            CPF
-          </label>
-          <input
-            type="text"
-            inputMode="numeric"
-            autoComplete="off"
-            placeholder="000.000.000-00"
-            maxLength={14}
-            {...register("cpf")}
-            onChange={(e) => {
-              const fmt = formatCPF(e.target.value);
-              setValue("cpf", fmt, { shouldValidate: false });
-              e.target.value = fmt;
-            }}
-            className={inputCls(!!errors.cpf)}
-          />
-          <FieldError message={errors.cpf?.message} />
-        </motion.div>
-
-        {/* Email */}
-        <motion.div variants={staggerItem}>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700">
-            E-mail
-          </label>
-          <input
-            type="email"
-            autoComplete="email"
-            placeholder="voce@exemplo.com"
-            {...register("email")}
-            className={inputCls(!!errors.email)}
-          />
-          <FieldError message={errors.email?.message} />
-        </motion.div>
-
-        {/* Senha */}
-        <motion.div variants={staggerItem}>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700">
-            Senha
-          </label>
-          <div className="relative">
-            <input
-              type={showPw ? "text" : "password"}
-              autoComplete="new-password"
-              placeholder="Mín. 8 caracteres, 1 maiúscula, 1 número"
-              {...register("password")}
-              className={`${inputCls(!!errors.password)} pr-11`}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPw(!showPw)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-              aria-label={showPw ? "Ocultar senha" : "Mostrar senha"}
+      {/* Step indicator */}
+      <div className="mb-6 flex items-center gap-2">
+        {[1, 2].map((s) => (
+          <div key={s} className="flex items-center gap-2">
+            <div
+              className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold transition-colors ${
+                step >= s
+                  ? "bg-gray-900 text-white"
+                  : "bg-gray-100 text-gray-400"
+              }`}
             >
-              {showPw ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
-            </button>
+              {step > s ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : s}
+            </div>
+            <span
+              className={`text-xs font-medium transition-colors ${
+                step >= s ? "text-gray-700" : "text-gray-400"
+              }`}
+            >
+              {s === 1 ? "Seus dados" : "Consentimentos LGPD"}
+            </span>
+            {s < 2 && <div className="mx-1 h-px w-6 bg-gray-200" />}
           </div>
-          <FieldError message={errors.password?.message} />
-        </motion.div>
+        ))}
+      </div>
 
-        {/* Telefone */}
-        <motion.div variants={staggerItem}>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700">
-            Telefone <span className="text-gray-400 text-xs">(opcional)</span>
-          </label>
-          <input
-            type="tel"
-            inputMode="numeric"
-            placeholder="(11) 99999-9999"
-            maxLength={15}
-            {...register("phone")}
-            onChange={(e) => {
-              const fmt = formatPhone(e.target.value);
-              setValue("phone", fmt, { shouldValidate: false });
-              e.target.value = fmt;
-            }}
-            className={inputCls(!!errors.phone)}
-          />
-          <FieldError message={errors.phone?.message} />
-        </motion.div>
-
-        {/* Consentimentos LGPD */}
-        <motion.div variants={staggerItem} className="space-y-3">
-          <p className="text-sm font-medium text-gray-700">
-            Consentimentos LGPD
-          </p>
-          {LGPD_PURPOSES.map((purpose) => {
-            const { title, description } = LGPD_LABELS[purpose];
-            const isRequired = purpose === "cadastro";
-            const checked = consents[purpose];
-
-            return (
-              <label
-                key={purpose}
-                htmlFor={`consent-${purpose}`}
-                className={`flex cursor-pointer gap-3 rounded-xl border p-3.5 transition-colors ${
-                  checked
-                    ? "border-gray-900 bg-gray-50"
-                    : "border-gray-200 bg-white hover:border-gray-300"
-                }`}
-              >
-                <div className="mt-0.5 shrink-0">
-                  <div
-                    className={`flex h-5 w-5 items-center justify-center rounded border-2 transition-colors ${
-                      checked
-                        ? "border-gray-900 bg-gray-900"
-                        : "border-gray-300"
-                    }`}
-                  >
-                    {checked && (
-                      <Check className="h-3 w-3 text-white" strokeWidth={3} />
-                    )}
-                  </div>
-                  <input
-                    id={`consent-${purpose}`}
-                    type="checkbox"
-                    className="sr-only"
-                    checked={checked}
-                    onChange={() => toggleConsent(purpose)}
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900">
-                    {title}
-                    {isRequired && (
-                      <span className="ml-1.5 rounded-full bg-gray-900 px-2 py-0.5 text-[10px] font-semibold text-white">
-                        Obrigatório
-                      </span>
-                    )}
-                  </p>
-                  <p className="mt-0.5 text-xs text-gray-500 leading-relaxed">
-                    {description}
-                  </p>
-                </div>
-              </label>
-            );
-          })}
-          <FieldError message={errors.consents?.message} />
-        </motion.div>
-
-        {/* Server error */}
-        {serverError && (
+      <AnimatePresence mode="wait">
+        {step === 1 && (
           <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-start gap-2.5 rounded-lg border border-red-200 bg-red-50 px-4 py-3"
+            key="step1"
+            variants={staggerContainer}
+            initial="hidden"
+            animate="show"
+            exit={{ opacity: 0, x: -16, transition: { duration: 0.15 } }}
+            className="space-y-5"
           >
-            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
-            <p className="text-sm text-red-700">{serverError}</p>
+            {/* Nome */}
+            <motion.div variants={staggerItem}>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                Nome completo
+              </label>
+              <input
+                type="text"
+                autoComplete="name"
+                placeholder="João da Silva"
+                {...register("name")}
+                className={inputCls(!!errors.name)}
+              />
+              <FieldError message={errors.name?.message} />
+            </motion.div>
+
+            {/* CPF */}
+            <motion.div variants={staggerItem}>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                CPF
+              </label>
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                placeholder="000.000.000-00"
+                maxLength={14}
+                {...register("cpf")}
+                onChange={(e) => {
+                  const fmt = formatCPF(e.target.value);
+                  setValue("cpf", fmt, { shouldValidate: false });
+                  e.target.value = fmt;
+                }}
+                className={inputCls(!!errors.cpf)}
+              />
+              <FieldError message={errors.cpf?.message} />
+            </motion.div>
+
+            {/* Email */}
+            <motion.div variants={staggerItem}>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                E-mail
+              </label>
+              <input
+                type="email"
+                autoComplete="email"
+                placeholder="voce@exemplo.com"
+                {...register("email")}
+                className={inputCls(!!errors.email)}
+              />
+              <FieldError message={errors.email?.message} />
+            </motion.div>
+
+            {/* Senha */}
+            <motion.div variants={staggerItem}>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                Senha
+              </label>
+              <div className="relative">
+                <input
+                  type={showPw ? "text" : "password"}
+                  autoComplete="new-password"
+                  placeholder="Mín. 8 caracteres, 1 maiúscula, 1 número"
+                  {...register("password")}
+                  className={`${inputCls(!!errors.password)} pr-11`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPw(!showPw)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  aria-label={showPw ? "Ocultar senha" : "Mostrar senha"}
+                >
+                  {showPw ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+              <FieldError message={errors.password?.message} />
+            </motion.div>
+
+            {/* Telefone */}
+            <motion.div variants={staggerItem}>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                Telefone{" "}
+                <span className="text-gray-400 text-xs">(opcional)</span>
+              </label>
+              <input
+                type="tel"
+                inputMode="numeric"
+                placeholder="(11) 99999-9999"
+                maxLength={15}
+                {...register("phone")}
+                onChange={(e) => {
+                  const fmt = formatPhone(e.target.value);
+                  setValue("phone", fmt, { shouldValidate: false });
+                  e.target.value = fmt;
+                }}
+                className={inputCls(!!errors.phone)}
+              />
+              <FieldError message={errors.phone?.message} />
+            </motion.div>
+
+            <motion.div variants={staggerItem} className="pt-1">
+              <button
+                type="button"
+                onClick={goToStep2}
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-gray-900 px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-85"
+              >
+                Continuar
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </motion.div>
           </motion.div>
         )}
 
-        <motion.div variants={staggerItem} className="pt-1">
-          <button
-            type="submit"
-            disabled={isPending}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-gray-900 px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-85 disabled:opacity-60 disabled:cursor-not-allowed"
+        {step === 2 && (
+          <motion.div
+            key="step2"
+            variants={staggerContainer}
+            initial="hidden"
+            animate="show"
+            exit={{ opacity: 0, x: 16, transition: { duration: 0.15 } }}
+            className="space-y-5"
           >
-            {isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <>
-                Entrar na comunidade
-                <ArrowRight className="h-4 w-4" />
-              </>
+            {/* Consentimentos LGPD */}
+            <motion.div variants={staggerItem} className="space-y-3">
+              <p className="text-sm font-medium text-gray-700">
+                Como utilizaremos seus dados
+              </p>
+              {LGPD_PURPOSES.map((purpose) => {
+                const { title, description } = LGPD_LABELS[purpose];
+                const isRequired = purpose === "cadastro";
+                const checked = consents[purpose];
+
+                return (
+                  <label
+                    key={purpose}
+                    htmlFor={`consent-${purpose}`}
+                    className={`flex cursor-pointer gap-3 rounded-xl border p-3.5 transition-colors ${
+                      checked
+                        ? "border-gray-900 bg-gray-50"
+                        : "border-gray-200 bg-white hover:border-gray-300"
+                    }`}
+                  >
+                    <div className="mt-0.5 shrink-0">
+                      <div
+                        className={`flex h-5 w-5 items-center justify-center rounded border-2 transition-colors ${
+                          checked
+                            ? "border-gray-900 bg-gray-900"
+                            : "border-gray-300"
+                        }`}
+                      >
+                        {checked && (
+                          <Check
+                            className="h-3 w-3 text-white"
+                            strokeWidth={3}
+                          />
+                        )}
+                      </div>
+                      <input
+                        id={`consent-${purpose}`}
+                        type="checkbox"
+                        className="sr-only"
+                        checked={checked}
+                        onChange={() => toggleConsent(purpose)}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900">
+                        {title}
+                        {isRequired && (
+                          <span className="ml-1.5 rounded-full bg-gray-900 px-2 py-0.5 text-[10px] font-semibold text-white">
+                            Obrigatório
+                          </span>
+                        )}
+                      </p>
+                      <p className="mt-0.5 text-xs text-gray-500 leading-relaxed">
+                        {description}
+                      </p>
+                    </div>
+                  </label>
+                );
+              })}
+              <FieldError
+                message={
+                  errors.consents?.root?.message ?? errors.consents?.message
+                }
+              />
+            </motion.div>
+
+            {/* Turnstile */}
+            <motion.div variants={staggerItem}>
+              <Turnstile
+                siteKey={
+                  process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ??
+                  "1x00000000000000000000AA"
+                }
+                options={{ theme: "light", appearance: "interaction-only" }}
+                onSuccess={(token) => {
+                  turnstileToken.current = token;
+                }}
+              />
+            </motion.div>
+
+            {/* Server error */}
+            {serverError && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-start gap-2.5 rounded-lg border border-red-200 bg-red-50 px-4 py-3"
+              >
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+                <p className="text-sm text-red-700">{serverError}</p>
+              </motion.div>
             )}
-          </button>
-        </motion.div>
-      </motion.div>
+
+            <motion.div variants={staggerItem} className="flex gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="flex items-center justify-center gap-2 rounded-lg border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Voltar
+              </button>
+              <button
+                type="submit"
+                disabled={isPending}
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gray-900 px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-85 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    Entrar na comunidade
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </form>
   );
 }

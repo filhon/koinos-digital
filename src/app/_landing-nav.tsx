@@ -4,22 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, Menu, X } from "lucide-react";
-
-function KoinosLogo({ size = 32 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 40 40"
-      fill="none"
-      aria-hidden="true"
-    >
-      <circle cx="20" cy="20" r="18" stroke="currentColor" strokeWidth="2.5" />
-      <circle cx="20" cy="20" r="9" fill="currentColor" opacity="0.15" />
-      <circle cx="20" cy="20" r="4" fill="currentColor" />
-    </svg>
-  );
-}
+import { KoinosLogo } from "@/components/ui/koinos-logo";
 
 export function LandingNav() {
   const [menuOpen, setMenuOpen] = useState(false);

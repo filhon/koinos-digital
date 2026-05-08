@@ -2,10 +2,14 @@ import Link from "next/link";
 import { BarChart2 } from "lucide-react";
 import { getUser } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
-import { getLeaderboard } from "@/actions/gamification";
+import { getLeaderboard, getMyProgress } from "@/actions/gamification";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { GamificationView } from "./gamification-view";
-import type { LeaderboardData } from "@/lib/validators/gamification";
+import { MyProgressCard } from "./my-progress-card";
+import type {
+  LeaderboardData,
+  MyProgressData,
+} from "@/lib/validators/gamification";
 
 export const metadata = {
   title: "Gamificação | Koinos",
@@ -21,14 +25,29 @@ export default async function GamificacaoPage() {
     user.role as (typeof ANALYTICS_ROLES)[number]
   );
 
-  const result = await getLeaderboard({ period: "monthly" });
+  const [leaderboardResult, progressResult] = await Promise.all([
+    getLeaderboard({ period: "monthly" }),
+    getMyProgress(),
+  ]);
 
-  const initialData: LeaderboardData = ("data" in result
-    ? result.data
+  const initialData: LeaderboardData = ("data" in leaderboardResult
+    ? leaderboardResult.data
     : undefined) ?? {
     teams: [],
     individuals: [],
   };
+
+  const myProgress: MyProgressData =
+    "data" in progressResult && progressResult.data
+      ? progressResult.data
+      : {
+          myPoints: 0,
+          myRank: null,
+          actionBreakdown: [],
+          currentStreak: 0,
+          longestStreak: 0,
+          badgeCount: 0,
+        };
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -47,6 +66,7 @@ export default async function GamificacaoPage() {
           </Link>
         )}
       </div>
+      <MyProgressCard data={myProgress} />
       <GamificationView initialData={initialData} />
     </div>
   );

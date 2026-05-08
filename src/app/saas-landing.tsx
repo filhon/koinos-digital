@@ -1,37 +1,9 @@
 import Link from "next/link";
-import {
-  Users,
-  CalendarDays,
-  MessageSquare,
-  Banknote,
-  Trophy,
-  BookOpen,
-  Check,
-  ChevronRight,
-  Shield,
-  Zap,
-  Globe,
-} from "lucide-react";
+import { Check, ChevronRight, Shield, Zap, Globe } from "lucide-react";
 import { LandingNav } from "./_landing-nav";
 import { LandingHero } from "./_landing-hero";
-
-// ─── Logo ────────────────────────────────────────────────────────────────────
-
-function KoinosLogo({ size = 32 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 40 40"
-      fill="none"
-      aria-hidden="true"
-    >
-      <circle cx="20" cy="20" r="18" stroke="currentColor" strokeWidth="2.5" />
-      <circle cx="20" cy="20" r="9" fill="currentColor" opacity="0.15" />
-      <circle cx="20" cy="20" r="4" fill="currentColor" />
-    </svg>
-  );
-}
+import { FeatureStackSection } from "./_landing-features-stack";
+import { KoinosLogo } from "@/components/ui/koinos-logo";
 
 // ─── Trust Signals ────────────────────────────────────────────────────────────
 
@@ -59,7 +31,7 @@ function TrustSignals() {
       aria-label="Diferenciais"
       className="py-10 px-6 border-y border-border"
     >
-      <ul className="mx-auto max-w-3xl flex flex-col sm:flex-row items-start sm:items-center justify-center gap-5 sm:gap-12">
+      <ul className="mx-auto max-w-7xl flex flex-col sm:flex-row items-start sm:items-center justify-center gap-5 sm:gap-16">
         {signals.map(({ icon: Icon, label, desc }) => (
           <li key={label} className="flex items-center gap-3 text-sm">
             <Icon
@@ -74,115 +46,6 @@ function TrustSignals() {
           </li>
         ))}
       </ul>
-    </section>
-  );
-}
-
-// ─── Features ────────────────────────────────────────────────────────────────
-
-const features = [
-  {
-    icon: Users,
-    title: "Membros & Famílias",
-    description:
-      "Cadastro completo com CPF criptografado, vínculos familiares, roles por hierarquia e portal de privacidade LGPD integrado.",
-    color: "oklch(0.52 0.118 228)",
-    bg: "oklch(0.93 0.028 238 / 0.4)",
-  },
-  {
-    icon: CalendarDays,
-    title: "Agenda & Eventos",
-    description:
-      "Calendário mensal e semanal, eventos recorrentes, ministérios, escalas automáticas e liturgia editável com drag-and-drop.",
-    color: "oklch(0.55 0.118 148)",
-    bg: "oklch(0.94 0.048 148 / 0.4)",
-  },
-  {
-    icon: MessageSquare,
-    title: "Mural & Engajamento",
-    description:
-      'Feed de posts com reações "Orar" e "Gratidão", gamificação com as 12 Tribos de Israel, streaks de devoção e QR code de check-in.',
-    color: "oklch(0.62 0.148 58)",
-    bg: "oklch(0.93 0.042 70 / 0.4)",
-  },
-  {
-    icon: Banknote,
-    title: "Financeiro",
-    description:
-      "Controle de contas e transações imutáveis com comprovantes, relatórios gráficos, suporte a múltiplas congregações e exportação PDF.",
-    color: "oklch(0.55 0.148 28)",
-    bg: "oklch(0.94 0.048 28 / 0.3)",
-  },
-  {
-    icon: Trophy,
-    title: "Assembleia & Votação",
-    description:
-      "Gestão de assembleias com eleições anônimas (SHA-256), votação presencial e remota com OTP por e-mail e apuração em tempo real.",
-    color: "oklch(0.44 0.118 50)",
-    bg: "oklch(0.87 0.078 68 / 0.3)",
-  },
-  {
-    icon: BookOpen,
-    title: "Liturgia Inteligente",
-    description:
-      "Estruture cultos com itens arrastáveis. Com o add-on premium, a IA sugere leituras e cânticos do repertório baseados no objetivo do culto.",
-    color: "oklch(0.42 0.04 228)",
-    bg: "oklch(0.93 0.028 238 / 0.35)",
-  },
-];
-
-function Features() {
-  return (
-    <section id="funcionalidades" className="py-24 px-6 bg-card">
-      <div className="mx-auto max-w-6xl">
-        <div className="text-center mb-16">
-          <p className="text-xs font-semibold tracking-[0.2em] uppercase text-accent-700 mb-3">
-            Funcionalidades
-          </p>
-          <h2 className="font-display text-4xl md:text-5xl text-foreground leading-tight">
-            Cada módulo,
-            <br />
-            <span className="text-primary">
-              construído para igrejas brasileiras.
-            </span>
-          </h2>
-        </div>
-
-        <ol className="divide-y divide-border">
-          {features.map((feat, i) => {
-            const Icon = feat.icon;
-            return (
-              <li
-                key={feat.title}
-                className="group grid grid-cols-[2.5rem_1fr_auto] sm:grid-cols-[3rem_1fr_auto] gap-4 sm:gap-6 py-7 items-center"
-              >
-                <span className="font-mono text-xs font-semibold text-text-body tabular-nums">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <div>
-                  <h3 className="font-display text-xl text-foreground mb-1.5 group-hover:text-primary transition-colors">
-                    {feat.title}
-                  </h3>
-                  <p className="text-sm text-text-body leading-relaxed">
-                    {feat.description}
-                  </p>
-                </div>
-                <div
-                  className="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center"
-                  style={{ backgroundColor: feat.bg }}
-                >
-                  <Icon
-                    className="w-5 h-5"
-                    style={{ color: feat.color }}
-                    strokeWidth={1.75}
-                    aria-hidden="true"
-                  />
-                </div>
-              </li>
-            );
-          })}
-        </ol>
-      </div>
     </section>
   );
 }
@@ -391,13 +254,21 @@ function CtaBanner() {
             Cadastre sua igreja em minutos e comece a usar todos os módulos do
             plano Grátis imediatamente.
           </p>
-          <Link
-            href="/signup/igreja"
-            className="inline-flex items-center gap-2 px-10 py-4 rounded-full bg-accent text-primary-900 text-base font-semibold hover:bg-accent/90 transition-all hover:shadow-[0_8px_32px_oklch(0.62_0.148_58/0.5)] active:scale-[0.97]"
-          >
-            Criar minha conta grátis
-            <ChevronRight className="w-4 h-4" />
-          </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              href="/signup/igreja"
+              className="inline-flex items-center gap-2 px-10 py-4 rounded-full bg-accent text-primary-900 text-base font-semibold hover:bg-accent/90 transition-all hover:shadow-[0_8px_32px_oklch(0.62_0.148_58/0.5)] active:scale-[0.97]"
+            >
+              Cadastrar minha Igreja
+              <ChevronRight className="w-4 h-4" />
+            </Link>
+            <Link
+              href="/signup/membro"
+              className="inline-flex items-center gap-2 px-10 py-4 rounded-full border border-primary-400/40 text-primary-200 text-base font-medium hover:bg-primary-400/10 transition-colors"
+            >
+              Já sou membro
+            </Link>
+          </div>
         </div>
       </div>
     </section>
@@ -415,7 +286,6 @@ function Footer() {
           className="flex items-center gap-2 text-primary rounded-sm"
         >
           <KoinosLogo size={22} />
-          <span className="font-display text-lg">Koinos</span>
         </Link>
         <div className="flex flex-wrap items-center gap-6 text-sm text-text-subtle">
           <Link
@@ -425,14 +295,14 @@ function Footer() {
             Entrar
           </Link>
           <Link
-            href="/signup/igreja"
+            href="/signup"
             className="hover:text-primary transition-colors rounded-sm"
           >
             Cadastrar
           </Link>
         </div>
         <p className="text-xs text-text-body">
-          © {new Date().getFullYear()} Koinos · LGPD Compliant
+          Versão Beta · © {new Date().getFullYear()} Koinos · LGPD Compliant
         </p>
       </div>
     </footer>
@@ -451,7 +321,7 @@ export function SaasLanding() {
       <main id="main-content">
         <LandingHero />
         <TrustSignals />
-        <Features />
+        <FeatureStackSection />
         <Pricing />
         <CtaBanner />
       </main>

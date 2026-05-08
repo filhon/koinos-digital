@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, type DefaultValues } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -14,7 +14,10 @@ import {
   EyeOff,
   Check,
   Church,
+  CheckCircle2,
 } from "lucide-react";
+import Link from "next/link";
+import { Turnstile } from "@marsidev/react-turnstile";
 
 import {
   personalDataSchema,
@@ -26,7 +29,11 @@ import {
   type ChurchDataInput,
   type CreateChurchInput,
 } from "@/lib/validators/onboarding";
-import { createChurch } from "@/actions/onboarding";
+import {
+  createChurch,
+  lookupCnpj,
+  type CnpjPrefill,
+} from "@/actions/onboarding";
 import { formatCPF } from "@/lib/utils/cpf";
 import { staggerContainer, staggerItem } from "@/lib/motion";
 
@@ -61,6 +68,198 @@ function inputCls(hasError?: boolean) {
         ? "border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-200"
         : "border-gray-200 bg-white focus:border-gray-400 focus:ring-gray-100"
     }`;
+}
+
+// ─── Pre-check ────────────────────────────────────────────────────────────────
+
+function formatCNPJInput(value: string): string {
+  const n = value.replace(/\D/g, "").slice(0, 14);
+  if (n.length <= 2) return n;
+  if (n.length <= 5) return `${n.slice(0, 2)}.${n.slice(2)}`;
+  if (n.length <= 8) return `${n.slice(0, 2)}.${n.slice(2, 5)}.${n.slice(5)}`;
+  if (n.length <= 12)
+    return `${n.slice(0, 2)}.${n.slice(2, 5)}.${n.slice(5, 8)}/${n.slice(8)}`;
+  return `${n.slice(0, 2)}.${n.slice(2, 5)}.${n.slice(5, 8)}/${n.slice(8, 12)}-${n.slice(12)}`;
+}
+
+function StepPreCheck({
+  onNotFound,
+}: {
+  onNotFound: (prefill?: CnpjPrefill) => void;
+}) {
+  const [cnpj, setCnpj] = useState("");
+  const [cnpjError, setCnpjError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const [foundName, setFoundName] = useState<string | null>(null);
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const formatted = formatCNPJInput(e.target.value);
+    setCnpj(formatted);
+    setCnpjError(null);
+    setFoundName(null);
+  }
+
+  function handleCheck() {
+    const digits = cnpj.replace(/\D/g, "");
+    if (digits.length !== 14) {
+      setCnpjError("Digite o CNPJ completo (14 dígitos).");
+      return;
+    }
+    startTransition(async () => {
+      const result = await lookupCnpj(cnpj);
+      if (result.status === "already_registered") {
+        setFoundName(result.churchName);
+      } else if (result.status === "not_found") {
+        setCnpjError(
+          "CNPJ não encontrado na Receita Federal. Verifique e tente novamente."
+        );
+      } else if (result.status === "api_error") {
+        setCnpjError(
+          "Não foi possível consultar o CNPJ agora. Tente novamente ou prossiga sem verificação."
+        );
+      } else if (result.status === "ok") {
+        onNotFound(result.prefill);
+      }
+    });
+  }
+
+  if (foundName) {
+    return (
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        animate="show"
+        className="space-y-6"
+      >
+        <motion.div
+          variants={staggerItem}
+          className="rounded-2xl border border-green-200 bg-green-50 p-5 space-y-3"
+        >
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
+            <p className="text-sm font-semibold text-green-900">
+              Igreja encontrada no Koinos!
+            </p>
+          </div>
+          <p className="text-sm text-green-800 leading-relaxed">
+            <strong>{foundName}</strong> já está cadastrada. Para entrar, você
+            precisa de um link de convite gerado pela liderança da sua igreja.
+          </p>
+        </motion.div>
+
+        <motion.div variants={staggerItem} className="space-y-3">
+          <Link
+            href="/signup/membro"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-88"
+          >
+            Entrar como Membro
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+          <button
+            type="button"
+            onClick={() => {
+              setFoundName(null);
+              setCnpjError(null);
+            }}
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:border-gray-300 hover:bg-gray-50"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Tentar outro CNPJ
+          </button>
+        </motion.div>
+
+        <motion.div
+          variants={staggerItem}
+          className="rounded-xl border border-gray-100 bg-gray-50 p-4"
+        >
+          <p className="text-xs text-gray-500 leading-relaxed">
+            <strong className="text-gray-700">
+              Sou pastor e quero criar uma congregação.
+            </strong>{" "}
+            Peça ao administrador da matriz para cadastrá-la pelo painel em{" "}
+            <strong className="text-gray-700">
+              Configurações → Congregações
+            </strong>
+            .
+          </p>
+        </motion.div>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      variants={staggerContainer}
+      initial="hidden"
+      animate="show"
+      className="space-y-5"
+    >
+      <motion.div variants={staggerItem}>
+        <p className="text-sm text-gray-600 leading-relaxed">
+          Antes de prosseguir, vamos verificar se sua igreja já está cadastrada
+          no Koinos. Digite o <strong>CNPJ</strong> da sua igreja.
+        </p>
+      </motion.div>
+
+      <motion.div variants={staggerItem}>
+        <label className="mb-1.5 block text-sm font-medium text-gray-700">
+          CNPJ da igreja
+        </label>
+        <input
+          type="text"
+          inputMode="numeric"
+          value={cnpj}
+          onChange={handleChange}
+          maxLength={18}
+          placeholder="00.000.000/0000-00"
+          className={`w-full rounded-lg border px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 outline-none transition-all focus:ring-2 focus:ring-offset-0 ${
+            cnpjError
+              ? "border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-200"
+              : "border-gray-200 bg-white focus:border-gray-400 focus:ring-gray-100"
+          }`}
+        />
+        {cnpjError ? (
+          <p className="mt-1.5 flex items-center gap-1.5 text-xs text-red-600">
+            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+            {cnpjError}
+          </p>
+        ) : (
+          <p className="mt-1.5 text-xs text-gray-400">
+            Minha igreja não tem CNPJ?{" "}
+            <button
+              type="button"
+              onClick={() => onNotFound(undefined)}
+              className="font-medium text-gray-600 hover:underline"
+            >
+              Prosseguir assim mesmo
+            </button>
+          </p>
+        )}
+      </motion.div>
+
+      <motion.div variants={staggerItem} className="flex gap-3 pt-1">
+        <Link href="/signup" className="btn-secondary flex items-center gap-2">
+          <ArrowLeft className="h-4 w-4" />
+          Voltar
+        </Link>
+        <button
+          type="button"
+          onClick={handleCheck}
+          disabled={isPending || cnpj.replace(/\D/g, "").length !== 14}
+          className="btn-primary flex flex-1 items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <>
+              Verificar
+              <ArrowRight className="h-4 w-4" />
+            </>
+          )}
+        </button>
+      </motion.div>
+    </motion.div>
+  );
 }
 
 // ─── Step components ─────────────────────────────────────────────────────────
@@ -338,16 +537,29 @@ function formatZip(value: string): string {
 function StepChurch({
   onNext,
   onBack,
+  defaultValues,
 }: {
   onNext: (data: ChurchDataInput) => void;
   onBack: () => void;
+  defaultValues?: DefaultValues<ChurchDataInput>;
 }) {
   const {
     register,
     handleSubmit,
     setValue,
+    reset,
     formState: { errors },
-  } = useForm({ resolver: zodResolver(churchDataSchema) });
+    // zodResolver infers the pre-transform input type; ChurchDataInput is the post-transform
+    // output type. The cast is safe because the schema and type refer to the same shape.
+  } = useForm<ChurchDataInput>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(churchDataSchema) as any,
+  });
+
+  useEffect(() => {
+    if (defaultValues) reset(defaultValues);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const addrErr = errors.address;
 
@@ -544,6 +756,7 @@ function StepConfirm({
   church,
   onBack,
   onConfirm,
+  onTurnstileSuccess,
   isPending,
   serverError,
 }: {
@@ -552,6 +765,7 @@ function StepConfirm({
   church: ChurchDataInput;
   onBack: () => void;
   onConfirm: () => void;
+  onTurnstileSuccess: (token: string) => void;
   isPending: boolean;
   serverError: string | null;
 }) {
@@ -642,6 +856,17 @@ function StepConfirm({
         </motion.div>
       )}
 
+      <motion.div variants={staggerItem}>
+        <Turnstile
+          siteKey={
+            process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ??
+            "1x00000000000000000000AA"
+          }
+          options={{ theme: "light", appearance: "interaction-only" }}
+          onSuccess={onTurnstileSuccess}
+        />
+      </motion.div>
+
       <motion.div variants={staggerItem} className="flex gap-3 pt-1">
         <button
           type="button"
@@ -724,12 +949,17 @@ function StepIndicator({ current }: { current: number }) {
 
 export default function SignupIgrejaPage() {
   const router = useRouter();
+  const [preChecked, setPreChecked] = useState(false);
+  const [cnpjPrefill, setCnpjPrefill] = useState<CnpjPrefill | undefined>(
+    undefined
+  );
   const [step, setStep] = useState(0);
   const [personal, setPersonal] = useState<PersonalDataInput | null>(null);
   const [consent, setConsent] = useState<ConsentInput | null>(null);
   const [church, setChurch] = useState<ChurchDataInput | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const turnstileToken = useRef<string>("");
 
   function handlePersonal(data: PersonalDataInput) {
     setPersonal(data);
@@ -750,7 +980,12 @@ export default function SignupIgrejaPage() {
     if (!personal || !consent || !church) return;
     setServerError(null);
 
-    const payload: CreateChurchInput = { personal, consents: consent, church };
+    const payload: CreateChurchInput = {
+      personal,
+      consents: consent,
+      church,
+      turnstileToken: turnstileToken.current,
+    };
 
     startTransition(async () => {
       const result = await createChurch(payload);
@@ -779,6 +1014,52 @@ export default function SignupIgrejaPage() {
     { title: "Tudo certo?", subtitle: "Revise antes de finalizar." },
   ];
 
+  // Pre-check phase
+  if (!preChecked) {
+    return (
+      <div className="w-full">
+        <div className="mb-8">
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
+            Cadastrar minha Igreja
+          </h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Primeiro, vamos verificar se sua igreja já está no Koinos.
+          </p>
+        </div>
+        <StepPreCheck
+          onNotFound={(prefill) => {
+            setCnpjPrefill(prefill);
+            setPreChecked(true);
+          }}
+        />
+        <style>{`
+          .btn-primary {
+            border-radius: 0.5rem;
+            background: oklch(0.205 0 0);
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: white;
+            transition: opacity 0.15s;
+          }
+          .btn-primary:hover { opacity: 0.88; }
+          .btn-primary:active { transform: scale(0.99); }
+          .btn-secondary {
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+            background: white;
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            transition: border-color 0.15s, background 0.15s;
+          }
+          .btn-secondary:hover { border-color: #d1d5db; background: #f9fafb; }
+        `}</style>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full">
       <StepIndicator current={step} />
@@ -803,7 +1084,19 @@ export default function SignupIgrejaPage() {
             <StepConsent onNext={handleConsent} onBack={() => setStep(0)} />
           )}
           {step === 2 && (
-            <StepChurch onNext={handleChurch} onBack={() => setStep(1)} />
+            <StepChurch
+              onNext={handleChurch}
+              onBack={() => setStep(1)}
+              defaultValues={
+                cnpjPrefill
+                  ? ({
+                      churchName: cnpjPrefill.churchName,
+                      cnpj: formatCNPJ(cnpjPrefill.cnpj),
+                      address: cnpjPrefill.address,
+                    } as DefaultValues<ChurchDataInput>)
+                  : undefined
+              }
+            />
           )}
           {step === 3 && personal && consent && church && (
             <StepConfirm
@@ -812,6 +1105,9 @@ export default function SignupIgrejaPage() {
               church={church}
               onBack={() => setStep(2)}
               onConfirm={handleConfirm}
+              onTurnstileSuccess={(token) => {
+                turnstileToken.current = token;
+              }}
               isPending={isPending}
               serverError={serverError}
             />

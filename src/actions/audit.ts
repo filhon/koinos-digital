@@ -25,6 +25,8 @@ export async function logAudit({
   metadata,
   ip,
 }: LogAuditParams): Promise<void> {
+  if (!churchId || !userId) return;
+
   try {
     const supabase = await createClient();
 

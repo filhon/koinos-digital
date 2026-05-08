@@ -25,6 +25,10 @@ export const metadata: Metadata = {
     default: "Koinos — Sistema de Gestão para Igrejas",
     template: "%s — Koinos",
   },
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    apple: "/favicon.svg",
+  },
   description:
     "Plataforma SaaS 360° de gestão para igrejas evangélicas brasileiras. Membros, agenda, financeiro, liturgia, gamificação e muito mais em um único sistema.",
   keywords:

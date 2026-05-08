@@ -134,7 +134,7 @@ export function PostForm({
               onInput={autoResize}
               className={cn(
                 "w-full resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60",
-                "outline-none leading-relaxed min-h-[80px]",
+                "outline-none leading-relaxed min-h-20",
                 "transition-colors duration-200"
               )}
             />

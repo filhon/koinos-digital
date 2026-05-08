@@ -135,7 +135,7 @@ export function Header({ userEmail, userName, userAvatar }: HeaderProps) {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="gap-2 cursor-pointer"
-              onSelect={() => router.push("/perfil")}
+              onClick={() => router.push("/perfil")}
             >
               <User className="size-4" aria-hidden="true" />
               Meu perfil
@@ -147,7 +147,7 @@ export function Header({ userEmail, userName, userAvatar }: HeaderProps) {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="gap-2 text-destructive focus:text-destructive cursor-pointer"
-              onSelect={async () => {
+              onClick={async () => {
                 await signOut();
               }}
             >
