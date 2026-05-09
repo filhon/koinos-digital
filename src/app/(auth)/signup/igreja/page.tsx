@@ -36,10 +36,11 @@ import {
 } from "@/actions/onboarding";
 import { formatCPF } from "@/lib/utils/cpf";
 import { staggerContainer, staggerItem } from "@/lib/motion";
+import { CURRENT_TERMS_VERSION } from "@/lib/constants/legal";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const TERMS_VERSION = "1.0.0";
+const TERMS_VERSION = CURRENT_TERMS_VERSION;
 
 const STEPS = [
   { label: "Sua conta" },
@@ -422,6 +423,25 @@ function StepConsent({
           <strong>Lei Geral de Proteção de Dados (LGPD)</strong>. Você pode
           revogar qualquer consentimento a qualquer momento nas configurações de
           privacidade.
+        </p>
+        <p className="mt-2 text-xs text-gray-500">
+          Ao continuar, você concorda com os{" "}
+          <Link
+            href="/termos"
+            target="_blank"
+            className="font-medium text-gray-700 underline underline-offset-2 hover:text-gray-900"
+          >
+            Termos de Uso
+          </Link>{" "}
+          e a{" "}
+          <Link
+            href="/privacidade"
+            target="_blank"
+            className="font-medium text-gray-700 underline underline-offset-2 hover:text-gray-900"
+          >
+            Política de Privacidade
+          </Link>{" "}
+          do Koinos.
         </p>
       </motion.div>
 

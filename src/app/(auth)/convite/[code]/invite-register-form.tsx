@@ -25,8 +25,9 @@ import { registerMember } from "@/actions/onboarding";
 import { Turnstile } from "@marsidev/react-turnstile";
 import { formatCPF, formatPhone } from "@/lib/utils/cpf";
 import { staggerContainer, staggerItem } from "@/lib/motion";
+import { CURRENT_TERMS_VERSION } from "@/lib/constants/legal";
 
-const TERMS_VERSION = "1.0.0";
+const TERMS_VERSION = CURRENT_TERMS_VERSION;
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
@@ -347,6 +348,27 @@ export function InviteRegisterForm({ inviteCode }: Props) {
                   errors.consents?.root?.message ?? errors.consents?.message
                 }
               />
+              <p className="mt-2 text-xs text-gray-500">
+                Ao se cadastrar, você concorda com os{" "}
+                <a
+                  href="/termos"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-gray-700 underline underline-offset-2 hover:text-gray-900"
+                >
+                  Termos de Uso
+                </a>{" "}
+                e a{" "}
+                <a
+                  href="/privacidade"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-gray-700 underline underline-offset-2 hover:text-gray-900"
+                >
+                  Política de Privacidade
+                </a>{" "}
+                do Koinos.
+              </p>
             </motion.div>
 
             {/* Turnstile */}

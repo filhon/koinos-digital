@@ -23,6 +23,8 @@
 
 > [IA] **Pergunta:** O redirecionamento deve ser para a última página acessada (requer armazenar state) ou para o `/dashboard` (início)? Redirecionar para `/dashboard` é mais simples e evita edge cases.
 
+**Resposta:** Pode ser para o /dashboard. Vamos manter simples.
+
 ---
 
 ## Início
@@ -41,6 +43,8 @@
 > **Sugestão para o MVP:** Manter a tela de início como um dashboard informativo simples — próximos eventos, posição na Liga, atalhos rápidos. O feed social é um passo para depois de validar o core (gestão da igreja). Isso evita construir infraestrutura social antes de ter massa de usuários.
 >
 > [IA] **Pergunta:** No MVP, o que faz mais sentido como tela inicial — um dashboard com widgets informativos (próximos eventos, streak de leitura, posição na liga) ou já começar com um feed? Se o objetivo é validação, talvez o dashboard informativo gere mais valor imediato do que um feed que depende de conteúdo gerado pelos usuários.
+
+**Resposta:** Você precisa entender que o meu foco é criar uma comunidade. Softwares de gestão para igrejas já existem aos montes. No meu caso, a gestão será só uma consequência da comunidade criada e da interação constante no Koinos. Por isso, já quero lançar o MVP com esses aspectos fortes de comunidade e rede social.
 
 ---
 
@@ -66,6 +70,8 @@
 > - Deixar o sistema de menções para a v2
 >
 > [IA] **Pergunta:** Os membros comuns devem poder comentar nos posts do módulo Comunicação? Ou a comunicação é unidirecional (liderança → membros)?
+
+**Resposta:** Sim, os membros comuns poderão comentar os posts no módulo comunicação.
 
 ---
 
@@ -121,6 +127,8 @@
 >
 > **Sugestão:** Adiar completamente. Quando for implementar o módulo Comunhão e o feed social, aí sim o perfil público se justifica.
 
+**Resposta:** Preciso incluir isso no MVP. Sei que causa mais atrito ao onboarding (novo campo para preencher), mas como eu disse, preciso criar uma comunidade desde o momento 0, então, o perfil público é importantíssimo, mesmo com poucos usuários.
+
 ---
 
 ## Roadmap público de desenvolvimento
@@ -135,6 +143,8 @@
 > **Sugestão:** Se for implementar, usar uma solução simples (página estática com cards de status: planejado / em desenvolvimento / lançado). Não precisa de backend — pode ser hardcoded no MVP e migrar para algo dinâmico depois. Esforço: baixo. Pode ser feito num dia.
 >
 > [IA] **Sugestão de implementação simples:** Uma página estática em `/roadmap` com 3 colunas (Kanban-style): "Planejado", "Em Desenvolvimento", "Lançado". Cada item é um card com título e descrição curta. Dados hardcoded. Isso já passa profissionalismo.
+
+**Resposta:** Perfeito! Concordo 100%.
 
 ---
 
@@ -154,6 +164,8 @@
 > **Sugestão:** Adiar para quando houver pelo menos 10+ igrejas ativas. A feature de pesquisar por slug é simples e poderia ser implementada isoladamente como uma "prévia" do módulo.
 >
 > [IA] **Pergunta:** No cadastro da igreja, o endereço completo já é coletado (rua, cidade, estado, CEP). Vocês planejam usar geocoding (converter endereço → lat/lng) para a busca por raio, ou prefere uma abordagem mais simples como filtro por cidade/estado?
+
+**Resposta:** Isso! Geocoding é a melhor opção, por ser mais preciso.
 
 ---
 
@@ -182,7 +194,7 @@
 >
 > [IA] **Pergunta:** Os feedbacks serão direcionados a quem? À equipe do Koinos (vocês) como produto, ou à liderança da igreja? Se for para vocês, pode ser ainda mais simples — um formulário que salva no banco e vocês consultam pelo admin. Se for intra-igreja, precisa de listagem e gestão dentro do app.
 
-Resposta: os feedbacks serão direcionados à equipe Koinos. Seria muito complicado ter a possibilidade de responder os feedbacks in app?
+**Resposta:** Os feedbacks serão direcionados à equipe Koinos. Seria muito complicado ter a possibilidade de responder os feedbacks in app?
 
 ---
 
@@ -210,6 +222,8 @@ Resposta: os feedbacks serão direcionados à equipe Koinos. Seria muito complic
 >
 > [IA] **Pergunta:** Vocês já definiram qual tradução bíblica será usada? Isso impacta diretamente se o módulo pode ser lançado ou se depende de licenciamento/parceria.
 
+**Resposta:** A versão será a NVI. Existe uma API pública que retorna os versículos. A documentação está em https://github.com/rribeiro1/bible-edge. Preciso que verifique se está funcionando normalmente ou se é melhor utilizar outro serviço (obter a bíblia em JSON e serví-la localmente).
+
 ---
 
 ## Página: Docs
@@ -231,7 +245,7 @@ Resposta: os feedbacks serão direcionados à equipe Koinos. Seria muito complic
 >
 > [IA] **Pergunta:** Os termos jurídicos já existem redigidos? Se não, isso é um bloqueador legal para o MVP. Considerar usar um template adaptado ou consultar um advogado.
 
-Resposta: não posso consultar uma advogado agora. Gere um template adaptado para o meu sistema.
+**Resposta:** não posso consultar uma advogado agora. Gere um template adaptado para o meu sistema.
 
 ---
 
@@ -250,6 +264,8 @@ Resposta: não posso consultar uma advogado agora. Gere um template adaptado par
 > **Risco:** Economia virtual mal balanceada pode gerar frustração. Precisa de game design dedicado.
 >
 > **Sugestão:** Adiar completamente. Validar primeiro se a gamificação simples (tribos, pontos, badges) já gera engajamento suficiente. Se os usuários pedirem mais, aí implementar.
+
+**Resposta:** Como eu já disse algumas vezes, mesmo que eu gaste mais um tempo até lançar o MVP, é muito importante ter os aspectos de comunidade prontos, até em detrimento as funções de gestão. Então, preciso que você planeje a implementação dos níveis de usuário.
 
 ---
 
@@ -344,11 +360,15 @@ O sistema de convites por código já existe. Para o MVP, garantir que o pastor 
 
 **Pergunta:** O fluxo de convite está funcional e testado end-to-end? O link gerado é curto e compartilhável?
 
+**Resposta:** Sim, está funcional!
+
 ## 4. Mobile responsiveness completa
 
 O sistema é declarado como mobile-first, mas a maioria dos membros de igrejas brasileiras acessará pelo celular. Garantir que **todas** as páginas do MVP estejam responsivas é essencial.
 
 **Pergunta:** Já foi feito um teste completo de responsividade em todas as rotas do dashboard? Existe alguma página que ainda não está adaptada para mobile?
+
+**Resposta:** Sim, todas as páginas estão responsivas.
 
 ---
 

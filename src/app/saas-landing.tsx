@@ -300,6 +300,18 @@ function Footer() {
           >
             Cadastrar
           </Link>
+          <Link
+            href="/termos"
+            className="hover:text-primary transition-colors rounded-sm"
+          >
+            Termos de Uso
+          </Link>
+          <Link
+            href="/privacidade"
+            className="hover:text-primary transition-colors rounded-sm"
+          >
+            Privacidade
+          </Link>
         </div>
         <p className="text-xs text-text-body">
           Versão Beta · © {new Date().getFullYear()} Koinos · LGPD Compliant

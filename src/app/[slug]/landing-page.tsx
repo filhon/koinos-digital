@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   type FullLandingData,
   type LandingSection,
@@ -66,6 +67,20 @@ export default function LandingPageClient({ data }: Props) {
         <p>
           Powered by <span className="text-[oklch(0.78_0.13_55)]">Koinos</span>
         </p>
+        <div className="mt-4 flex items-center justify-center gap-5 text-xs text-[oklch(0.55_0.015_250)]">
+          <Link
+            href="/termos"
+            className="hover:text-[oklch(0.78_0.13_55)] transition-colors"
+          >
+            Termos de Uso
+          </Link>
+          <Link
+            href="/privacidade"
+            className="hover:text-[oklch(0.78_0.13_55)] transition-colors"
+          >
+            Política de Privacidade
+          </Link>
+        </div>
       </footer>
     </div>
   );
