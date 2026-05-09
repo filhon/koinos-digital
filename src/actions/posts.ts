@@ -173,11 +173,29 @@ export const listPosts = withPermission(
 
 // ─── createPost ───────────────────────────────────────────────────────────────
 
+const LEADERSHIP_ROLES = [
+  "admin",
+  "pastor",
+  "presbítero",
+  "diácono",
+  "líder",
+] as const;
+
 export const createPost = withPermission(
   async (
     user: AuthUser,
     input: CreatePostInput
   ): Promise<ActionResult<{ post: PostRow }>> => {
+    // Apenas liderança pode criar posts no módulo Comunicação
+    if (
+      !LEADERSHIP_ROLES.includes(user.role as (typeof LEADERSHIP_ROLES)[number])
+    ) {
+      return {
+        data: null,
+        error: "Apenas liderança pode publicar comunicados.",
+      };
+    }
+
     const parsed = createPostSchema.safeParse(input);
     if (!parsed.success)
       return { data: null, error: parsed.error.issues[0].message };

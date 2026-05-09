@@ -6,7 +6,7 @@ import { MuralFeed } from "./mural-feed";
 
 const INITIAL_LIMIT = 10;
 
-export default async function MuralPage() {
+export default async function ComunicacaoPage() {
   const user = await requireAuth();
 
   const [postsResult, memberResult] = await Promise.all([
@@ -38,8 +38,8 @@ export default async function MuralPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <PageHeader
-        title="Mural"
-        description="Compartilhe avisos, pedidos de oração e novidades com a comunidade."
+        title="Comunicação"
+        description="Avisos, pedidos de oração e novidades da comunidade."
       />
 
       <MuralFeed

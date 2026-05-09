@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import { deletePost, reactToPost, pinPost, unpinPost } from "@/actions/posts";
 import type { PostRow } from "@/actions/posts";
 import { CommentsSection } from "./comments-section";
-import { TribeBadge } from "@/app/(dashboard)/gamificacao/tribe-badge";
+import { TribeBadge } from "@/app/(dashboard)/liga/tribe-badge";
 import { TagChip } from "@/app/(dashboard)/membros/[id]/tags-editor";
 import { cn } from "@/lib/utils";
 

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   CalendarDays,
-  MessageSquare,
+  Megaphone,
   MoreHorizontal,
   User,
 } from "lucide-react";
@@ -23,7 +23,7 @@ interface BottomNavItem {
 const navItems: BottomNavItem[] = [
   { label: "Início", href: "/dashboard", icon: LayoutDashboard },
   { label: "Agenda", href: "/agenda", icon: CalendarDays },
-  { label: "Mural", href: "/mural", icon: MessageSquare },
+  { label: "Comunicação", href: "/comunicacao", icon: Megaphone },
   {
     label: "Mais",
     href: "/configuracoes",

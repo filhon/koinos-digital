@@ -101,7 +101,7 @@ export const globalSearch = withPermission(
         ((p.content as string) ?? "").substring(0, 60) +
         (((p.content as string | null)?.length ?? 0 > 60) ? "…" : ""),
       category: "post" as const,
-      href: `/mural`,
+      href: `/comunicacao`,
     }));
 
     return {

@@ -85,14 +85,24 @@ export function MuralFeed({
     );
   }
 
+  const canCreate = [
+    "admin",
+    "pastor",
+    "presbítero",
+    "diácono",
+    "líder",
+  ].includes(currentUserRole);
+
   return (
     <div className="flex flex-col gap-4">
-      {/* Compose form */}
-      <PostForm
-        authorName={currentUserName}
-        authorAvatar={currentUserAvatar}
-        onCreated={handlePostCreated}
-      />
+      {/* Compose form — restrito à liderança */}
+      {canCreate && (
+        <PostForm
+          authorName={currentUserName}
+          authorAvatar={currentUserAvatar}
+          onCreated={handlePostCreated}
+        />
+      )}
 
       {/* Feed */}
       <div className="flex flex-col gap-3">
@@ -145,7 +155,7 @@ export function MuralFeed({
         {/* End of feed */}
         {!hasMore && posts.length > 0 && (
           <p className="text-center text-xs text-muted-foreground/40 py-4">
-            Você chegou ao fim do mural.
+            Você chegou ao fim da Comunicação.
           </p>
         )}
       </div>

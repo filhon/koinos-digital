@@ -23,17 +23,17 @@ const NAV = [
     icon: Building2,
   },
   {
-    href: "/admin/gamificacao/equipes",
+    href: "/admin/liga/equipes",
     label: "Tribos",
     icon: Users,
   },
   {
-    href: "/admin/gamificacao/badges",
+    href: "/admin/liga/badges",
     label: "Badges",
     icon: Award,
   },
   {
-    href: "/admin/gamificacao/pontuacao",
+    href: "/admin/liga/pontuacao",
     label: "Pontuação",
     icon: Zap,
   },
@@ -54,9 +54,9 @@ export default async function AdminLayout({
   return (
     <div className="min-h-screen bg-[#0a0d14] text-white flex">
       {/* ── Sidebar ─────────────────────────────────────────────── */}
-      <aside className="w-56 shrink-0 border-r border-white/[0.06] flex flex-col bg-[#080b11]">
+      <aside className="w-56 shrink-0 border-r border-white/6 flex flex-col bg-[#080b11]">
         {/* Logo */}
-        <div className="h-14 flex items-center gap-2.5 px-5 border-b border-white/[0.06]">
+        <div className="h-14 flex items-center gap-2.5 px-5 border-b border-white/6">
           <div className="w-6 h-6 rounded bg-primary-500 flex items-center justify-center">
             <Shield className="w-3.5 h-3.5 text-white" />
           </div>
@@ -76,7 +76,7 @@ export default async function AdminLayout({
             <Link
               key={href}
               href={href}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-white/50 hover:text-white hover:bg-white/[0.06] transition-colors duration-150 group"
+              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-white/50 hover:text-white hover:bg-white/6 transition-colors duration-150 group"
             >
               <Icon className="w-4 h-4 shrink-0 group-hover:text-primary-400 transition-colors" />
               {label}
@@ -85,7 +85,7 @@ export default async function AdminLayout({
         </nav>
 
         {/* Footer */}
-        <div className="p-3 border-t border-white/[0.06] space-y-1">
+        <div className="p-3 border-t border-white/6 space-y-1">
           <div className="px-3 py-2">
             <p className="text-[10px] font-medium text-white/30 truncate">
               {user.email}
@@ -93,7 +93,7 @@ export default async function AdminLayout({
           </div>
           <Link
             href="/dashboard"
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-white/40 hover:text-white/70 hover:bg-white/[0.04] transition-colors"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-white/40 hover:text-white/70 hover:bg-white/4 transition-colors"
           >
             <LogOut className="w-3.5 h-3.5" />
             Voltar ao app

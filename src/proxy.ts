@@ -130,8 +130,8 @@ export async function proxy(request: NextRequest) {
     !pathname.startsWith("/repertorio") &&
     !pathname.startsWith("/recursos") &&
     !pathname.startsWith("/financeiro") &&
-    !pathname.startsWith("/mural") &&
-    !pathname.startsWith("/gamificacao") &&
+    !pathname.startsWith("/comunicacao") &&
+    !pathname.startsWith("/liga") &&
     !pathname.startsWith("/assembleia") &&
     !pathname.startsWith("/configuracoes") &&
     !pathname.startsWith("/landing-page") &&

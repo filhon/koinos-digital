@@ -262,7 +262,7 @@ function TeamCard({
           Minha tribo
         </h2>
         <Link
-          href="/gamificacao"
+          href="/liga"
           className="text-xs text-primary font-medium hover:underline flex items-center gap-1"
         >
           Placar <ArrowRight className="w-3 h-3" />
@@ -331,7 +331,7 @@ function TeamCard({
 // ─── Quick Actions ────────────────────────────────────────────────────────────
 
 const quickActions = [
-  { label: "Mural", href: "/mural", icon: MessageSquare },
+  { label: "Comunicação", href: "/comunicacao", icon: MessageSquare },
   { label: "Membros", href: "/membros", icon: Users },
   { label: "Eventos", href: "/eventos", icon: CalendarDays },
   { label: "Ministérios", href: "/ministerios", icon: ListTodo },
@@ -447,11 +447,11 @@ export function HomeContent({
           {devotionData ? (
             <DailyReadingWidget initialData={devotionData} />
           ) : (
-            <Link href="/mural">
+            <Link href="/comunicacao">
               <div className="rounded-xl border border-border bg-card p-4 flex items-center gap-3 shadow-[0_2px_4px_oklch(0.32_0.096_224/0.06),0_4px_12px_oklch(0.32_0.096_224/0.05)] hover:border-primary/20 hover:shadow-md transition-all">
                 <BookOpen className="w-5 h-5 text-muted-foreground/60 shrink-0" />
                 <p className="text-sm text-muted-foreground">
-                  Nenhuma leitura programada hoje; visite o mural.
+                  Nenhuma leitura programada hoje; visite a Comunicação.
                 </p>
               </div>
             </Link>

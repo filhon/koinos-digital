@@ -11,7 +11,7 @@ import {
   Music,
   ListTodo,
   Banknote,
-  MessageSquare,
+  Megaphone,
   Trophy,
   Vote,
   Cog,
@@ -46,7 +46,7 @@ const navigation: NavGroup[] = [
     items: [
       { label: "Início", href: "/dashboard", icon: LayoutDashboard },
       { label: "Agenda", href: "/agenda", icon: CalendarDays },
-      { label: "Mural", href: "/mural", icon: MessageSquare },
+      { label: "Comunicação", href: "/comunicacao", icon: Megaphone },
     ],
   },
   {
@@ -76,7 +76,7 @@ const navigation: NavGroup[] = [
         icon: Banknote,
         roles: ["admin", "pastor", "presbítero", "diácono", "tesoureiro"],
       },
-      { label: "Gamificação", href: "/gamificacao", icon: Trophy },
+      { label: "Liga", href: "/liga", icon: Trophy },
       { label: "Assembléia", href: "/assembleia", icon: Vote },
       {
         label: "Landing Page",
@@ -119,9 +119,24 @@ export function Sidebar() {
       aria-label="Navegação principal"
     >
       {/* Logo */}
-      <div className="flex h-14 items-center border-b border-sidebar-border px-4 shrink-0">
+      <div
+        className={cn(
+          "flex h-14 items-center border-b border-sidebar-border shrink-0",
+          collapsed ? "justify-center px-0" : "gap-2.5 px-4"
+        )}
+      >
+        {/* SVG logo — sempre visível */}
+        <img
+          src="/favicon.svg"
+          alt="Koinos"
+          width={collapsed ? 26 : 22}
+          height={collapsed ? 26 : 22}
+          className="shrink-0 transition-all duration-200"
+        />
+
+        {/* Texto — só quando expandida */}
         <AnimatePresence mode="popLayout" initial={false}>
-          {!collapsed ? (
+          {!collapsed && (
             <motion.span
               key="logo-text"
               initial={{ opacity: 0, x: -8 }}
@@ -135,22 +150,6 @@ export function Sidebar() {
               }}
             >
               Koinos
-            </motion.span>
-          ) : (
-            <motion.span
-              key="logo-icon"
-              initial={{ opacity: 0, scale: 0.7 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.7 }}
-              transition={{ duration: 0.12 }}
-              className="text-xl"
-              style={{
-                fontFamily: "var(--font-display)",
-                color: "var(--sidebar-primary)",
-              }}
-              aria-hidden="true"
-            >
-              K
             </motion.span>
           )}
         </AnimatePresence>

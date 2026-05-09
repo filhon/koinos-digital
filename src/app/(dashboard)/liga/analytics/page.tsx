@@ -7,12 +7,12 @@ import { AnalyticsView } from "./analytics-view";
 import type { GamificationAnalyticsData } from "@/lib/validators/gamification";
 
 export const metadata = {
-  title: "Analytics de Gamificação | Koinos",
+  title: "Analytics da Liga | Koinos",
 };
 
 const ALLOWED_ROLES = ["admin", "pastor", "presbítero"] as const;
 
-export default async function GamificacaoAnalyticsPage() {
+export default async function LigaAnalyticsPage() {
   const user = await getUser();
   if (!user) redirect("/login");
   if (!ALLOWED_ROLES.includes(user.role as (typeof ALLOWED_ROLES)[number])) {
@@ -35,7 +35,7 @@ export default async function GamificacaoAnalyticsPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <PageHeader
-        title="Analytics de Gamificação"
+        title="Analytics da Liga"
         description="Métricas de engajamento da congregação por período"
       />
       <PremiumGate feature="analytics_gamificacao">
