@@ -339,6 +339,7 @@ export async function createChurch(
       church_id: churchId,
       home_church_id: churchId,
       name: personal.name,
+      username: personal.username ?? null,
       cpf: encryptedCpf,
       email: personal.email,
       role: "pastor",
@@ -437,6 +438,7 @@ export async function registerMember(
 
   const {
     name,
+    username,
     cpf,
     email,
     password,
@@ -576,6 +578,7 @@ export async function registerMember(
         church_id: churchId,
         home_church_id: churchId,
         name,
+        username: username ?? null,
         cpf: encryptedCpf,
         email,
         role: "visitante",

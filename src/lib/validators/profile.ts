@@ -4,6 +4,33 @@ function stripNonDigits(v: string) {
   return v.replace(/\D/g, "");
 }
 
+// ─── Username ─────────────────────────────────────────────────────────────────
+
+export const usernameSchema = z
+  .string()
+  .min(3, { message: "Username deve ter no mínimo 3 caracteres" })
+  .max(30, { message: "Username deve ter no máximo 30 caracteres" })
+  .regex(/^[a-z0-9._]+$/, {
+    message: "Apenas letras minúsculas, números, ponto e underscore",
+  });
+
+export const updateUsernameSchema = z.object({
+  username: usernameSchema,
+});
+
+export const updatePublicVisibilitySchema = z.object({
+  public_email: z.boolean(),
+  public_phone: z.boolean(),
+  public_birth_date: z.boolean(),
+});
+
+export type UpdateUsernameInput = z.infer<typeof updateUsernameSchema>;
+export type UpdatePublicVisibilityInput = z.infer<
+  typeof updatePublicVisibilitySchema
+>;
+
+// ─── Address ──────────────────────────────────────────────────────────────────
+
 export const addressSchema = z.object({
   street: z.string().min(3, { message: "Rua é obrigatória" }),
   number: z.string().min(1, { message: "Número é obrigatório" }),

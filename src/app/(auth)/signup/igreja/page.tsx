@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect, useRef } from "react";
+import { useState, useTransition, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, type DefaultValues } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,6 +15,8 @@ import {
   Check,
   Church,
   CheckCircle2,
+  AtSign,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { Turnstile } from "@marsidev/react-turnstile";
@@ -34,9 +36,57 @@ import {
   lookupCnpj,
   type CnpjPrefill,
 } from "@/actions/onboarding";
+import { suggestUsername, checkUsernameAvailability } from "@/actions/profile";
 import { formatCPF } from "@/lib/utils/cpf";
 import { staggerContainer, staggerItem } from "@/lib/motion";
 import { CURRENT_TERMS_VERSION } from "@/lib/constants/legal";
+
+// ─── Username availability indicator ─────────────────────────────────────────
+
+type UsernameAvailState =
+  | { status: "idle" }
+  | { status: "checking" }
+  | { status: "available" }
+  | { status: "unavailable"; message?: string };
+
+function UsernameIndicator({ state }: { state: UsernameAvailState }) {
+  if (state.status === "idle") return null;
+  return (
+    <AnimatePresence mode="wait">
+      <motion.span
+        key={state.status}
+        initial={{ opacity: 0, x: -4 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.15 }}
+        className="flex items-center gap-1"
+      >
+        {state.status === "checking" && (
+          <>
+            <Loader2 className="h-3 w-3 animate-spin text-gray-400" />
+            <span className="text-xs text-gray-400">Verificando...</span>
+          </>
+        )}
+        {state.status === "available" && (
+          <>
+            <Check className="h-3 w-3 text-green-600" />
+            <span className="text-xs text-green-700 font-medium">
+              Disponível
+            </span>
+          </>
+        )}
+        {state.status === "unavailable" && (
+          <>
+            <X className="h-3 w-3 text-red-500" />
+            <span className="text-xs text-red-600">
+              {state.message ?? "Já está em uso"}
+            </span>
+          </>
+        )}
+      </motion.span>
+    </AnimatePresence>
+  );
+}
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -271,12 +321,74 @@ function StepPersonal({
   onNext: (data: PersonalDataInput) => void;
 }) {
   const [showPw, setShowPw] = useState(false);
+  const [usernameValue, setUsernameValue] = useState("");
+  const [usernameAvail, setUsernameAvail] = useState<UsernameAvailState>({
+    status: "idle",
+  });
+  const nameDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const usernameDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+
   const {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<PersonalDataInput>({ resolver: zodResolver(personalDataSchema) });
+
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const nameValue = watch("name");
+
+  const checkAvail = useCallback(async (u: string) => {
+    if (u.length < 3) {
+      setUsernameAvail({ status: "idle" });
+      return;
+    }
+    setUsernameAvail({ status: "checking" });
+    const result = await checkUsernameAvailability(u);
+    setUsernameAvail(
+      result.available
+        ? { status: "available" }
+        : { status: "unavailable", message: result.error }
+    );
+  }, []);
+
+  // Sugestão automática ao preencher o nome (debounce 500ms)
+  useEffect(() => {
+    if (nameDebounceRef.current) clearTimeout(nameDebounceRef.current);
+    if (!nameValue || nameValue.length < 3) return;
+
+    nameDebounceRef.current = setTimeout(async () => {
+      // Só sugere se o campo username ainda estiver vazio ou inalterado pelo usuário
+      if (usernameValue.length > 0) return;
+      const suggestion = await suggestUsername(nameValue);
+      if (suggestion) {
+        setUsernameValue(suggestion);
+        setValue("username", suggestion, { shouldValidate: false });
+        checkAvail(suggestion);
+      }
+    }, 500);
+
+    return () => {
+      if (nameDebounceRef.current) clearTimeout(nameDebounceRef.current);
+    };
+  }, [nameValue, usernameValue, setValue, checkAvail]);
+
+  function handleUsernameInput(e: React.ChangeEvent<HTMLInputElement>) {
+    const raw = e.target.value.toLowerCase().replace(/[^a-z0-9._]/g, "");
+    setUsernameValue(raw);
+    setValue("username", raw, { shouldValidate: false });
+    setUsernameAvail({ status: "idle" });
+
+    if (usernameDebounceRef.current) clearTimeout(usernameDebounceRef.current);
+    if (raw.length >= 3) {
+      usernameDebounceRef.current = setTimeout(() => checkAvail(raw), 500);
+    }
+  }
+
+  const usernameInputError = errors.username?.message;
 
   return (
     <form onSubmit={handleSubmit(onNext)} noValidate>
@@ -298,6 +410,41 @@ function StepPersonal({
             className={inputCls(!!errors.name)}
           />
           <FieldError message={errors.name?.message} />
+        </motion.div>
+
+        {/* Username */}
+        <motion.div variants={staggerItem}>
+          <label className="mb-1.5 block text-sm font-medium text-gray-700">
+            Nome de usuário
+          </label>
+          <div className="relative">
+            <AtSign className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              autoComplete="off"
+              autoCapitalize="none"
+              placeholder="joaosilva"
+              value={usernameValue}
+              maxLength={30}
+              {...register("username")}
+              onChange={handleUsernameInput}
+              className={`${inputCls(
+                !!usernameInputError || usernameAvail.status === "unavailable"
+              )} pl-9`}
+            />
+          </div>
+          <div className="mt-1.5 flex items-center gap-2">
+            {usernameInputError ? (
+              <FieldError message={usernameInputError} />
+            ) : (
+              <UsernameIndicator state={usernameAvail} />
+            )}
+            {!usernameInputError && usernameAvail.status === "idle" && (
+              <p className="text-xs text-gray-400">
+                Sugerido automaticamente com base no seu nome
+              </p>
+            )}
+          </div>
         </motion.div>
 
         <motion.div variants={staggerItem}>

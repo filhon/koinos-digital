@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -126,7 +127,7 @@ export function Sidebar() {
         )}
       >
         {/* SVG logo — sempre visível */}
-        <img
+        <Image
           src="/favicon.svg"
           alt="Koinos"
           width={collapsed ? 26 : 22}

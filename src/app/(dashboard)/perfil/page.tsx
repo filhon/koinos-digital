@@ -7,6 +7,7 @@ import { getMyBadges } from "@/actions/badges";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ProfileForm } from "./profile-form";
 import { BadgesSection } from "./badges-section";
+import { PublicProfileSection } from "./public-profile-section";
 
 export const metadata = { title: "Meu Perfil — Koinos" };
 
@@ -47,6 +48,9 @@ export default async function PerfilPage() {
         churchId={user.church_id}
         streak={streak}
       />
+
+      {/* Perfil público */}
+      <PublicProfileSection profile={result.data} />
 
       {/* Conquistas */}
       <div className="rounded-2xl border border-border bg-card p-4">

@@ -96,10 +96,10 @@ export function ScoreConfigManager({ initialConfig }: ScoreConfigManagerProps) {
       </div>
 
       {/* Rows */}
-      <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] overflow-hidden">
+      <div className="rounded-xl border border-white/8 bg-white/2 overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-white/[0.06]">
+            <tr className="border-b border-white/6">
               <th className="px-6 py-3 text-left text-[11px] font-medium text-white/30 uppercase tracking-wider">
                 Ação
               </th>
@@ -121,7 +121,7 @@ export function ScoreConfigManager({ initialConfig }: ScoreConfigManagerProps) {
               return (
                 <tr
                   key={row.action_type}
-                  className="border-b border-white/[0.03] last:border-0 hover:bg-white/[0.02] transition-colors"
+                  className="border-b border-white/3 last:border-0 hover:bg-white/2 transition-colors"
                 >
                   {/* Label */}
                   <td className="px-6 py-4">
@@ -152,7 +152,7 @@ export function ScoreConfigManager({ initialConfig }: ScoreConfigManagerProps) {
                           setDraft(row.action_type, Number(e.target.value))
                         }
                         className={cn(
-                          "w-20 text-right bg-white/[0.06] border rounded-lg px-2.5 py-1.5 text-sm font-mono text-white focus:outline-none focus:border-primary-500/50 transition-colors",
+                          "w-20 text-right bg-white/6 border rounded-lg px-2.5 py-1.5 text-sm font-mono text-white focus:outline-none focus:border-primary-500/50 transition-colors",
                           dirty ? "border-amber-500/40" : "border-white/10"
                         )}
                       />

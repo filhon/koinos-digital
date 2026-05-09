@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { validateCPF } from "@/lib/utils/cpf";
+import { usernameSchema } from "@/lib/validators/profile";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -33,6 +34,7 @@ export const personalDataSchema = z.object({
     .string()
     .min(3, { message: "Nome deve ter no mínimo 3 caracteres" })
     .max(100, { message: "Nome muito longo" }),
+  username: usernameSchema,
   cpf: z
     .string()
     .min(1, { message: "CPF é obrigatório" })
@@ -158,6 +160,7 @@ export const registerMemberSchema = z.object({
     .string()
     .min(3, { message: "Nome deve ter no mínimo 3 caracteres" })
     .max(100, { message: "Nome muito longo" }),
+  username: usernameSchema,
   cpf: z
     .string()
     .min(1, { message: "CPF é obrigatório" })
