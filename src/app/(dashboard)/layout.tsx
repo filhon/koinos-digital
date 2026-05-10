@@ -2,7 +2,14 @@ import { redirect } from "next/navigation";
 import { getUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { AppShell } from "@/components/layout/AppShell";
-import { OnboardingTour } from "@/components/layout/OnboardingTour";
+import { OnboardingChecklist } from "@/components/layout/OnboardingTour";
+import { checkAndUpdateProgress } from "@/actions/onboarding-progress";
+import type {
+  OnboardingProgressData,
+  StepConditions,
+} from "@/actions/onboarding-progress";
+
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 export default async function DashboardLayout({
   children,
@@ -10,12 +17,8 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const user = await getUser();
+  if (!user) redirect("/login");
 
-  if (!user) {
-    redirect("/login");
-  }
-
-  // Verifica se o membro é novo (criado há menos de 7 dias)
   const supabase = await createClient();
   const { data: member } = await supabase
     .from("members")
@@ -26,11 +29,23 @@ export default async function DashboardLayout({
 
   // eslint-disable-next-line react-hooks/purity
   const now = Date.now();
+  const createdAt = member?.created_at
+    ? new Date(member.created_at as string).getTime()
+    : now;
+  const isRecentPastor =
+    user.role === "pastor" && now - createdAt < THIRTY_DAYS_MS;
 
-  const isNew = member?.created_at
-    ? now - new Date(member.created_at as string).getTime() <
-      7 * 24 * 60 * 60 * 1000
-    : false;
+  // Only run the onboarding check for recent pastors
+  let onboardingProgress: OnboardingProgressData | null = null;
+  let stepConditions: StepConditions | null = null;
+  if (isRecentPastor) {
+    const result = await checkAndUpdateProgress();
+    onboardingProgress = result.progress;
+    stepConditions = result.conditions;
+  }
+
+  const showChecklist =
+    isRecentPastor && onboardingProgress?.completed_at == null;
 
   return (
     <AppShell
@@ -38,7 +53,13 @@ export default async function DashboardLayout({
       userName={member?.name as string | undefined}
       userAvatar={member?.avatar_url as string | undefined}
     >
-      <OnboardingTour userRole={user.role} isNew={isNew} />
+      {showChecklist && stepConditions && (
+        <OnboardingChecklist
+          initialProgress={onboardingProgress}
+          conditions={stepConditions}
+          memberId={user.id}
+        />
+      )}
       {children}
     </AppShell>
   );

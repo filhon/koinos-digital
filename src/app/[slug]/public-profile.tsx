@@ -2,15 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import {
-  Award,
-  Star,
-  Users,
-  ExternalLink,
-  Mail,
-  Phone,
-  Calendar,
-} from "lucide-react";
+import { Award, Star, Users, Mail, Phone, Calendar } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { PublicProfileData } from "@/actions/profile";
@@ -162,13 +154,13 @@ export function PublicProfile({ data }: { data: PublicProfileData }) {
 
       {/* Content */}
       <div className="mx-auto max-w-xl px-4 pb-16">
-        {/* Avatar + identity */}
-        <div className="-mt-14 mb-5 flex items-end gap-4">
+        {/* Avatar */}
+        <div className="-mt-14 mb-5">
           <motion.div
             initial={{ scale: 0.85, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            className="relative shrink-0"
+            className="relative inline-block"
           >
             {data.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -185,17 +177,6 @@ export function PublicProfile({ data }: { data: PublicProfileData }) {
               </div>
             )}
           </motion.div>
-
-          {/* Link voltar / nav mínima */}
-          <div className="flex flex-1 justify-end pb-2">
-            <Link
-              href={`/${data.church_slug}`}
-              className="flex items-center gap-1.5 rounded-lg border border-[oklch(0.88_0.01_220)] bg-[oklch(0.99_0.003_75)] px-3 py-1.5 text-xs font-medium text-[oklch(0.42_0.016_220)] transition-colors hover:bg-[oklch(0.982_0.004_80)]"
-            >
-              <ExternalLink className="h-3 w-3" />
-              {data.church_name}
-            </Link>
-          </div>
         </div>
 
         {/* Nome e username */}

@@ -1,216 +1,622 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ArrowRight, CheckCircle } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  ChevronUp,
+  ArrowRight,
+  Sparkles,
+  X,
+} from "lucide-react";
+import {
+  markStepCompleted,
+  completeOnboarding,
+  type OnboardingProgressData,
+  type OnboardingStepKey,
+  type StepConditions,
+} from "@/actions/onboarding-progress";
 
-const TOUR_KEY = "koinos_tour_v1";
+// ─── Step definitions ─────────────────────────────────────────────────────────
 
-interface TourStep {
+type SubStep = {
+  label: string;
+  /** Key in StepConditions that determines if this sub-step is done. */
+  conditionKey: keyof StepConditions;
+  /** For OR-logic steps: completing ANY sub-step marks the parent done. */
+  anyOf?: boolean;
+};
+
+type StepDef = {
+  key: OnboardingStepKey;
   title: string;
-  description: string;
-  targetSelector?: string;
-  position: "top" | "bottom" | "left" | "right" | "center";
-}
+  href: string;
+  subSteps: SubStep[];
+};
 
-const TOUR_STEPS: TourStep[] = [
+const ALL_STEPS: StepDef[] = [
   {
-    title: "Bem-vindo ao Koinos!",
-    description:
-      "Sua plataforma de gestão para igrejas está pronta. Vamos dar uma volta rápida pelas principais funcionalidades.",
-    position: "center",
+    key: "complete_profile",
+    title: "Completar perfil",
+    href: "/perfil",
+    subSteps: [
+      { label: "Adicionar foto de perfil", conditionKey: "has_avatar" },
+      { label: "Informar telefone de contato", conditionKey: "has_phone" },
+    ],
   },
   {
-    title: "Menu de navegação",
-    description:
-      "No menu lateral você acessa todos os módulos: membros, eventos, financeiro, liturgia e muito mais.",
-    targetSelector: "nav",
-    position: "right",
+    key: "create_first_event",
+    title: "Criar o primeiro evento",
+    href: "/eventos/novo",
+    subSteps: [
+      {
+        label: "Criar qualquer culto, reunião ou retiro",
+        conditionKey: "has_event",
+      },
+    ],
   },
   {
-    title: "Busca global",
-    description:
-      "Use Cmd+K (ou o ícone de lupa no celular) para buscar membros, eventos e músicas instantaneamente.",
-    position: "center",
+    key: "invite_members",
+    title: "Convidar membros",
+    href: "/configuracoes/convites",
+    subSteps: [
+      { label: "Gerar um link de convite", conditionKey: "has_invite_link" },
+    ],
   },
   {
-    title: "Comece pelos membros",
-    description:
-      "Cadastre os membros da sua igreja em Membros → Novo membro. Você pode importar dados a qualquer momento.",
-    position: "center",
+    key: "create_ministry",
+    title: "Criar um ministério",
+    href: "/ministerios/novo",
+    subSteps: [
+      { label: "Cadastrar qualquer ministério", conditionKey: "has_ministry" },
+    ],
   },
   {
-    title: "Crie um evento",
-    description:
-      "Em Eventos você agenda cultos, reuniões e retiros com recorrência automática, lista de ministérios e liturgia integrada.",
-    position: "center",
+    key: "customize_landing",
+    title: "Personalizar a landing page",
+    href: "/landing-page",
+    subSteps: [
+      {
+        label: "Preencher o 'Sobre nós' da igreja",
+        conditionKey: "has_about_us",
+        anyOf: true,
+      },
+      {
+        label: "Publicar a página da sua comunidade",
+        conditionKey: "is_published",
+        anyOf: true,
+      },
+    ],
   },
   {
-    title: "Tudo pronto!",
-    description:
-      "Você já pode começar a usar o Koinos. Se precisar de ajuda, consulte as configurações da sua conta.",
-    position: "center",
+    key: "explore_league",
+    title: "Explorar a Liga",
+    href: "/liga",
+    subSteps: [
+      { label: "Visitar a página da Liga", conditionKey: "visited_league" },
+    ],
   },
 ];
 
-interface OnboardingTourProps {
-  userRole: string;
-  /** Passa true se o membro foi criado há menos de 7 dias */
-  isNew: boolean;
+// ─── Particle system ──────────────────────────────────────────────────────────
+
+interface Particle {
+  id: number;
+  x: number;
+  y: number;
+  color: string;
+  size: number;
+  delay: number;
+  rotate: number;
 }
 
-export function OnboardingTour({ userRole, isNew }: OnboardingTourProps) {
-  const [step, setStep] = useState(0);
-  const [visible, setVisible] = useState(false);
+function makeParticles(count: number): Particle[] {
+  const colors = [
+    "oklch(0.32 0.096 224)",
+    "oklch(0.70 0.136 62)",
+    "oklch(0.55 0.118 148)",
+    "oklch(0.62 0.148 58)",
+  ];
+  // Deterministic spread using trigonometry so no Math.random hydration issues
+  return Array.from({ length: count }, (_, i) => {
+    const angle = (i / count) * Math.PI * 2 + i * 0.7;
+    const radius = 60 + (i % 4) * 20;
+    return {
+      id: i,
+      x: Math.cos(angle) * radius,
+      y: Math.sin(angle) * radius - 40,
+      color: colors[i % colors.length],
+      size: 5 + (i % 3) * 2,
+      delay: i * 0.045,
+      rotate: i * 37,
+    };
+  });
+}
 
-  useEffect(() => {
-    if (!isNew) return;
-    if (!["pastor", "admin"].includes(userRole)) return;
+// ─── Completion card ──────────────────────────────────────────────────────────
 
-    const done = localStorage.getItem(TOUR_KEY);
-    if (!done) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setVisible(true);
+function CompletionCard({
+  celebrating,
+  particles,
+  onClose,
+}: {
+  celebrating: boolean;
+  particles: Particle[];
+  onClose: () => void;
+}) {
+  return (
+    <div className="relative px-5 py-6 text-center overflow-hidden">
+      {/* Particle burst */}
+      <AnimatePresence>
+        {celebrating && (
+          <div
+            className="absolute inset-0 pointer-events-none flex items-center justify-center"
+            aria-hidden="true"
+          >
+            {particles.map((p) => (
+              <motion.div
+                key={p.id}
+                className="absolute rounded-sm"
+                style={{
+                  width: p.size,
+                  height: p.size,
+                  background: p.color,
+                  rotate: p.rotate,
+                }}
+                initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+                animate={{ x: p.x, y: p.y, opacity: 0, scale: 0.4 }}
+                transition={{
+                  duration: 0.9,
+                  delay: p.delay,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Icon */}
+      <div className="mb-3 flex justify-center">
+        <div
+          className="size-12 rounded-full flex items-center justify-center"
+          style={{ background: "oklch(0.62 0.148 58 / 0.12)" }}
+        >
+          <Sparkles
+            className="size-6"
+            style={{ color: "oklch(0.62 0.148 58)" }}
+            aria-hidden="true"
+          />
+        </div>
+      </div>
+
+      {/* Heading */}
+      <h3
+        className="mb-1.5"
+        style={{
+          fontFamily: "Instrument Serif, Georgia, serif",
+          fontSize: "1.2rem",
+          color: "oklch(0.18 0.012 230)",
+          letterSpacing: "-0.01em",
+          lineHeight: 1.3,
+        }}
+      >
+        Configuração completa!
+      </h3>
+
+      <p
+        className="text-[13px] mb-5"
+        style={{
+          color: "oklch(0.42 0.016 220)",
+          lineHeight: 1.55,
+          maxWidth: "24ch",
+          margin: "0 auto 1.25rem",
+        }}
+      >
+        Sua comunidade está pronta no Koinos. Continue explorando tudo que a
+        plataforma oferece.
+      </p>
+
+      <button
+        onClick={onClose}
+        className="w-full rounded-xl py-2 text-sm font-medium transition-all active:scale-[0.97]"
+        style={{
+          background: "oklch(0.62 0.148 58)",
+          color: "oklch(0.97 0.008 70)",
+        }}
+      >
+        Fechar
+      </button>
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
+interface OnboardingChecklistProps {
+  initialProgress: OnboardingProgressData | null;
+  conditions: StepConditions;
+  memberId: string;
+}
+
+export function OnboardingChecklist({
+  initialProgress,
+  conditions: initialConditions,
+}: OnboardingChecklistProps) {
+  const router = useRouter();
+  const [progress, setProgress] = useState(initialProgress);
+  const [conditions, setConditions] = useState(initialConditions);
+  const [minimized, setMinimized] = useState(false);
+  const [celebrating, setCelebrating] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+  const [closing, setClosing] = useState(false);
+
+  const particles = useMemo(() => makeParticles(16), []);
+  const prevCountRef = useRef<number>(
+    initialProgress?.steps_completed.length ?? 0
+  );
+
+  if (dismissed || progress?.completed_at) return null;
+
+  const completedSet = new Set<OnboardingStepKey>(
+    progress?.steps_completed ?? []
+  );
+  const completedCount = completedSet.size;
+  const total = ALL_STEPS.length;
+  const allDone = completedCount === total;
+  const progressFraction = completedCount / total;
+
+  function triggerCelebrationIfJustCompleted(newCount: number) {
+    if (newCount === total && prevCountRef.current < total) {
+      setCelebrating(true);
+      setTimeout(() => setCelebrating(false), 1200);
     }
-  }, [isNew, userRole]);
-
-  function next() {
-    if (step < TOUR_STEPS.length - 1) {
-      setStep((s) => s + 1);
-    } else {
-      finish();
-    }
+    prevCountRef.current = newCount;
   }
 
-  function finish() {
-    localStorage.setItem(TOUR_KEY, "done");
-    setVisible(false);
+  async function handleGoStep(step: (typeof ALL_STEPS)[number]) {
+    // explore_league is the only step marked on navigation
+    if (step.key === "explore_league" && !completedSet.has("explore_league")) {
+      try {
+        await markStepCompleted("explore_league");
+        const newSteps = [
+          ...(progress?.steps_completed ?? []),
+          "explore_league" as OnboardingStepKey,
+        ];
+        setProgress((prev) =>
+          prev
+            ? { ...prev, steps_completed: newSteps }
+            : {
+                id: "",
+                member_id: "",
+                church_id: "",
+                steps_completed: newSteps,
+                completed_at: null,
+                created_at: "",
+                updated_at: "",
+              }
+        );
+        setConditions((prev) => ({ ...prev, visited_league: true }));
+        triggerCelebrationIfJustCompleted(newSteps.length);
+      } catch {
+        // non-blocking — navigate anyway
+      }
+    }
+    router.push(step.href);
   }
 
-  const current = TOUR_STEPS[step];
-  const isLast = step === TOUR_STEPS.length - 1;
+  async function handleClose() {
+    setClosing(true);
+    try {
+      await completeOnboarding();
+    } finally {
+      setDismissed(true);
+    }
+  }
 
   return (
-    <AnimatePresence>
-      {visible && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            key="backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[90] bg-black/40 backdrop-blur-sm"
-            onClick={finish}
+    <div
+      className="fixed z-80 bottom-0 left-0 right-0 sm:bottom-4 sm:right-4 sm:left-auto sm:w-80 pointer-events-none"
+      role="complementary"
+      aria-label="Checklist de onboarding"
+    >
+      <motion.div
+        layout
+        layoutRoot
+        className="pointer-events-auto rounded-t-2xl sm:rounded-2xl overflow-hidden"
+        style={{
+          boxShadow:
+            "0 -4px 20px oklch(0.32 0.096 224 / 0.08), 0 8px 24px oklch(0.32 0.096 224 / 0.10)",
+        }}
+        initial={{ y: 24, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      >
+        {/* ── Header (petroleum dusk) ─────────────────────────────────── */}
+        <div
+          className="px-4 py-3 flex items-center gap-3"
+          style={{ background: "oklch(0.32 0.096 224)" }}
+        >
+          {/* Mobile drag handle affordance */}
+          <div
+            className="absolute top-2 left-1/2 -translate-x-1/2 w-8 h-1 rounded-full sm:hidden"
+            style={{ background: "oklch(0.97 0.006 220 / 0.25)" }}
             aria-hidden="true"
           />
 
-          {/* Tooltip/card central */}
-          <motion.div
-            key={`step-${step}`}
-            role="dialog"
-            aria-label={`Tour passo ${step + 1} de ${TOUR_STEPS.length}`}
-            aria-modal="true"
-            initial={{ opacity: 0, scale: 0.95, y: 8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 8 }}
-            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed z-[91] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(90vw,22rem)]"
+          {/* Title + progress bar */}
+          <button
+            className="flex-1 text-left"
+            onClick={() => setMinimized((m) => !m)}
+            aria-expanded={!minimized}
+            aria-controls="onboarding-steps"
           >
-            <div
-              className="rounded-2xl border border-border shadow-2xl overflow-hidden"
-              style={{ background: "var(--surface-1)" }}
-            >
-              {/* Progress bar */}
-              <div
-                className="h-1 transition-all duration-300"
+            <div className="flex items-center justify-between mb-1.5">
+              <span
                 style={{
-                  background: "var(--muted)",
-                  position: "relative",
+                  fontFamily: "Instrument Serif, Georgia, serif",
+                  fontSize: "0.875rem",
+                  color: "oklch(0.97 0.006 220)",
+                  letterSpacing: "-0.01em",
+                  lineHeight: 1,
                 }}
               >
-                <div
-                  className="h-full transition-all duration-300"
-                  style={{
-                    width: `${((step + 1) / TOUR_STEPS.length) * 100}%`,
-                    background: "var(--primary)",
-                  }}
-                />
-              </div>
-
-              <div className="p-5">
-                {/* Header */}
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-2">
-                    {isLast ? (
-                      <CheckCircle
-                        className="size-4 shrink-0"
-                        style={{ color: "var(--primary)" }}
-                        aria-hidden="true"
-                      />
-                    ) : (
-                      <span
-                        className="text-xs font-mono font-medium shrink-0"
-                        style={{ color: "var(--muted-foreground)" }}
-                        aria-hidden="true"
-                      >
-                        {step + 1}/{TOUR_STEPS.length}
-                      </span>
-                    )}
-                    <h2
-                      className="text-base font-semibold leading-snug"
-                      style={{ color: "var(--foreground)" }}
-                    >
-                      {current.title}
-                    </h2>
-                  </div>
-                  <button
-                    onClick={finish}
-                    className="shrink-0 rounded-full p-1 transition-colors hover:bg-muted"
-                    aria-label="Fechar tour"
-                  >
-                    <X
-                      className="size-3.5"
-                      style={{ color: "var(--muted-foreground)" }}
-                      aria-hidden="true"
-                    />
-                  </button>
-                </div>
-
-                <p
-                  className="text-sm leading-relaxed mb-5"
-                  style={{ color: "var(--muted-foreground)" }}
-                >
-                  {current.description}
-                </p>
-
-                <div className="flex items-center justify-between gap-3">
-                  <button
-                    onClick={finish}
-                    className="text-xs transition-colors"
-                    style={{ color: "var(--muted-foreground)" }}
-                  >
-                    Pular tour
-                  </button>
-                  <button
-                    onClick={next}
-                    className="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
-                    style={{
-                      background: "var(--primary)",
-                      color: "var(--primary-foreground)",
-                    }}
-                  >
-                    {isLast ? "Começar" : "Próximo"}
-                    {!isLast && (
-                      <ArrowRight className="size-3.5" aria-hidden="true" />
-                    )}
-                  </button>
-                </div>
-              </div>
+                Primeiros passos
+              </span>
+              <span
+                className="font-mono text-[11px]"
+                style={{ color: "oklch(0.97 0.006 220 / 0.6)" }}
+              >
+                {completedCount}/{total}
+              </span>
             </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+
+            {/* Progress track */}
+            <div
+              className="h-0.75 rounded-full overflow-hidden"
+              style={{ background: "oklch(0.97 0.006 220 / 0.15)" }}
+            >
+              <motion.div
+                className="h-full rounded-full origin-left"
+                style={{ background: "oklch(0.70 0.136 62)" }}
+                animate={{ scaleX: progressFraction }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              />
+            </div>
+          </button>
+
+          {/* Minimize / expand toggle */}
+          <button
+            onClick={() => setMinimized((m) => !m)}
+            className="shrink-0 rounded-lg p-1 transition-colors hover:bg-white/10"
+            aria-label={
+              minimized ? "Expandir checklist" : "Minimizar checklist"
+            }
+          >
+            {minimized ? (
+              <ChevronUp
+                className="size-4"
+                style={{ color: "oklch(0.97 0.006 220 / 0.75)" }}
+                aria-hidden="true"
+              />
+            ) : (
+              <ChevronDown
+                className="size-4"
+                style={{ color: "oklch(0.97 0.006 220 / 0.75)" }}
+                aria-hidden="true"
+              />
+            )}
+          </button>
+        </div>
+
+        {/* ── Content ────────────────────────────────────────────────── */}
+        <AnimatePresence initial={false}>
+          {!minimized && (
+            <motion.div
+              id="onboarding-steps"
+              key="content"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              style={{
+                overflow: "hidden",
+                background: "oklch(0.99 0.003 75)",
+              }}
+            >
+              {allDone ? (
+                <CompletionCard
+                  celebrating={celebrating}
+                  particles={particles}
+                  onClose={handleClose}
+                />
+              ) : (
+                <>
+                  <ul
+                    className="py-1 max-h-[50vh] sm:max-h-none overflow-y-auto"
+                    role="list"
+                  >
+                    {ALL_STEPS.map((step, i) => {
+                      const done = completedSet.has(step.key);
+                      const isNext =
+                        !done &&
+                        ALL_STEPS.slice(0, i).every((s) =>
+                          completedSet.has(s.key)
+                        );
+
+                      // Sub-step completion from conditions
+                      const hasAny = step.subSteps.some((s) => s.anyOf);
+                      const subDone = step.subSteps.map((s) => ({
+                        ...s,
+                        met: conditions[s.conditionKey],
+                      }));
+
+                      return (
+                        <li
+                          key={step.key}
+                          className="px-4 py-2.5 transition-colors"
+                          style={{
+                            background: isNext
+                              ? "oklch(0.96 0.008 224 / 0.45)"
+                              : "transparent",
+                          }}
+                        >
+                          <div className="flex items-center gap-3">
+                            {/* Checkbox indicator */}
+                            <motion.div
+                              className="shrink-0 size-4.5 rounded-full flex items-center justify-center"
+                              style={{
+                                background: done
+                                  ? "oklch(0.32 0.096 224)"
+                                  : "transparent",
+                                border: done
+                                  ? "none"
+                                  : `1.5px solid ${
+                                      isNext
+                                        ? "oklch(0.62 0.148 58)"
+                                        : "oklch(0.88 0.01 220)"
+                                    }`,
+                              }}
+                              animate={done ? { scale: [1, 1.15, 1] } : {}}
+                              transition={{ duration: 0.25 }}
+                              aria-hidden="true"
+                            >
+                              {done && (
+                                <Check
+                                  className="size-2.5"
+                                  style={{ color: "oklch(0.97 0.006 220)" }}
+                                  strokeWidth={3}
+                                />
+                              )}
+                            </motion.div>
+
+                            {/* Step title */}
+                            <span
+                              className="flex-1 text-[13px] font-medium leading-snug"
+                              style={{
+                                color: done
+                                  ? "oklch(0.52 0.016 220)"
+                                  : isNext
+                                    ? "oklch(0.18 0.012 230)"
+                                    : "oklch(0.42 0.016 220)",
+                                textDecoration: done
+                                  ? "line-through oklch(0.72 0.016 220)"
+                                  : "none",
+                              }}
+                            >
+                              {step.title}
+                            </span>
+
+                            {/* Navigate button */}
+                            <button
+                              onClick={() => handleGoStep(step)}
+                              className="shrink-0 flex items-center gap-0.5 rounded-md px-2 py-1 text-[12px] font-medium transition-colors hover:bg-muted"
+                              style={{
+                                color: done
+                                  ? "oklch(0.62 0.016 220)"
+                                  : "oklch(0.32 0.096 224)",
+                              }}
+                              aria-label={`Ir para ${step.title}`}
+                            >
+                              Ir
+                              <ArrowRight
+                                className="size-3"
+                                strokeWidth={2}
+                                aria-hidden="true"
+                              />
+                            </button>
+                          </div>
+
+                          {/* Sub-steps — shown when step is not done */}
+                          {!done && (
+                            <ul
+                              className="mt-1.5 ml-7 space-y-1"
+                              aria-label={`Requisitos para ${step.title}`}
+                            >
+                              {subDone.map((sub) => (
+                                <li
+                                  key={sub.conditionKey}
+                                  className="flex items-center gap-1.5"
+                                >
+                                  {/* Sub-step indicator */}
+                                  <div
+                                    className="shrink-0 size-3.5 rounded-full flex items-center justify-center"
+                                    style={{
+                                      background: sub.met
+                                        ? "oklch(0.55 0.118 148)"
+                                        : "transparent",
+                                      border: sub.met
+                                        ? "none"
+                                        : "1.5px solid oklch(0.88 0.01 220)",
+                                    }}
+                                    aria-hidden="true"
+                                  >
+                                    {sub.met && (
+                                      <Check
+                                        className="size-2"
+                                        style={{
+                                          color: "oklch(0.97 0.006 148)",
+                                        }}
+                                        strokeWidth={3}
+                                      />
+                                    )}
+                                  </div>
+                                  <span
+                                    className="text-[11px] leading-tight"
+                                    style={{
+                                      color: sub.met
+                                        ? "oklch(0.55 0.118 148)"
+                                        : "oklch(0.52 0.016 220)",
+                                    }}
+                                  >
+                                    {sub.label}
+                                    {sub.anyOf && hasAny && (
+                                      <span
+                                        style={{
+                                          color: "oklch(0.64 0.016 220)",
+                                        }}
+                                      >
+                                        {" "}
+                                        (ou)
+                                      </span>
+                                    )}
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+
+                  {/* Footer dismiss */}
+                  <div
+                    className="flex justify-end px-4 py-2 border-t"
+                    style={{ borderColor: "oklch(0.88 0.01 220 / 0.6)" }}
+                  >
+                    <button
+                      onClick={handleClose}
+                      disabled={closing}
+                      className="flex items-center gap-1 text-[11px] transition-colors hover:text-foreground"
+                      style={{ color: "oklch(0.52 0.016 220)" }}
+                    >
+                      <X className="size-3" aria-hidden="true" />
+                      Dispensar
+                    </button>
+                  </div>
+                </>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </div>
   );
 }
+
+// ─── Legacy export (keeps backward-compat with dashboard/layout.tsx import) ──
+/** @deprecated Use OnboardingChecklist */
+export { OnboardingChecklist as OnboardingTour };

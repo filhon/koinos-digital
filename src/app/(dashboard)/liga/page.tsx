@@ -3,6 +3,7 @@ import { BarChart2 } from "lucide-react";
 import { getUser } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 import { getLeaderboard, getMyProgress } from "@/actions/gamification";
+import { markStepCompleted } from "@/actions/onboarding-progress";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { GamificationView } from "./gamification-view";
 import { MyProgressCard } from "./my-progress-card";
@@ -28,6 +29,10 @@ export default async function LigaPage() {
   const [leaderboardResult, progressResult] = await Promise.all([
     getLeaderboard({ period: "monthly" }),
     getMyProgress(),
+    // Mark explore_league step for pastors visiting this page
+    user.role === "pastor"
+      ? markStepCompleted("explore_league").catch(() => {})
+      : Promise.resolve(),
   ]);
 
   const initialData: LeaderboardData = ("data" in leaderboardResult

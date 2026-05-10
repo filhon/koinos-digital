@@ -3,16 +3,7 @@
 import { useState, useTransition, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Check,
-  X,
-  Loader2,
-  ExternalLink,
-  User,
-  Eye,
-  EyeOff,
-  AtSign,
-} from "lucide-react";
+import { Check, X, Loader2, ExternalLink, User, AtSign } from "lucide-react";
 import { toast } from "sonner";
 import {
   checkUsernameAvailability,
@@ -96,37 +87,40 @@ function VisibilityToggle({
   disabled?: boolean;
 }) {
   return (
-    <label className="flex cursor-pointer items-start gap-3">
+    <div
+      className="flex cursor-pointer items-start gap-3"
+      onClick={() => !disabled && onChange(!checked)}
+    >
       <button
         type="button"
         role="switch"
         aria-checked={checked}
         disabled={disabled}
-        onClick={() => onChange(!checked)}
-        className={`relative mt-0.5 h-5 w-9 shrink-0 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[oklch(0.62_0.148_58)] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
-          checked ? "bg-[oklch(0.32_0.096_224)]" : "bg-[oklch(0.88_0.01_220)]"
+        onClick={(e) => {
+          e.stopPropagation();
+          onChange(!checked);
+        }}
+        className={`relative mt-0.5 h-5 w-9 shrink-0 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[oklch(0.62_0.148_58/0.4)] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+          checked ? "bg-primary-700" : "bg-[oklch(0.88_0.01_220)]"
         }`}
       >
         <span
-          className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-            checked ? "translate-x-4" : "translate-x-0.5"
+          className={`absolute inset-y-0.5 left-0.5 h-4 w-4 rounded-full bg-[oklch(0.995_0.002_70)] shadow-sm transition-transform duration-200 ${
+            checked ? "translate-x-4" : "translate-x-0"
           }`}
         />
       </button>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-[oklch(0.18_0.012_230)]">
+        <p
+          className={`text-sm font-medium transition-colors duration-200 ${checked ? "text-[oklch(0.18_0.012_230)]" : "text-[oklch(0.42_0.016_220)]"}`}
+        >
           {label}
         </p>
         <p className="mt-0.5 text-xs text-[oklch(0.52_0.016_220)] leading-relaxed">
           {description}
         </p>
       </div>
-      {checked ? (
-        <Eye className="mt-0.5 h-4 w-4 shrink-0 text-[oklch(0.32_0.096_224)]" />
-      ) : (
-        <EyeOff className="mt-0.5 h-4 w-4 shrink-0 text-[oklch(0.52_0.016_220)]" />
-      )}
-    </label>
+    </div>
   );
 }
 
@@ -240,12 +234,12 @@ export function PublicProfileSection({ profile }: { profile: MemberProfile }) {
   const hasUsername = !!profile.username;
 
   return (
-    <div className="rounded-2xl border border-[oklch(0.88_0.01_220_/_0.6)] bg-[oklch(0.99_0.003_75)] shadow-[0_2px_4px_oklch(0.32_0.096_224_/_0.06),0_4px_12px_oklch(0.32_0.096_224_/_0.05)]">
+    <div className="rounded-2xl border border-[oklch(0.88_0.01_220/0.6)] bg-[oklch(0.99_0.003_75)] shadow-[0_2px_4px_oklch(0.32_0.096_224/0.06),0_4px_12px_oklch(0.32_0.096_224/0.05)]">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 border-b border-[oklch(0.88_0.01_220_/_0.6)] px-5 py-4">
+      <div className="flex items-start justify-between gap-4 border-b border-[oklch(0.88_0.01_220/0.6)] px-5 py-4">
         <div>
           <div className="flex items-center gap-2">
-            <User className="h-4 w-4 text-[oklch(0.62_0.148_58)]" />
+            <User className="h-4 w-4 text-accent-500" />
             <h2 className="font-display text-[1.125rem] tracking-[-0.01em] text-[oklch(0.18_0.012_230)]">
               Perfil público
             </h2>
@@ -258,7 +252,7 @@ export function PublicProfileSection({ profile }: { profile: MemberProfile }) {
           <Link
             href={`/${profile.username}`}
             target="_blank"
-            className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[oklch(0.88_0.01_220)] px-3 py-1.5 text-xs font-medium text-[oklch(0.32_0.096_224)] transition-colors hover:bg-[oklch(0.982_0.004_80)]"
+            className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[oklch(0.88_0.01_220)] px-3 py-1.5 text-xs font-medium text-primary-700 transition-colors hover:bg-[oklch(0.982_0.004_80)]"
           >
             <ExternalLink className="h-3 w-3" />
             Ver perfil
@@ -266,7 +260,7 @@ export function PublicProfileSection({ profile }: { profile: MemberProfile }) {
         )}
       </div>
 
-      <div className="divide-y divide-[oklch(0.88_0.01_220_/_0.5)]">
+      <div className="divide-y divide-[oklch(0.88_0.01_220/0.5)]">
         {/* Username */}
         <div className="px-5 py-5">
           <label
@@ -289,10 +283,10 @@ export function PublicProfileSection({ profile }: { profile: MemberProfile }) {
                 autoCapitalize="none"
                 className={`h-10 w-full rounded-xl border pl-9 pr-3 text-sm text-[oklch(0.18_0.012_230)] placeholder:text-[oklch(0.52_0.016_220)] outline-none transition-all focus:ring-2 focus:ring-offset-0 ${
                   usernameInputError || availability.status === "unavailable"
-                    ? "border-[oklch(0.55_0.148_28)] bg-[oklch(0.97_0.005_28_/_0.4)] focus:border-[oklch(0.55_0.148_28)] focus:ring-[oklch(0.55_0.148_28_/_0.2)]"
+                    ? "border-[oklch(0.55_0.148_28)] bg-[oklch(0.97_0.005_28/0.4)] focus:border-[oklch(0.55_0.148_28)] focus:ring-[oklch(0.55_0.148_28/0.2)]"
                     : availability.status === "available"
-                      ? "border-[oklch(0.55_0.118_148)] bg-white focus:border-[oklch(0.55_0.118_148)] focus:ring-[oklch(0.55_0.118_148_/_0.2)]"
-                      : "border-[oklch(0.88_0.01_220)] bg-white focus:border-[oklch(0.62_0.148_58)] focus:ring-[oklch(0.62_0.148_58_/_0.2)]"
+                      ? "border-[oklch(0.55_0.118_148)] bg-white focus:border-[oklch(0.55_0.118_148)] focus:ring-[oklch(0.55_0.118_148/0.2)]"
+                      : "border-[oklch(0.88_0.01_220)] bg-white focus:border-accent-500 focus:ring-[oklch(0.62_0.148_58/0.2)]"
                 }`}
               />
             </div>
@@ -300,7 +294,7 @@ export function PublicProfileSection({ profile }: { profile: MemberProfile }) {
               type="button"
               onClick={handleSaveUsername}
               disabled={!canSave}
-              className="h-10 rounded-xl bg-[oklch(0.32_0.096_224)] px-4 text-sm font-medium text-[oklch(0.97_0.006_220)] transition-all disabled:cursor-not-allowed disabled:opacity-40 hover:enabled:brightness-90 active:enabled:scale-[0.97]"
+              className="h-10 rounded-xl bg-primary-700 px-4 text-sm font-medium text-[oklch(0.97_0.006_220)] transition-all disabled:cursor-not-allowed disabled:opacity-40 hover:enabled:brightness-90 active:enabled:scale-[0.97]"
             >
               {isSavingUsername ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -324,7 +318,7 @@ export function PublicProfileSection({ profile }: { profile: MemberProfile }) {
               <p className="text-xs text-[oklch(0.52_0.016_220)]">
                 Apenas letras minúsculas, números, ponto e underscore.
                 {!hasUsername && (
-                  <span className="ml-1 font-medium text-[oklch(0.62_0.148_58)]">
+                  <span className="ml-1 font-medium text-accent-500">
                     Defina o seu para ativar o perfil público.
                   </span>
                 )}
