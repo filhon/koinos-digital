@@ -33,6 +33,7 @@ interface HomeContentProps {
   myTeam: { team_name: string; team_color: string } | null;
   teamRanking: TeamRankRow[];
   devotionData: TodayReadingData | null;
+  previewVerses?: Array<{ verse: number; text: string }>;
 }
 
 // ─── Greeting ─────────────────────────────────────────────────────────────────
@@ -396,6 +397,7 @@ export function HomeContent({
   myTeam,
   teamRanking,
   devotionData,
+  previewVerses,
 }: HomeContentProps) {
   const firstName = userName?.split(" ")[0] ?? null;
   const greeting = getGreeting();
@@ -445,7 +447,10 @@ export function HomeContent({
         {/* Left: reading + events */}
         <div className="flex flex-col gap-5">
           {devotionData ? (
-            <DailyReadingWidget initialData={devotionData} />
+            <DailyReadingWidget
+              initialData={devotionData}
+              previewVerses={previewVerses}
+            />
           ) : (
             <Link href="/comunicacao">
               <div className="rounded-xl border border-border bg-card p-4 flex items-center gap-3 shadow-[0_2px_4px_oklch(0.32_0.096_224/0.06),0_4px_12px_oklch(0.32_0.096_224/0.05)] hover:border-primary/20 hover:shadow-md transition-all">

@@ -286,7 +286,7 @@ ENTREGÁVEIS: Checklist de onboarding funcional que rastreia progresso real do p
 
 ## Sessão 7.1 — Módulo Leitura: Bíblia NVI + reader + fluxo diário expandido
 
-> **UI:** Use `/impeccable craft` para implementar as telas desta sessão.
+> **UI:** Use `/impeccable` para implementar as telas desta sessão.
 
 ```
 CONTEXTO: O sistema já possui tabelas daily_readings e devotion_streaks, um widget DailyReadingWidget

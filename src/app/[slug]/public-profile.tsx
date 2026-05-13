@@ -84,10 +84,10 @@ function BadgeChip({
       className="group flex shrink-0 flex-col items-center gap-1.5 px-1"
       title={badge.description}
     >
-      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[oklch(0.88_0.01_220)] bg-[oklch(0.99_0.003_75)] text-2xl shadow-[0_2px_4px_oklch(0.32_0.096_224_/_0.06),0_4px_12px_oklch(0.32_0.096_224_/_0.05)] transition-transform duration-200 group-hover:scale-110">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[oklch(0.88_0.01_220)] bg-[oklch(0.99_0.003_75)] text-2xl shadow-[0_2px_4px_oklch(0.32_0.096_224/0.06),0_4px_12px_oklch(0.32_0.096_224/0.05)] transition-transform duration-200 group-hover:scale-110">
         {badge.icon}
       </div>
-      <span className="max-w-[56px] truncate text-center text-[10px] font-medium leading-tight text-[oklch(0.52_0.016_220)]">
+      <span className="max-w-14 truncate text-center text-[10px] font-medium leading-tight text-[oklch(0.52_0.016_220)]">
         {badge.name}
       </span>
     </motion.div>
@@ -115,7 +115,7 @@ function LigaWidget({
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.25, duration: 0.35 }}
-      className="flex items-center gap-3 rounded-xl border border-[oklch(0.88_0.01_220)] bg-[oklch(0.99_0.003_75)] px-4 py-3 shadow-[0_2px_4px_oklch(0.32_0.096_224_/_0.06),0_4px_12px_oklch(0.32_0.096_224_/_0.05)]"
+      className="flex items-center gap-3 rounded-xl border border-[oklch(0.88_0.01_220)] bg-[oklch(0.99_0.003_75)] px-4 py-3 shadow-[0_2px_4px_oklch(0.32_0.096_224/0.06),0_4px_12px_oklch(0.32_0.096_224/0.05)]"
     >
       {/* Tribe color dot */}
       <div
@@ -136,7 +136,7 @@ function LigaWidget({
         <p className="text-xs font-medium text-[oklch(0.52_0.016_220)]">
           Pontos
         </p>
-        <p className="text-sm font-bold text-[oklch(0.32_0.096_224)]">
+        <p className="text-sm font-bold text-primary-700">
           {totalPoints.toLocaleString("pt-BR")}
         </p>
       </div>
@@ -167,10 +167,10 @@ export function PublicProfile({ data }: { data: PublicProfileData }) {
               <img
                 src={data.avatar_url}
                 alt={data.name}
-                className="h-24 w-24 rounded-full border-4 border-[oklch(0.982_0.004_80)] object-cover shadow-[0_4px_16px_oklch(0.32_0.096_224_/_0.18)]"
+                className="h-24 w-24 rounded-full border-4 border-[oklch(0.982_0.004_80)] object-cover shadow-[0_4px_16px_oklch(0.32_0.096_224/0.18)]"
               />
             ) : (
-              <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-[oklch(0.982_0.004_80)] bg-[oklch(0.32_0.096_224)] shadow-[0_4px_16px_oklch(0.32_0.096_224_/_0.18)]">
+              <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-[oklch(0.982_0.004_80)] bg-primary-700 shadow-[0_4px_16px_oklch(0.32_0.096_224/0.18)]">
                 <span className="font-display text-2xl font-light tracking-tight text-[oklch(0.97_0.006_220)]">
                   {initials(data.name)}
                 </span>
@@ -199,7 +199,7 @@ export function PublicProfile({ data }: { data: PublicProfileData }) {
               {data.email && (
                 <a
                   href={`mailto:${data.email}`}
-                  className="flex items-center gap-2 text-sm text-[oklch(0.42_0.016_220)] hover:text-[oklch(0.32_0.096_224)] transition-colors"
+                  className="flex items-center gap-2 text-sm text-[oklch(0.42_0.016_220)] hover:text-primary-700 transition-colors"
                 >
                   <Mail className="h-3.5 w-3.5 shrink-0" />
                   {data.email}
@@ -232,7 +232,7 @@ export function PublicProfile({ data }: { data: PublicProfileData }) {
             className="mb-5"
           >
             <div className="mb-3 flex items-center gap-2">
-              <Award className="h-4 w-4 text-[oklch(0.62_0.148_58)]" />
+              <Award className="h-4 w-4 text-accent-500" />
               <h2 className="text-xs font-semibold uppercase tracking-widest text-[oklch(0.52_0.016_220)]">
                 Conquistas
               </h2>
@@ -251,7 +251,7 @@ export function PublicProfile({ data }: { data: PublicProfileData }) {
         {data.team_name && (
           <section className="mb-5">
             <div className="mb-3 flex items-center gap-2">
-              <Users className="h-4 w-4 text-[oklch(0.62_0.148_58)]" />
+              <Users className="h-4 w-4 text-accent-500" />
               <h2 className="text-xs font-semibold uppercase tracking-widest text-[oklch(0.52_0.016_220)]">
                 Liga
               </h2>
@@ -269,13 +269,13 @@ export function PublicProfile({ data }: { data: PublicProfileData }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3, duration: 0.35 }}
-          className="border-t border-[oklch(0.88_0.01_220_/_0.6)] pt-6 text-center"
+          className="border-t border-[oklch(0.88_0.01_220/0.6)] pt-6 text-center"
         >
           <p className="text-xs text-[oklch(0.52_0.016_220)]">
             Membro de{" "}
             <Link
               href={`/${data.church_slug}`}
-              className="font-medium text-[oklch(0.32_0.096_224)] hover:underline"
+              className="font-medium text-primary-700 hover:underline"
             >
               {data.church_name}
             </Link>

@@ -18,13 +18,13 @@ const nextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              `script-src 'self' 'unsafe-inline'${
+              `script-src 'self' 'unsafe-inline' challenges.cloudflare.com static.cloudflareinsights.com${
                 process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""
               }`,
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: *.supabase.co",
-              "connect-src 'self' *.supabase.co *.upstash.io",
-              "frame-src www.youtube.com youtube.com www.google.com maps.google.com",
+              "connect-src 'self' *.supabase.co *.upstash.io challenges.cloudflare.com *.challenges.cloudflare.com cloudflareinsights.com",
+              "frame-src www.youtube.com youtube.com www.google.com maps.google.com challenges.cloudflare.com *.challenges.cloudflare.com",
             ].join("; "),
           },
           {
@@ -33,7 +33,7 @@ const nextConfig = {
           },
           {
             key: "X-Frame-Options",
-            value: "DENY",
+            value: "SAMEORIGIN",
           },
           {
             key: "X-Content-Type-Options",

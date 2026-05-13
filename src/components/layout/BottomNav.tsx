@@ -6,8 +6,8 @@ import {
   LayoutDashboard,
   CalendarDays,
   Megaphone,
-  MoreHorizontal,
   User,
+  BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -22,14 +22,9 @@ interface BottomNavItem {
 
 const navItems: BottomNavItem[] = [
   { label: "Início", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Leitura", href: "/leitura", icon: BookOpen },
   { label: "Agenda", href: "/agenda", icon: CalendarDays },
   { label: "Comunicação", href: "/comunicacao", icon: Megaphone },
-  {
-    label: "Mais",
-    href: "/configuracoes",
-    icon: MoreHorizontal,
-    roles: ["admin", "pastor"],
-  },
   { label: "Perfil", href: "/perfil", icon: User },
 ];
 

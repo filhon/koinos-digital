@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen, CheckCircle2, Sparkles } from "lucide-react";
-import { toast } from "sonner";
-import { markRead } from "@/actions/devotion";
+import { BookOpen, CheckCircle2, Sparkles, ArrowRight } from "lucide-react";
 import type { TodayReadingData } from "@/lib/validators/devotion";
 import { cn } from "@/lib/utils";
 
@@ -72,47 +71,28 @@ function StreakFlame({ count }: { count: number }) {
 
 interface DailyReadingWidgetProps {
   initialData: TodayReadingData;
+  previewVerses?: Array<{ verse: number; text: string }>;
 }
 
-export function DailyReadingWidget({ initialData }: DailyReadingWidgetProps) {
-  const [alreadyRead, setAlreadyRead] = useState(initialData.already_read);
-  const [streak, setStreak] = useState(initialData.streak.current_streak);
-  const [isPending, startTransition] = useTransition();
+export function DailyReadingWidget({
+  initialData,
+  previewVerses,
+}: DailyReadingWidgetProps) {
+  const [alreadyRead] = useState(initialData.already_read);
+  const [streak] = useState(initialData.streak.current_streak);
+  const [isPending] = useTransition();
+  const router = useRouter();
 
   const { reading } = initialData;
 
+  function handleNavigate() {
+    router.push("/leitura");
+  }
+
   function handleMarkRead() {
     if (!reading || alreadyRead) return;
-
-    startTransition(async () => {
-      const result = await markRead({ daily_reading_id: reading.id });
-
-      if (!result || "code" in result || !result.data) {
-        const errMsg =
-          result && "error" in result
-            ? result.error
-            : "Erro ao registrar leitura.";
-        // Se já foi lida, atualizar estado silenciosamente
-        if (errMsg?.includes("já registrada")) {
-          setAlreadyRead(true);
-          return;
-        }
-        toast.error(errMsg ?? "Erro ao registrar leitura.");
-        return;
-      }
-
-      setAlreadyRead(true);
-      setStreak(result.data.current_streak);
-
-      if (result.data.bonus_points > 0) {
-        toast.success(
-          `+${result.data.bonus_points} pts bônus! 🎉 Streak de ${result.data.current_streak} dias!`,
-          { duration: 4000 }
-        );
-      } else {
-        toast.success(`Leitura registrada! +10 pts`);
-      }
-    });
+    // Navega para a página de leitura completa em vez de marcar diretamente
+    router.push("/leitura");
   }
 
   // Sem leitura programada para hoje
@@ -218,12 +198,37 @@ export function DailyReadingWidget({ initialData }: DailyReadingWidgetProps) {
                 >
                   <FlameIcon size={18} />
                 </motion.span>
-                <span className="text-[11px]">{isPending ? "..." : "Li!"}</span>
+                <span className="text-[11px]">{isPending ? "..." : "Ler"}</span>
               </motion.button>
             )}
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Preview dos primeiros versículos */}
+      {previewVerses && previewVerses.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-amber-100 dark:border-amber-900/30">
+          <p className="text-[11px] leading-relaxed text-foreground/70 line-clamp-3">
+            {previewVerses.map((v) => (
+              <span key={v.verse}>
+                <sup className="text-[9px] font-bold text-amber-600/60 mr-0.5">
+                  {v.verse}
+                </sup>
+                {v.text}{" "}
+              </span>
+            ))}
+          </p>
+        </div>
+      )}
+
+      {/* Link para leitura completa */}
+      <button
+        onClick={handleNavigate}
+        className="mt-3 flex items-center gap-1 text-[11px] font-medium text-amber-600 dark:text-amber-400 hover:underline"
+      >
+        <span>Ler capítulo completo</span>
+        <ArrowRight className="w-3 h-3" />
+      </button>
 
       {/* Milestone sparkle banner */}
       <AnimatePresence>

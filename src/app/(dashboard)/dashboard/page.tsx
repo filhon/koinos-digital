@@ -5,6 +5,28 @@ import { getLeaderboard, getMyTeam } from "@/actions/gamification";
 import { createClient } from "@/lib/supabase/server";
 import { HomeContent } from "./home-content";
 
+async function getPreviewVerses(
+  book: string,
+  chapter: number
+): Promise<Array<{ verse: number; text: string }>> {
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("bible_verses")
+      .select("verse, text")
+      .eq("book", book)
+      .eq("chapter", chapter)
+      .order("verse", { ascending: true })
+      .limit(2);
+    return (data ?? []).map((v) => ({
+      verse: v.verse as number,
+      text: v.text as string,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 async function getMemberData(
   churchId: string,
   email: string | undefined
@@ -56,6 +78,13 @@ export default async function DashboardPage() {
       ? devotionResult.data
       : null;
 
+  const previewVerses = devotionData?.reading
+    ? await getPreviewVerses(
+        devotionData.reading.book,
+        devotionData.reading.chapter
+      )
+    : [];
+
   const upcomingEvents =
     eventsResult && "data" in eventsResult && eventsResult.data
       ? eventsResult.data.events
@@ -80,6 +109,7 @@ export default async function DashboardPage() {
       myTeam={myTeam}
       teamRanking={teamRanking}
       devotionData={devotionData}
+      previewVerses={previewVerses}
     />
   );
 }

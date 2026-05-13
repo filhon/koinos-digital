@@ -19,6 +19,7 @@ export default function LoginPage() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const turnstileToken = useRef<string>("");
+  const [turnstileReady, setTurnstileReady] = useState(false);
 
   const {
     register,
@@ -164,13 +165,18 @@ export default function LoginPage() {
           <motion.div variants={fadeUp}>
             <Turnstile
               siteKey={
-                process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ??
-                "1x00000000000000000000AA"
+                process.env.NODE_ENV === "development"
+                  ? "1x00000000000000000000AA"
+                  : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ??
+                    "1x00000000000000000000AA")
               }
               options={{ theme: "light", appearance: "interaction-only" }}
               onSuccess={(token) => {
                 turnstileToken.current = token;
+                setTurnstileReady(true);
               }}
+              onError={() => setTurnstileReady(false)}
+              onExpire={() => setTurnstileReady(false)}
             />
           </motion.div>
 
@@ -178,7 +184,7 @@ export default function LoginPage() {
           <motion.div variants={fadeUp} className="pt-1">
             <button
               type="submit"
-              disabled={isPending}
+              disabled={isPending || !turnstileReady}
               className="flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold text-white transition-all
                 disabled:opacity-60 disabled:cursor-not-allowed
                 hover:opacity-90 active:scale-[0.99]"
