@@ -18,8 +18,9 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const turnstileToken = useRef<string>("");
-  const [turnstileReady, setTurnstileReady] = useState(false);
+  const isDev = process.env.NODE_ENV === "development";
+  const turnstileToken = useRef<string>(isDev ? "dev-bypass" : "");
+  const [turnstileReady, setTurnstileReady] = useState(isDev);
 
   const {
     register,
@@ -162,23 +163,23 @@ export default function LoginPage() {
           </motion.div>
 
           {/* Turnstile */}
-          <motion.div variants={fadeUp}>
-            <Turnstile
-              siteKey={
-                process.env.NODE_ENV === "development"
-                  ? "1x00000000000000000000AA"
-                  : (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ??
-                    "1x00000000000000000000AA")
-              }
-              options={{ theme: "light", appearance: "interaction-only" }}
-              onSuccess={(token) => {
-                turnstileToken.current = token;
-                setTurnstileReady(true);
-              }}
-              onError={() => setTurnstileReady(false)}
-              onExpire={() => setTurnstileReady(false)}
-            />
-          </motion.div>
+          {!isDev && (
+            <motion.div variants={fadeUp}>
+              <Turnstile
+                siteKey={
+                  process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ??
+                  "1x00000000000000000000AA"
+                }
+                options={{ theme: "light", appearance: "always" }}
+                onSuccess={(token) => {
+                  turnstileToken.current = token;
+                  setTurnstileReady(true);
+                }}
+                onError={() => setTurnstileReady(false)}
+                onExpire={() => setTurnstileReady(false)}
+              />
+            </motion.div>
+          )}
 
           {/* Submit */}
           <motion.div variants={fadeUp} className="pt-1">

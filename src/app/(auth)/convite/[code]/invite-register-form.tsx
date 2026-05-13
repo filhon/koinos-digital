@@ -536,9 +536,15 @@ export function InviteRegisterForm({ inviteCode }: Props) {
                   process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ??
                   "1x00000000000000000000AA"
                 }
-                options={{ theme: "light", appearance: "interaction-only" }}
+                options={{ theme: "light", appearance: "always" }}
                 onSuccess={(token) => {
                   turnstileToken.current = token;
+                }}
+                onError={() => {
+                  turnstileToken.current = "";
+                }}
+                onExpire={() => {
+                  turnstileToken.current = "";
                 }}
               />
             </motion.div>
