@@ -158,6 +158,36 @@
   --chart-5: oklch(0.55 0.148 28);
 }
 
+/* ─── Landing page: sempre light mode, mesmo se html.dark ─── */
+.force-light,
+.dark .force-light {
+  --background: oklch(0.982 0.004 80);
+  --foreground: oklch(0.18 0.012 230);
+  --card: oklch(0.99 0.003 75);
+  --card-foreground: oklch(0.18 0.012 230);
+  --popover: oklch(0.995 0.002 70);
+  --popover-foreground: oklch(0.18 0.012 230);
+  --primary: oklch(0.32 0.096 224);
+  --primary-foreground: oklch(0.97 0.006 220);
+  --secondary: oklch(0.94 0.008 220);
+  --secondary-foreground: oklch(0.28 0.068 224);
+  --muted: oklch(0.94 0.006 75);
+  --muted-foreground: oklch(0.52 0.016 220);
+  --accent: oklch(0.62 0.148 58);
+  --accent-foreground: oklch(0.97 0.008 70);
+  --destructive: oklch(0.55 0.148 28);
+  --destructive-foreground: oklch(0.97 0.006 28);
+  --border: oklch(0.88 0.01 220);
+  --input: oklch(0.9 0.008 75);
+  --ring: oklch(0.52 0.118 228);
+  --surface-0: oklch(0.975 0.005 78);
+  --surface-1: oklch(0.99 0.003 75);
+  --surface-2: oklch(0.998 0.002 70);
+  --text-body: oklch(0.42 0.016 220);
+  --text-subtle: oklch(0.42 0.04 228);
+  color-scheme: light;
+}
+
 /* ─── Dark mode ─── */
 .dark {
   /* Superfícies com temperatura quente — NÃO preto puro */

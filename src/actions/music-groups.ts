@@ -1,7 +1,11 @@
 "use server";
 
+import { revalidateTag, unstable_cache } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createCachedClient } from "@/lib/supabase/cached";
 import { withPermission } from "@/lib/auth/with-permission";
+import { tag, CACHE_TTL } from "@/lib/cache";
+import { getAccessToken } from "@/lib/auth/session";
 import { logAudit } from "@/actions/audit";
 import {
   createMusicGroupSchema,
@@ -57,50 +61,61 @@ export const listMusicGroups = withPermission(
     user: AuthUser,
     search?: string
   ): Promise<ActionResult<MusicGroupWithRelations[]>> => {
-    const supabase = await createClient();
+    const accessToken = await getAccessToken();
+    if (!accessToken) return { data: null, error: "Não autenticado." };
 
-    let query = supabase
-      .from("music_groups")
-      .select(
-        `
-        *,
-        leader:members!music_groups_leader_id_fkey(id, name, avatar_url, role)
-        `
-      )
-      .eq("is_active", true)
-      .order("name", { ascending: true });
+    const cachedFetch = unstable_cache(
+      async (token: string) => {
+        const supabase = createCachedClient(token);
 
-    if (search?.trim()) {
-      query = query.ilike("name", `%${search.trim()}%`);
-    }
+        let query = supabase
+          .from("music_groups")
+          .select(
+            `
+            *,
+            leader:members!music_groups_leader_id_fkey(id, name, avatar_url, role)
+            `
+          )
+          .eq("church_id", user.church_id)
+          .eq("is_active", true)
+          .order("name", { ascending: true });
 
-    const { data: groups, error: groupsError } = await query;
+        if (search?.trim()) {
+          query = query.ilike("name", `%${search.trim()}%`);
+        }
 
-    if (groupsError) {
-      return { data: null, error: groupsError.message };
-    }
+        const { data: groups, error: groupsError } = await query;
 
-    // Contagem de membros por grupo
-    const { data: memberRows } = await supabase
-      .from("music_group_members")
-      .select("music_group_id")
-      .eq("church_id", user.church_id);
+        if (groupsError) {
+          return { data: null, error: groupsError.message };
+        }
 
-    const countMap = (memberRows ?? []).reduce<Record<string, number>>(
-      (acc, row) => {
-        acc[row.music_group_id] = (acc[row.music_group_id] ?? 0) + 1;
-        return acc;
+        const { data: memberRows } = await supabase
+          .from("music_group_members")
+          .select("music_group_id")
+          .eq("church_id", user.church_id);
+
+        const countMap = (memberRows ?? []).reduce<Record<string, number>>(
+          (acc, row) => {
+            acc[row.music_group_id] = (acc[row.music_group_id] ?? 0) + 1;
+            return acc;
+          },
+          {}
+        );
+
+        const result = (groups ?? []).map((g) => ({
+          ...(g as MusicGroupRow),
+          leader: (g.leader as MemberSummary) ?? null,
+          member_count: countMap[g.id] ?? 0,
+        }));
+
+        return { data: result, error: null };
       },
-      {}
+      ["list-music-groups", user.church_id, search ?? ""],
+      { tags: [tag.musicGroups(user.church_id)], revalidate: CACHE_TTL.list }
     );
 
-    const result = (groups ?? []).map((g) => ({
-      ...(g as MusicGroupRow),
-      leader: (g.leader as MemberSummary) ?? null,
-      member_count: countMap[g.id] ?? 0,
-    }));
-
-    return { data: result, error: null };
+    return cachedFetch(accessToken);
   },
   { module: "grupos-musicais", minRole: "visitante" }
 );
@@ -208,6 +223,7 @@ export const createMusicGroup = withPermission(
       metadata: { name: row.name },
     }).catch(() => {});
 
+    revalidateTag(tag.musicGroups(user.church_id), "default");
     return { data: row as MusicGroupRow, error: null };
   },
   { module: "grupos-musicais", minRole: "presbítero" }
@@ -268,6 +284,7 @@ export const updateMusicGroup = withPermission(
       metadata: { fields: Object.keys(parsed.data) },
     }).catch(() => {});
 
+    revalidateTag(tag.musicGroups(user.church_id), "default");
     return { data: row as MusicGroupRow, error: null };
   },
   { module: "grupos-musicais", minRole: "presbítero" }
@@ -311,6 +328,7 @@ export const deleteMusicGroup = withPermission(
       metadata: { name: existing.name },
     }).catch(() => {});
 
+    revalidateTag(tag.musicGroups(user.church_id), "default");
     return { data: { id: groupId }, error: null };
   },
   { module: "grupos-musicais", minRole: "presbítero" }
@@ -384,6 +402,7 @@ export const addMusicGroupMember = withPermission(
       metadata: { memberId: parsed.data.memberId },
     }).catch(() => {});
 
+    revalidateTag(tag.musicGroups(user.church_id), "default");
     return { data: { id: row.id }, error: null };
   },
   { module: "grupos-musicais", minRole: "líder" }
@@ -450,6 +469,7 @@ export const removeMusicGroupMember = withPermission(
       metadata: { memberId: parsed.data.memberId },
     }).catch(() => {});
 
+    revalidateTag(tag.musicGroups(user.church_id), "default");
     return { data: { ok: true }, error: null };
   },
   { module: "grupos-musicais", minRole: "líder" }

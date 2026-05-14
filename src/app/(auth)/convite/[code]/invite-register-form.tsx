@@ -111,7 +111,9 @@ export function InviteRegisterForm({ inviteCode }: Props) {
   );
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const turnstileToken = useRef<string>("");
+  const isDev = process.env.NODE_ENV === "development";
+  const turnstileToken = useRef<string>(isDev ? "dev-bypass" : "");
+  const [turnstileReady, setTurnstileReady] = useState(isDev);
   const [usernameValue, setUsernameValue] = useState("");
   const [usernameAvail, setUsernameAvail] = useState<UsernameAvailState>({
     status: "idle",
@@ -214,10 +216,6 @@ export function InviteRegisterForm({ inviteCode }: Props) {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function onSubmit(data: any) {
-    if (!turnstileToken.current) {
-      setServerError("Complete a verificação de segurança antes de continuar.");
-      return;
-    }
     setServerError(null);
     startTransition(async () => {
       const result = await registerMember({
@@ -530,24 +528,31 @@ export function InviteRegisterForm({ inviteCode }: Props) {
             </motion.div>
 
             {/* Turnstile */}
-            <motion.div variants={staggerItem}>
-              <Turnstile
-                siteKey={
-                  process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ??
-                  "1x00000000000000000000AA"
-                }
-                options={{ theme: "light", appearance: "always" }}
-                onSuccess={(token) => {
-                  turnstileToken.current = token;
-                }}
-                onError={() => {
-                  turnstileToken.current = "";
-                }}
-                onExpire={() => {
-                  turnstileToken.current = "";
-                }}
-              />
-            </motion.div>
+            {!isDev && (
+              <motion.div
+                variants={staggerItem}
+                className="w-full overflow-hidden rounded-[6px]"
+              >
+                <Turnstile
+                  siteKey={
+                    process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ??
+                    "1x00000000000000000000AA"
+                  }
+                  options={{
+                    theme: "light",
+                    appearance: "always",
+                    size: "flexible",
+                  }}
+                  style={{ width: "100%" }}
+                  onSuccess={(token) => {
+                    turnstileToken.current = token;
+                    setTurnstileReady(true);
+                  }}
+                  onError={() => setTurnstileReady(false)}
+                  onExpire={() => setTurnstileReady(false)}
+                />
+              </motion.div>
+            )}
 
             {/* Server error */}
             {serverError && (
@@ -572,7 +577,7 @@ export function InviteRegisterForm({ inviteCode }: Props) {
               </button>
               <button
                 type="submit"
-                disabled={isPending}
+                disabled={isPending || !turnstileReady}
                 className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gray-900 px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-85 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isPending ? (

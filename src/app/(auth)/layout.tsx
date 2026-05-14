@@ -59,7 +59,7 @@ export default function AuthLayout({
             animate="show"
           >
             <motion.div variants={fadeUp} className="flex items-center gap-3">
-              <KoinosLogo size={36} />
+              <KoinosLogo size={36} style={{ color: "oklch(0.18 0.04 55)" }} />
 
               <span
                 className="text-5xl lg:text-6xl tracking-tight"

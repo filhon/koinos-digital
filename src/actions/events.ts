@@ -1,8 +1,12 @@
 "use server";
 
+import { revalidateTag, unstable_cache } from "next/cache";
 import { format, parseISO } from "date-fns";
 import { createClient } from "@/lib/supabase/server";
+import { createCachedClient } from "@/lib/supabase/cached";
 import { withPermission } from "@/lib/auth/with-permission";
+import { tag, CACHE_TTL } from "@/lib/cache";
+import { getAccessToken } from "@/lib/auth/session";
 import { logAudit } from "@/actions/audit";
 import { createNotification } from "@/actions/notifications";
 import { generateInstanceDates } from "@/lib/utils/recurrence";
@@ -63,7 +67,7 @@ type ActionResult<T> = { data: T; error: null } | { data: null; error: string };
 
 export const listEvents = withPermission(
   async (
-    _user: AuthUser,
+    user: AuthUser,
     input: ListEventsInput = {}
   ): Promise<ActionResult<ListEventsResult>> => {
     const parsed = listEventsSchema.safeParse(input);
@@ -72,48 +76,69 @@ export const listEvents = withPermission(
     }
 
     const { modality, upcoming, page, pageSize } = parsed.data;
-    const supabase = await createClient();
-    const offset = (page - 1) * pageSize;
     const today = new Date().toISOString().split("T")[0];
 
-    let query = supabase
-      .from("events")
-      .select(
-        `
-        *,
-        responsible:members!events_responsible_id_fkey(id, name, avatar_url, role)
-        `,
-        { count: "exact" }
-      )
-      .eq("is_active", true)
-      .order("date", { ascending: true })
-      .order("start_time", { ascending: true })
-      .range(offset, offset + pageSize - 1);
+    const accessToken = await getAccessToken();
+    if (!accessToken) return { data: null, error: "Não autenticado." };
 
-    if (upcoming) {
-      query = query.gte("date", today);
-    }
+    const cachedFetch = unstable_cache(
+      async (token: string) => {
+        const supabase = createCachedClient(token);
+        const offset = (page - 1) * pageSize;
 
-    if (modality !== "all") {
-      query = query.eq("modality", modality);
-    }
+        let query = supabase
+          .from("events")
+          .select(
+            `
+            *,
+            responsible:members!events_responsible_id_fkey(id, name, avatar_url, role)
+            `,
+            { count: "exact" }
+          )
+          .eq("is_active", true)
+          .eq("church_id", user.church_id)
+          .order("date", { ascending: true })
+          .order("start_time", { ascending: true })
+          .range(offset, offset + pageSize - 1);
 
-    const { data, error, count } = await query;
+        if (upcoming) {
+          query = query.gte("date", today);
+        }
 
-    if (error) {
-      return { data: null, error: error.message };
-    }
+        if (modality !== "all") {
+          query = query.eq("modality", modality);
+        }
 
-    return {
-      data: {
-        events: (data ?? []) as EventWithResponsible[],
-        total: count ?? 0,
-        page,
-        pageSize,
-        totalPages: Math.ceil((count ?? 0) / pageSize),
+        const { data, error, count } = await query;
+
+        if (error) {
+          return { data: null, error: error.message };
+        }
+
+        return {
+          data: {
+            events: (data ?? []) as EventWithResponsible[],
+            total: count ?? 0,
+            page,
+            pageSize,
+            totalPages: Math.ceil((count ?? 0) / pageSize),
+          },
+          error: null,
+        };
       },
-      error: null,
-    };
+      [
+        "list-events",
+        user.church_id,
+        modality,
+        String(upcoming),
+        String(page),
+        String(pageSize),
+        today,
+      ],
+      { tags: [tag.events(user.church_id)], revalidate: CACHE_TTL.list }
+    );
+
+    return cachedFetch(accessToken);
   },
   { module: "eventos", minRole: "visitante" }
 );
@@ -206,6 +231,7 @@ export const createEvent = withPermission(
       metadata: { name: row.name, modality: row.modality, date: row.date },
     }).catch(() => {});
 
+    revalidateTag(tag.events(user.church_id), "default");
     return { data: row as EventRow, error: null };
   },
   { module: "eventos", minRole: "líder" }
@@ -356,6 +382,7 @@ export const updateEvent = withPermission(
       metadata: { fields: Object.keys(parsed.data) },
     }).catch(() => {});
 
+    revalidateTag(tag.events(user.church_id), "default");
     return { data: row as EventRow, error: null };
   },
   { module: "eventos", minRole: "líder" }
@@ -474,6 +501,7 @@ export const updateRecurringEvents = withPermission(
       entityId: eventId,
       metadata: { scope, fields: Object.keys(safeFields) },
     }).catch(() => {});
+    revalidateTag(tag.events(user.church_id), "default");
     return { data: { updated: -1 }, error: null }; // count aproximado
   },
   { module: "eventos", minRole: "líder" }
@@ -517,6 +545,7 @@ export const deleteEvent = withPermission(
       metadata: { name: existing.name },
     }).catch(() => {});
 
+    revalidateTag(tag.events(user.church_id), "default");
     return { data: { id: eventId }, error: null };
   },
   { module: "eventos", minRole: "líder" }
@@ -623,6 +652,7 @@ export const deleteRecurringEvents = withPermission(
       entityId: eventId,
       metadata: { scope, name: current.name },
     }).catch(() => {});
+    revalidateTag(tag.events(user.church_id), "default");
     return { data: { deleted: -1 }, error: null };
   },
   { module: "eventos", minRole: "líder" }

@@ -29,6 +29,12 @@ export async function getSession() {
   return session;
 }
 
+/** Retorna apenas o access token da sessão atual, para uso em unstable_cache. */
+export async function getAccessToken(): Promise<string | null> {
+  const session = await getSession();
+  return session?.access_token ?? null;
+}
+
 /** Retorna o usuário com church_id e role extraídos do JWT, ou null. */
 export async function getUser(): Promise<AuthUser | null> {
   const supabase = await createClient();

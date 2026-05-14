@@ -1,63 +1,86 @@
-import { getUser } from "@/lib/auth/session";
+import { unstable_cache } from "next/cache";
+import { getUser, getAccessToken } from "@/lib/auth/session";
 import { getTodayReading } from "@/actions/devotion";
 import { listEvents } from "@/actions/events";
 import { getLeaderboard, getMyTeam } from "@/actions/gamification";
-import { createClient } from "@/lib/supabase/server";
+import { createCachedClient } from "@/lib/supabase/cached";
+import { tag, CACHE_TTL } from "@/lib/cache";
 import { HomeContent } from "./home-content";
 
 async function getPreviewVerses(
   book: string,
-  chapter: number
+  chapter: number,
+  accessToken: string
 ): Promise<Array<{ verse: number; text: string }>> {
-  try {
-    const supabase = await createClient();
-    const { data } = await supabase
-      .from("bible_verses")
-      .select("verse, text")
-      .eq("book", book)
-      .eq("chapter", chapter)
-      .order("verse", { ascending: true })
-      .limit(2);
-    return (data ?? []).map((v) => ({
-      verse: v.verse as number,
-      text: v.text as string,
-    }));
-  } catch {
-    return [];
-  }
+  const cached = unstable_cache(
+    async (token: string) => {
+      try {
+        const supabase = createCachedClient(token);
+        const { data } = await supabase
+          .from("bible_verses")
+          .select("verse, text")
+          .eq("book", book)
+          .eq("chapter", chapter)
+          .order("verse", { ascending: true })
+          .limit(2);
+        return (data ?? []).map((v) => ({
+          verse: v.verse as number,
+          text: v.text as string,
+        }));
+      } catch {
+        return [];
+      }
+    },
+    ["bible-preview", book, String(chapter)],
+    { revalidate: 86400 }
+  );
+  return cached(accessToken);
 }
 
 async function getMemberData(
   churchId: string,
-  email: string | undefined
+  email: string | undefined,
+  accessToken: string
 ): Promise<{ count: number; name: string | null }> {
-  const supabase = await createClient();
+  const cached = unstable_cache(
+    async (token: string) => {
+      const supabase = createCachedClient(token);
 
-  const [countResult, nameResult] = await Promise.all([
-    supabase
-      .from("members")
-      .select("id", { count: "exact", head: true })
-      .eq("church_id", churchId)
-      .eq("is_active", true),
-    email
-      ? supabase
+      const [countResult, nameResult] = await Promise.all([
+        supabase
           .from("members")
-          .select("name")
+          .select("id", { count: "exact", head: true })
           .eq("church_id", churchId)
-          .eq("email", email)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
-  ]);
+          .eq("is_active", true),
+        email
+          ? supabase
+              .from("members")
+              .select("name")
+              .eq("church_id", churchId)
+              .eq("email", email)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+      ]);
 
-  return {
-    count: countResult.count ?? 0,
-    name: (nameResult.data?.name as string | null) ?? null,
-  };
+      return {
+        count: countResult.count ?? 0,
+        name: (nameResult.data?.name as string | null) ?? null,
+      };
+    },
+    ["member-data", churchId, email ?? ""],
+    {
+      tags: [tag.dashboard(churchId), tag.members(churchId)],
+      revalidate: CACHE_TTL.dashboard,
+    }
+  );
+  return cached(accessToken);
 }
 
 export default async function DashboardPage() {
   const user = await getUser();
   if (!user) return null;
+
+  const accessToken = await getAccessToken();
 
   const [
     devotionResult,
@@ -70,7 +93,7 @@ export default async function DashboardPage() {
     listEvents({ upcoming: true, pageSize: 5 }),
     getLeaderboard({ period: "monthly" }),
     getMyTeam(),
-    getMemberData(user.church_id, user.email),
+    getMemberData(user.church_id, user.email, accessToken ?? ""),
   ]);
 
   const devotionData =
@@ -78,12 +101,14 @@ export default async function DashboardPage() {
       ? devotionResult.data
       : null;
 
-  const previewVerses = devotionData?.reading
-    ? await getPreviewVerses(
-        devotionData.reading.book,
-        devotionData.reading.chapter
-      )
-    : [];
+  const previewVerses =
+    devotionData?.reading && accessToken
+      ? await getPreviewVerses(
+          devotionData.reading.book,
+          devotionData.reading.chapter,
+          accessToken
+        )
+      : [];
 
   const upcomingEvents =
     eventsResult && "data" in eventsResult && eventsResult.data

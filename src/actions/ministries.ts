@@ -1,8 +1,12 @@
 "use server";
 
+import { revalidateTag, unstable_cache } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createCachedClient } from "@/lib/supabase/cached";
 import { withPermission } from "@/lib/auth/with-permission";
 import { logAudit } from "@/actions/audit";
+import { tag, CACHE_TTL } from "@/lib/cache";
+import { getAccessToken } from "@/lib/auth/session";
 import {
   createMinistrySchema,
   updateMinistrySchema,
@@ -72,52 +76,63 @@ export const listMinistries = withPermission(
     user: AuthUser,
     search?: string
   ): Promise<ActionResult<MinistryWithRelations[]>> => {
-    const supabase = await createClient();
+    const accessToken = await getAccessToken();
+    if (!accessToken) return { data: null, error: "Não autenticado." };
 
-    let query = supabase
-      .from("ministries")
-      .select(
-        `
-        *,
-        counselor:members!ministries_counselor_id_fkey(id, name, avatar_url, role),
-        leader:members!ministries_leader_id_fkey(id, name, avatar_url, role)
-        `
-      )
-      .eq("is_active", true)
-      .order("name", { ascending: true });
+    const cachedFetch = unstable_cache(
+      async (token: string) => {
+        const supabase = createCachedClient(token);
 
-    if (search?.trim()) {
-      query = query.ilike("name", `%${search.trim()}%`);
-    }
+        let query = supabase
+          .from("ministries")
+          .select(
+            `
+            *,
+            counselor:members!ministries_counselor_id_fkey(id, name, avatar_url, role),
+            leader:members!ministries_leader_id_fkey(id, name, avatar_url, role)
+            `
+          )
+          .eq("church_id", user.church_id)
+          .eq("is_active", true)
+          .order("name", { ascending: true });
 
-    const { data: ministries, error: ministriesError } = await query;
+        if (search?.trim()) {
+          query = query.ilike("name", `%${search.trim()}%`);
+        }
 
-    if (ministriesError) {
-      return { data: null, error: ministriesError.message };
-    }
+        const { data: ministries, error: ministriesError } = await query;
 
-    // Busca contagem de membros
-    const { data: memberRows } = await supabase
-      .from("ministry_members")
-      .select("ministry_id")
-      .eq("church_id", user.church_id);
+        if (ministriesError) {
+          return { data: null, error: ministriesError.message };
+        }
 
-    const countMap = (memberRows ?? []).reduce<Record<string, number>>(
-      (acc, row) => {
-        acc[row.ministry_id] = (acc[row.ministry_id] ?? 0) + 1;
-        return acc;
+        const { data: memberRows } = await supabase
+          .from("ministry_members")
+          .select("ministry_id")
+          .eq("church_id", user.church_id);
+
+        const countMap = (memberRows ?? []).reduce<Record<string, number>>(
+          (acc, row) => {
+            acc[row.ministry_id] = (acc[row.ministry_id] ?? 0) + 1;
+            return acc;
+          },
+          {}
+        );
+
+        const result = (ministries ?? []).map((m) => ({
+          ...(m as MinistryRow),
+          counselor: (m.counselor as MemberSummary) ?? null,
+          leader: (m.leader as MemberSummary) ?? null,
+          member_count: countMap[m.id] ?? 0,
+        }));
+
+        return { data: result, error: null };
       },
-      {}
+      ["list-ministries", user.church_id, search ?? ""],
+      { tags: [tag.ministries(user.church_id)], revalidate: CACHE_TTL.list }
     );
 
-    const result = (ministries ?? []).map((m) => ({
-      ...(m as MinistryRow),
-      counselor: (m.counselor as MemberSummary) ?? null,
-      leader: (m.leader as MemberSummary) ?? null,
-      member_count: countMap[m.id] ?? 0,
-    }));
-
-    return { data: result, error: null };
+    return cachedFetch(accessToken);
   },
   { module: "ministerios", minRole: "visitante" }
 );
@@ -302,6 +317,7 @@ export const createMinistry = withPermission(
       metadata: { name: row.name },
     }).catch(() => {});
 
+    revalidateTag(tag.ministries(user.church_id), "default");
     return { data: row as MinistryRow, error: null };
   },
   { module: "ministerios", minRole: "presbítero" }
@@ -360,6 +376,7 @@ export const updateMinistry = withPermission(
       metadata: { fields: Object.keys(parsed.data) },
     }).catch(() => {});
 
+    revalidateTag(tag.ministries(user.church_id), "default");
     return { data: row as MinistryRow, error: null };
   },
   { module: "ministerios", minRole: "presbítero" }
@@ -403,6 +420,7 @@ export const deleteMinistry = withPermission(
       metadata: { name: existing.name },
     }).catch(() => {});
 
+    revalidateTag(tag.ministries(user.church_id), "default");
     return { data: { id: ministryId }, error: null };
   },
   { module: "ministerios", minRole: "presbítero" }
@@ -479,6 +497,7 @@ export const addMinistryMember = withPermission(
       metadata: { memberId: parsed.data.memberId },
     }).catch(() => {});
 
+    revalidateTag(tag.ministries(user.church_id), "default");
     return { data: { id: row.id }, error: null };
   },
   { module: "ministerios", minRole: "líder" }
@@ -546,6 +565,7 @@ export const removeMinistryMember = withPermission(
       metadata: { memberId: parsed.data.memberId },
     }).catch(() => {});
 
+    revalidateTag(tag.ministries(user.church_id), "default");
     return { data: { ok: true }, error: null };
   },
   { module: "ministerios", minRole: "líder" }

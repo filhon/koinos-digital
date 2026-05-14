@@ -1,8 +1,12 @@
 "use server";
 
+import { revalidateTag, unstable_cache } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createCachedClient } from "@/lib/supabase/cached";
 import { withPermission } from "@/lib/auth/with-permission";
 import { logAudit } from "@/actions/audit";
+import { tag, CACHE_TTL } from "@/lib/cache";
+import { getAccessToken } from "@/lib/auth/session";
 import { encrypt, decrypt } from "@/lib/encryption/aes";
 import { SUBSCRIPTION_PLANS } from "@/lib/stripe/config";
 import {
@@ -143,90 +147,110 @@ export const listMembers = withPermission(
       effectiveChurchId = church_id_filter;
     }
 
-    const supabase = await createClient();
+    const accessToken = await getAccessToken();
+    if (!accessToken) return { data: null, error: "Não autenticado." };
 
-    let query = supabase
-      .from("members")
-      .select("*", { count: "exact" })
-      .eq("church_id", effectiveChurchId)
-      .order("name");
+    const cachedFetch = unstable_cache(
+      async (token: string) => {
+        const supabase = createCachedClient(token);
 
-    if (status === "active") query = query.eq("is_active", true);
-    if (status === "inactive") query = query.eq("is_active", false);
-    if (role !== "all") query = query.eq("role", role);
-    if (search && search.trim().length > 0) {
-      query = query.ilike("name", `%${search.trim()}%`);
-    }
+        let query = supabase
+          .from("members")
+          .select("*", { count: "exact" })
+          .eq("church_id", effectiveChurchId)
+          .order("name");
 
-    const from = (page - 1) * pageSize;
-    const to = from + pageSize - 1;
-    query = query.range(from, to);
+        if (status === "active") query = query.eq("is_active", true);
+        if (status === "inactive") query = query.eq("is_active", false);
+        if (role !== "all") query = query.eq("role", role);
+        if (search && search.trim().length > 0) {
+          query = query.ilike("name", `%${search.trim()}%`);
+        }
 
-    const { data, error, count } = await query;
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize - 1;
+        query = query.range(from, to);
 
-    if (error) {
-      return { data: null, error: `Erro ao listar membros: ${error.message}` };
-    }
+        const { data, error, count } = await query;
 
-    const members = (data ?? []) as MemberRow[];
-    const total = count ?? 0;
-    const totalPages = Math.ceil(total / pageSize);
+        if (error) {
+          return {
+            data: null,
+            error: `Erro ao listar membros: ${error.message}`,
+          };
+        }
 
-    // Build family groups using family_links
-    const memberIds = members.map((m) => m.id);
+        const members = (data ?? []) as MemberRow[];
+        const total = count ?? 0;
+        const totalPages = Math.ceil(total / pageSize);
 
-    let links: { member_id: string; related_member_id: string }[] = [];
-    if (memberIds.length > 0) {
-      const { data: linksData } = await supabase
-        .from("family_links")
-        .select("member_id, related_member_id")
-        .eq("church_id", effectiveChurchId)
-        .in("member_id", memberIds);
-      links = linksData ?? [];
-    }
+        const memberIds = members.map((m) => m.id);
 
-    // Union-Find grouping
-    const parent: Record<string, string> = {};
-    const find = (x: string): string => {
-      if (!parent[x]) return x;
-      parent[x] = find(parent[x]);
-      return parent[x];
-    };
-    const union = (a: string, b: string) => {
-      const ra = find(a);
-      const rb = find(b);
-      if (ra !== rb) {
-        if (ra < rb) parent[rb] = ra;
-        else parent[ra] = rb;
-      }
-    };
+        let links: { member_id: string; related_member_id: string }[] = [];
+        if (memberIds.length > 0) {
+          const { data: linksData } = await supabase
+            .from("family_links")
+            .select("member_id, related_member_id")
+            .eq("church_id", effectiveChurchId)
+            .in("member_id", memberIds);
+          links = linksData ?? [];
+        }
 
-    for (const link of links) {
-      union(link.member_id, link.related_member_id);
-    }
+        const parent: Record<string, string> = {};
+        const find = (x: string): string => {
+          if (!parent[x]) return x;
+          parent[x] = find(parent[x]);
+          return parent[x];
+        };
+        const union = (a: string, b: string) => {
+          const ra = find(a);
+          const rb = find(b);
+          if (ra !== rb) {
+            if (ra < rb) parent[rb] = ra;
+            else parent[ra] = rb;
+          }
+        };
 
-    const grouped: Record<string, MemberRow[]> = {};
-    for (const member of members) {
-      const root = find(member.id);
-      if (!grouped[root]) grouped[root] = [];
-      grouped[root].push(stripSensitive(member));
-    }
+        for (const link of links) {
+          union(link.member_id, link.related_member_id);
+        }
 
-    const families: FamilyGroup[] = [];
-    const individuals: MemberRow[] = [];
+        const grouped: Record<string, MemberRow[]> = {};
+        for (const member of members) {
+          const root = find(member.id);
+          if (!grouped[root]) grouped[root] = [];
+          grouped[root].push(stripSensitive(member));
+        }
 
-    for (const [familyId, grpMembers] of Object.entries(grouped)) {
-      if (grpMembers.length === 1) {
-        individuals.push(grpMembers[0]);
-      } else {
-        families.push({ familyId, members: grpMembers });
-      }
-    }
+        const families: FamilyGroup[] = [];
+        const individuals: MemberRow[] = [];
 
-    return {
-      data: { individuals, families, total, page, pageSize, totalPages },
-      error: null,
-    };
+        for (const [familyId, grpMembers] of Object.entries(grouped)) {
+          if (grpMembers.length === 1) {
+            individuals.push(grpMembers[0]);
+          } else {
+            families.push({ familyId, members: grpMembers });
+          }
+        }
+
+        return {
+          data: { individuals, families, total, page, pageSize, totalPages },
+          error: null,
+        };
+      },
+      [
+        "list-members",
+        effectiveChurchId,
+        search ?? "",
+        role,
+        status,
+        String(page),
+        String(pageSize),
+      ],
+      { tags: [tag.members(effectiveChurchId)], revalidate: CACHE_TTL.list }
+    );
+
+    return cachedFetch(accessToken);
   },
   { module: "membros", minRole: "líder" }
 );
@@ -366,6 +390,7 @@ export const createMember = withPermission(
       metadata: { name: parsed.data.name, role: parsed.data.role },
     });
 
+    revalidateTag(tag.members(user.church_id), "default");
     return { data: { id: data.id }, error: null };
   },
   { module: "membros", minRole: "líder" }
@@ -416,6 +441,7 @@ export const updateMember = withPermission(
       metadata: { fields: Object.keys(updates) },
     });
 
+    revalidateTag(tag.members(user.church_id), "default");
     return { data: { id: memberId }, error: null };
   },
   { module: "membros", minRole: "líder" }
@@ -449,6 +475,7 @@ export const deleteMember = withPermission(
       entityId: memberId,
     });
 
+    revalidateTag(tag.members(user.church_id), "default");
     return { data: { id: memberId }, error: null };
   },
   { module: "membros", minRole: "diácono" }

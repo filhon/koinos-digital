@@ -95,6 +95,8 @@ export function ThemeProvider({ children, initialTheme }: ThemeProviderProps) {
     if (!scheduled && initialTheme === "light") {
       const mq = window.matchMedia("(prefers-color-scheme: dark)");
       if (mq.matches) {
+        // Persiste no cookie para que o servidor sirva o mesmo tema nas próximas navegações
+        document.cookie = `koinos-theme=dark;path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`;
         applyTheme("dark");
         setTheme("dark");
       }

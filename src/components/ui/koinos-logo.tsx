@@ -1,9 +1,13 @@
+import type React from "react";
+
 export function KoinosLogo({
   size = 32,
   className,
+  style,
 }: {
   size?: number;
   className?: string;
+  style?: React.CSSProperties;
 }) {
   return (
     <svg
@@ -13,7 +17,7 @@ export function KoinosLogo({
       fill="none"
       aria-hidden="true"
       className={className}
-      style={{ fillRule: "evenodd", clipRule: "evenodd" }}
+      style={{ fillRule: "evenodd", clipRule: "evenodd", ...style }}
     >
       <g transform="matrix(1,0,0,1,-165.009677,-161)">
         <g transform="matrix(1.458065,0,0,1.458065,-235.958065,-209.348387)">

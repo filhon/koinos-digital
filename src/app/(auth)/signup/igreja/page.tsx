@@ -924,6 +924,8 @@ function StepConfirm({
   onBack,
   onConfirm,
   onTurnstileSuccess,
+  onTurnstileError,
+  turnstileReady,
   isPending,
   serverError,
 }: {
@@ -933,8 +935,11 @@ function StepConfirm({
   onBack: () => void;
   onConfirm: () => void;
   onTurnstileSuccess: (token: string) => void;
+  onTurnstileError: () => void;
   isPending: boolean;
   serverError: string | null;
+  turnstileReady: boolean;
+  isDev: boolean;
 }) {
   const consentedPurposes = Object.entries(consent.consents)
     .filter(([, v]) => v)
@@ -1023,16 +1028,28 @@ function StepConfirm({
         </motion.div>
       )}
 
-      <motion.div variants={staggerItem}>
-        <Turnstile
-          siteKey={
-            process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ??
-            "1x00000000000000000000AA"
-          }
-          options={{ theme: "light", appearance: "interaction-only" }}
-          onSuccess={onTurnstileSuccess}
-        />
-      </motion.div>
+      {process.env.NODE_ENV !== "development" && (
+        <motion.div
+          variants={staggerItem}
+          className="w-full overflow-hidden rounded-[6px]"
+        >
+          <Turnstile
+            siteKey={
+              process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ??
+              "1x00000000000000000000AA"
+            }
+            options={{
+              theme: "light",
+              appearance: "always",
+              size: "flexible",
+            }}
+            style={{ width: "100%" }}
+            onSuccess={onTurnstileSuccess}
+            onError={onTurnstileError}
+            onExpire={onTurnstileError}
+          />
+        </motion.div>
+      )}
 
       <motion.div variants={staggerItem} className="flex gap-3 pt-1">
         <button
@@ -1047,7 +1064,7 @@ function StepConfirm({
         <button
           type="button"
           onClick={onConfirm}
-          disabled={isPending}
+          disabled={isPending || !turnstileReady}
           className="btn-primary flex flex-1 items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {isPending ? (
@@ -1126,7 +1143,9 @@ export default function SignupIgrejaPage() {
   const [church, setChurch] = useState<ChurchDataInput | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const turnstileToken = useRef<string>("");
+  const isDev = process.env.NODE_ENV === "development";
+  const turnstileToken = useRef<string>(isDev ? "dev-bypass" : "");
+  const [turnstileReady, setTurnstileReady] = useState(isDev);
 
   function handlePersonal(data: PersonalDataInput) {
     setPersonal(data);
@@ -1274,9 +1293,13 @@ export default function SignupIgrejaPage() {
               onConfirm={handleConfirm}
               onTurnstileSuccess={(token) => {
                 turnstileToken.current = token;
+                setTurnstileReady(true);
               }}
+              onTurnstileError={() => setTurnstileReady(false)}
               isPending={isPending}
               serverError={serverError}
+              turnstileReady={turnstileReady}
+              isDev={isDev}
             />
           )}
         </motion.div>

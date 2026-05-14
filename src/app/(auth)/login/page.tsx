@@ -164,13 +164,21 @@ export default function LoginPage() {
 
           {/* Turnstile */}
           {!isDev && (
-            <motion.div variants={fadeUp}>
+            <motion.div
+              variants={fadeUp}
+              className="w-full overflow-hidden rounded-[6px]"
+            >
               <Turnstile
                 siteKey={
                   process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ??
                   "1x00000000000000000000AA"
                 }
-                options={{ theme: "light", appearance: "always" }}
+                options={{
+                  theme: "light",
+                  appearance: "always",
+                  size: "flexible",
+                }}
+                style={{ width: "100%" }}
                 onSuccess={(token) => {
                   turnstileToken.current = token;
                   setTurnstileReady(true);

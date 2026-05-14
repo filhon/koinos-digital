@@ -325,7 +325,7 @@ function Footer() {
 
 export function SaasLanding() {
   return (
-    <div className="min-h-screen bg-background font-sans">
+    <div className="force-light min-h-screen bg-background font-sans">
       <a href="#main-content" className="skip-to-content">
         Pular para o conteúdo
       </a>
