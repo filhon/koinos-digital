@@ -32,21 +32,21 @@ export default async function PrivacidadePage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto flex flex-col gap-6">
-      <div className="flex items-center gap-2">
+    <div className="max-w-3xl mx-auto flex flex-col gap-8">
+      <div className="flex flex-col gap-3">
         <Link
           href="/perfil"
-          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors w-fit"
         >
           <ChevronLeft className="size-4" aria-hidden="true" />
           Voltar ao perfil
         </Link>
-      </div>
 
-      <PageHeader
-        title="Privacidade e dados pessoais"
-        description="Gerencie seus dados, consentimentos e direitos previstos na LGPD."
-      />
+        <PageHeader
+          title="Privacidade e dados pessoais"
+          description="Gerencie seus dados, consentimentos e direitos previstos na LGPD."
+        />
+      </div>
 
       <PrivacyPortal
         profile={profileResult.data}

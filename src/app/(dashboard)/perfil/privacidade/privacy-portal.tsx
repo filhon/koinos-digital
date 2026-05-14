@@ -24,7 +24,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 
 import {
   updateConsent,
@@ -79,19 +78,14 @@ function triggerDownload(content: string, filename: string, mimeType: string) {
 function MyDataTab({ profile }: { profile: MemberProfile }) {
   const addr = profile.address as MemberAddress | null;
   return (
-    <div className="space-y-2">
-      <Separator />
+    <div className="divide-y divide-border">
       <DataRow label="Nome" value={profile.name} />
-      <Separator />
       <DataRow label="E-mail" value={profile.email} />
-      <Separator />
       <DataRow
         label="Telefone"
         value={profile.phone ? formatPhone(profile.phone) : null}
       />
-      <Separator />
       <DataRow label="Cargo" value={profile.role} />
-      <Separator />
       <DataRow
         label="Data de nasc."
         value={
@@ -100,15 +94,12 @@ function MyDataTab({ profile }: { profile: MemberProfile }) {
             : null
         }
       />
-      <Separator />
       <DataRow label="Endereço" value={formatAddress(addr)} />
-      <Separator />
       <DataRow
         label="Membro desde"
         value={new Date(profile.created_at).toLocaleDateString("pt-BR")}
       />
-      <Separator />
-      <p className="pt-4 text-xs text-muted-foreground">
+      <p className="pt-4 pb-2 text-xs text-muted-foreground">
         CPF e RG são dados sensíveis protegidos por criptografia AES-256 e não
         são exibidos nesta tela. Eles constam na exportação de dados.
       </p>
@@ -151,7 +142,7 @@ function ConsentsTab({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="divide-y divide-border">
       {consents.map((consent) => {
         const isLoading = loadingPurpose === consent.purpose && pending;
         const isMandatory = consent.purpose === "cadastro";
@@ -159,7 +150,7 @@ function ConsentsTab({
         return (
           <div
             key={consent.purpose}
-            className="flex items-start justify-between gap-4 rounded-lg border border-border p-4"
+            className="flex items-start justify-between gap-4 py-4"
           >
             <div className="flex-1 space-y-0.5">
               <div className="flex items-center gap-2">

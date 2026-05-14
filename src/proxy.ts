@@ -132,6 +132,7 @@ export async function proxy(request: NextRequest) {
     !pathname.startsWith("/financeiro") &&
     !pathname.startsWith("/comunicacao") &&
     !pathname.startsWith("/leitura") &&
+    !pathname.startsWith("/feedback") &&
     !pathname.startsWith("/liga") &&
     !pathname.startsWith("/assembleia") &&
     !pathname.startsWith("/configuracoes") &&

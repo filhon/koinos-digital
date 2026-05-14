@@ -9,6 +9,7 @@ import {
   LogOut,
   Shield,
   Building2,
+  MessageCircle,
 } from "lucide-react";
 
 const NAV = [
@@ -36,6 +37,11 @@ const NAV = [
     href: "/admin/liga/pontuacao",
     label: "Pontuação",
     icon: Zap,
+  },
+  {
+    href: "/admin/feedbacks",
+    label: "Feedbacks",
+    icon: MessageCircle,
   },
 ];
 

@@ -434,3 +434,142 @@ export async function updateScoreConfig(
     error: null,
   };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Feedbacks
+// ─────────────────────────────────────────────────────────────────────────────
+
+import type { FeedbackRow, FeedbackStatus } from "@/lib/validators/feedbacks";
+import { createNotification } from "@/actions/notifications";
+
+export interface AdminFeedbackFilters {
+  type?: "elogio" | "sugestao" | "reclamacao";
+  status?: FeedbackStatus;
+  church_id?: string;
+  page?: number;
+}
+
+const ADMIN_FB_PAGE_SIZE = 20;
+
+export async function listAllFeedbacks(
+  filters: AdminFeedbackFilters = {}
+): Promise<ActionResult<{ feedbacks: FeedbackRow[]; total: number }>> {
+  const denied = await requireAdmin();
+  if (denied) return { data: null, error: denied.error };
+
+  const admin = createAdminClient();
+  const page = filters.page ?? 1;
+
+  let query = admin
+    .from("feedbacks")
+    .select(
+      `*, member:members!member_id(name, avatar_url, role),
+       tenant:tenants!church_id(name, slug),
+       responses:feedback_responses(id, feedback_id, author_role, content, created_at)`,
+      { count: "exact" }
+    )
+    .eq("is_active", true)
+    .order("created_at", { ascending: false })
+    .range((page - 1) * ADMIN_FB_PAGE_SIZE, page * ADMIN_FB_PAGE_SIZE - 1);
+
+  if (filters.type) query = query.eq("type", filters.type);
+  if (filters.status) query = query.eq("status", filters.status);
+  if (filters.church_id) query = query.eq("church_id", filters.church_id);
+
+  const { data, error, count } = await query;
+  if (error) return { data: null, error: error.message };
+
+  return {
+    data: {
+      feedbacks: (data ?? []) as FeedbackRow[],
+      total: count ?? 0,
+    },
+    error: null,
+  };
+}
+
+export async function respondToFeedback(
+  feedbackId: string,
+  content: string
+): Promise<ActionResult<{ id: string }>> {
+  const denied = await requireAdmin();
+  if (denied) return { data: null, error: denied.error };
+
+  if (!content || content.trim().length < 5) {
+    return { data: null, error: "Resposta muito curta." };
+  }
+  if (content.length > 2000) {
+    return {
+      data: null,
+      error: "Resposta deve ter no máximo 2000 caracteres.",
+    };
+  }
+
+  const admin = createAdminClient();
+
+  // Busca o feedback para pegar member_id, church_id e title
+  const { data: fb, error: fbErr } = await admin
+    .from("feedbacks")
+    .select("id, member_id, church_id, title, status")
+    .eq("id", feedbackId)
+    .single();
+
+  if (fbErr || !fb) return { data: null, error: "Feedback não encontrado." };
+
+  // Insere a resposta via admin (bypassa RLS — INSERT restrito a service_role)
+  const { data: resp, error: respErr } = await admin
+    .from("feedback_responses")
+    .insert({
+      feedback_id: feedbackId,
+      author_role: "admin",
+      content: content.trim(),
+    })
+    .select("id")
+    .single();
+
+  if (respErr) return { data: null, error: respErr.message };
+
+  // Atualiza status para "respondido"
+  await admin
+    .from("feedbacks")
+    .update({ status: "respondido" })
+    .eq("id", feedbackId);
+
+  // Notificação in-app para o membro
+  await createNotification({
+    memberId: fb.member_id,
+    churchId: fb.church_id,
+    type: "feedback_response",
+    message: `Seu feedback "${fb.title}" recebeu uma resposta da equipe Koinos.`,
+  });
+
+  return { data: { id: resp.id }, error: null };
+}
+
+export async function updateFeedbackStatus(
+  feedbackId: string,
+  status: FeedbackStatus
+): Promise<ActionResult<{ id: string }>> {
+  const denied = await requireAdmin();
+  if (denied) return { data: null, error: denied.error };
+
+  const VALID: FeedbackStatus[] = [
+    "aberto",
+    "em_analise",
+    "respondido",
+    "fechado",
+  ];
+  if (!VALID.includes(status)) {
+    return { data: null, error: "Status inválido." };
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("feedbacks")
+    .update({ status })
+    .eq("id", feedbackId);
+
+  if (error) return { data: null, error: error.message };
+
+  return { data: { id: feedbackId }, error: null };
+}

@@ -23,6 +23,7 @@ import {
   Globe,
   Package,
   BookOpen,
+  MessageCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { sidebarSpring } from "@/lib/motion";
@@ -86,6 +87,19 @@ const navigation: NavGroup[] = [
         href: "/landing-page",
         icon: Globe,
         roles: ["admin", "pastor"],
+      },
+      {
+        label: "Feedback",
+        href: "/feedback",
+        icon: MessageCircle,
+        roles: [
+          "admin",
+          "pastor",
+          "presbítero",
+          "diácono",
+          "tesoureiro",
+          "líder",
+        ],
       },
       {
         label: "Configurações",

@@ -92,7 +92,7 @@ ENTREGÁVEIS: Duas páginas de termos jurídicos acessíveis publicamente, linka
 
 ## Sessão 6.2 — Renomear Gamificação → Liga + Mural → Comunicação + restrições
 
-> **UI:** Use `/impeccable craft` para implementar as telas desta sessão.
+> **UI:** Use `/impeccable` para implementar as telas desta sessão.
 
 ```
 CONTEXTO: Duas renomeações de identidade do produto + restrição de criação de posts no módulo Comunicação.
@@ -143,7 +143,7 @@ ENTREGÁVEIS: Módulo Liga acessível em /liga, módulo Comunicação acessível
 
 ## Sessão 6.3 — Perfil público + username no cadastro
 
-> **UI:** Use `/impeccable craft` para implementar as telas desta sessão.
+> **UI:** Use `/impeccable` para implementar as telas desta sessão.
 
 ```
 CONTEXTO: O Koinos é uma plataforma de comunidade. O perfil público é essencial desde o dia 0
@@ -212,7 +212,7 @@ ENTREGÁVEIS: Username no cadastro, perfil público acessível, resolução de c
 
 ## Sessão 6.4 — Onboarding guiado funcional
 
-> **UI:** Use `/impeccable craft` para implementar as telas desta sessão.
+> **UI:** Use `/impeccable` para implementar as telas desta sessão.
 
 ```
 CONTEXTO: O OnboardingTour atual (src/components/layout/OnboardingTour.tsx) é apenas uma janela
@@ -354,7 +354,7 @@ ENTREGÁVEIS: Página de leitura com texto bíblico completo, streak visual, bot
 
 ## Sessão 7.2 — Módulo Feedbacks (para equipe Koinos + respostas in-app)
 
-> **UI:** Use `/impeccable craft` para implementar as telas desta sessão.
+> **UI:** Use `/impeccable` para implementar as telas desta sessão.
 
 ```
 CONTEXTO: Módulo simples para liderança das igrejas enviar feedbacks à equipe Koinos.
@@ -515,7 +515,7 @@ ENTREGÁVEIS: Push notifications via OneSignal funcionando, email digest semanal
 
 ## Sessão 7.4 — Roadmap público
 
-> **UI:** Use `/impeccable craft` para implementar as telas desta sessão.
+> **UI:** Use `/impeccable` para implementar as telas desta sessão.
 
 ```
 CONTEXTO: Página estática em koinos.digital/roadmap. Sem backend — dados hardcoded.
@@ -586,7 +586,7 @@ ENTREGÁVEIS: Página de roadmap público estática, profissional, acessível em
 
 ## Sessão 8.1 — Níveis e Talentos (sistema de XP, moeda virtual, progressão)
 
-> **UI:** Use `/impeccable craft` para implementar as telas desta sessão.
+> **UI:** Use `/impeccable` para implementar as telas desta sessão.
 
 ```
 CONTEXTO: A gamificação já funciona com pontos, tribos e badges. Agora vamos adicionar uma
@@ -698,7 +698,7 @@ ENTREGÁVEIS: 30 níveis, Talentos como moeda virtual, progressão integrada com
 
 ## Sessão 8.2 — Loja digital (itens digitais + compra com Talentos)
 
-> **UI:** Use `/impeccable craft` para implementar as telas desta sessão.
+> **UI:** Use `/impeccable` para implementar as telas desta sessão.
 
 ```
 CONTEXTO: Os Talentos (moeda virtual) foram implementados na sessão 8.1. Agora vamos criar
@@ -825,7 +825,7 @@ ENTREGÁVEIS: Loja funcional com itens digitais, compra com Talentos, itens equi
 
 ## Sessão 9.1 — Feed social no Início (versão MVP)
 
-> **UI:** Use `/impeccable craft` para implementar as telas desta sessão.
+> **UI:** Use `/impeccable` para implementar as telas desta sessão.
 
 ```
 CONTEXTO: A tela de Início (/dashboard) é um dashboard com widgets. O usuário quer transformá-la
@@ -904,7 +904,7 @@ ENTREGÁVEIS: Feed social na tela de início com 2 colunas, rolagem infinita, to
 
 ## Sessão 9.2 — Liga Geral (ranking entre igrejas)
 
-> **UI:** Use `/impeccable craft` para implementar as telas desta sessão.
+> **UI:** Use `/impeccable` para implementar as telas desta sessão.
 
 ```
 CONTEXTO: A Liga interna (entre tribos da mesma igreja) já funciona. Agora vamos adicionar a
