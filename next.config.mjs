@@ -4,7 +4,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "*.supabase.co",
+        hostname: process.env.NEXT_PUBLIC_SUPABASE_HOSTNAME ?? "*.supabase.co",
         pathname: "/storage/v1/object/public/**",
       },
     ],
@@ -12,21 +12,9 @@ const nextConfig = {
   async headers() {
     return [
       {
+        // Security headers for static assets (CSP is set per-request in middleware)
         source: "/(.*)",
         headers: [
-          {
-            key: "Content-Security-Policy",
-            value: [
-              "default-src 'self'",
-              `script-src 'self' 'unsafe-inline' challenges.cloudflare.com static.cloudflareinsights.com${
-                process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""
-              }`,
-              "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: *.supabase.co",
-              "connect-src 'self' *.supabase.co *.upstash.io challenges.cloudflare.com *.challenges.cloudflare.com cloudflareinsights.com",
-              "frame-src www.youtube.com youtube.com www.google.com maps.google.com challenges.cloudflare.com *.challenges.cloudflare.com",
-            ].join("; "),
-          },
           {
             key: "Strict-Transport-Security",
             value: "max-age=31536000; includeSubDomains; preload",
@@ -46,6 +34,30 @@ const nextConfig = {
           {
             key: "Permissions-Policy",
             value: "camera=(self), microphone=(), geolocation=(self)",
+          },
+        ],
+      },
+      {
+        // CORS headers for API routes
+        source: "/api/:path*",
+        headers: [
+          {
+            key: "Access-Control-Allow-Origin",
+            value: process.env.NEXT_PUBLIC_APP_DOMAIN
+              ? `https://app.${process.env.NEXT_PUBLIC_APP_DOMAIN}`
+              : "http://localhost:3000",
+          },
+          {
+            key: "Access-Control-Allow-Methods",
+            value: "GET, POST, PUT, DELETE, OPTIONS",
+          },
+          {
+            key: "Access-Control-Allow-Headers",
+            value: "Content-Type, Authorization",
+          },
+          {
+            key: "Access-Control-Max-Age",
+            value: "86400",
           },
         ],
       },

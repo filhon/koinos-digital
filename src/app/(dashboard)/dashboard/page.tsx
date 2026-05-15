@@ -56,11 +56,7 @@ async function getMemberData(
       const supabase = createCachedClient(token);
 
       const [countResult, meResult] = await Promise.all([
-        supabase
-          .from("members")
-          .select("id", { count: "exact", head: true })
-          .eq("church_id", churchId)
-          .eq("is_active", true),
+        supabase.rpc("count_active_church_members"),
         email
           ? supabase
               .from("members")
@@ -72,7 +68,7 @@ async function getMemberData(
       ]);
 
       return {
-        count: countResult.count ?? 0,
+        count: (countResult.data as number) ?? 0,
         name: (meResult.data?.name as string | null) ?? null,
         memberId: (meResult.data?.id as string | null) ?? null,
         avatarUrl: (meResult.data?.avatar_url as string | null) ?? null,

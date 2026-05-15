@@ -43,7 +43,10 @@ export default function LoginPage() {
         setServerError(result.error);
         return;
       }
-      const next = searchParams.get("next") ?? "/dashboard";
+      const raw = searchParams.get("next") ?? "/dashboard";
+      // Prevent open redirect: only allow internal paths
+      const next =
+        raw.startsWith("/") && !raw.startsWith("//") ? raw : "/dashboard";
       router.push(next);
       router.refresh();
     });

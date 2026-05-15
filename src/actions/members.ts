@@ -474,6 +474,7 @@ export const deleteMember = withPermission(
       action: "member_deactivated",
       entityType: "member",
       entityId: memberId,
+      metadata: { deactivatedBy: user.id, reason: "manual_deactivation" },
     });
 
     revalidateTag(tag.members(user.church_id), "default");
@@ -625,7 +626,7 @@ export const updateMemberRole = withPermission(
       action: "member_role_changed",
       entityType: "member",
       entityId: memberId,
-      metadata: { oldRole, newRole },
+      metadata: { oldRole, newRole, changedBy: user.id },
     });
 
     return { data: { id: memberId }, error: null };

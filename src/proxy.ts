@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 import { createServerClient } from "@supabase/ssr";
 import type { MemberRole } from "@/lib/auth/session";
+import { buildCsp } from "@/lib/csp";
 
 // ─── Hostname → tenant slug resolver ─────────────────────────────────────────
 
@@ -101,9 +102,33 @@ const AAL2_ROUTES = [
   "/dashboard/assembleia",
 ];
 
+function applySecurityHeaders(
+  response: NextResponse,
+  nonce: string
+): NextResponse {
+  const csp = buildCsp(nonce);
+  response.headers.set("Content-Security-Policy", csp);
+  response.headers.set("x-nonce", nonce);
+  response.headers.set("X-Frame-Options", "SAMEORIGIN");
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set(
+    "Permissions-Policy",
+    "camera=(self), microphone=(), geolocation=(self)"
+  );
+  response.headers.set(
+    "Strict-Transport-Security",
+    "max-age=31536000; includeSubDomains; preload"
+  );
+  return response;
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const hostname = request.headers.get("host") ?? request.nextUrl.hostname;
+
+  // Generate a per-request nonce for CSP
+  const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
 
   // ── Resolução de hostname para tenant ──────────────────────────────────────
   // Só intercepta se NÃO for uma rota interna do Next.js ou do dashboard
@@ -147,7 +172,7 @@ export async function proxy(request: NextRequest) {
       // Reescreve a URL internamente para /[slug]{pathname}
       const rewriteUrl = request.nextUrl.clone();
       rewriteUrl.pathname = `/${slug}${pathname === "/" ? "" : pathname}`;
-      return NextResponse.rewrite(rewriteUrl);
+      return applySecurityHeaders(NextResponse.rewrite(rewriteUrl), nonce);
     }
   }
 
@@ -177,7 +202,7 @@ export async function proxy(request: NextRequest) {
       const loginUrl = request.nextUrl.clone();
       loginUrl.pathname = "/login";
       loginUrl.searchParams.set("next", pathname);
-      return NextResponse.redirect(loginUrl);
+      return applySecurityHeaders(NextResponse.redirect(loginUrl), nonce);
     }
 
     // Verifica guards de role para rotas específicas
@@ -188,7 +213,7 @@ export async function proxy(request: NextRequest) {
       if (guard.test(pathname) && !guard.roles.includes(role)) {
         const forbiddenUrl = request.nextUrl.clone();
         forbiddenUrl.pathname = guard.redirect ?? "/403";
-        return NextResponse.redirect(forbiddenUrl);
+        return applySecurityHeaders(NextResponse.redirect(forbiddenUrl), nonce);
       }
     }
 
@@ -207,12 +232,12 @@ export async function proxy(request: NextRequest) {
         const mfaUrl = request.nextUrl.clone();
         mfaUrl.pathname = "/verificar-2fa";
         mfaUrl.searchParams.set("next", pathname);
-        return NextResponse.redirect(mfaUrl);
+        return applySecurityHeaders(NextResponse.redirect(mfaUrl), nonce);
       }
     }
   }
 
-  return response;
+  return applySecurityHeaders(response, nonce);
 }
 
 export const config = {

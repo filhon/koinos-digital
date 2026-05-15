@@ -1,5 +1,7 @@
+import "@/lib/env";
 import "@/styles/globals.css";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Instrument_Serif, DM_Sans } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { getThemeFromCookie } from "@/lib/theme";
@@ -70,6 +72,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const theme = await getThemeFromCookie();
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
 
   return (
     <html
@@ -81,7 +84,7 @@ export default async function RootLayout({
       )}
       suppressHydrationWarning
     >
-      <body className="antialiased">
+      <body className="antialiased" nonce={nonce}>
         <a href="#main-content" className="skip-to-content">
           Ir para o conteúdo principal
         </a>

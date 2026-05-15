@@ -105,7 +105,7 @@ export async function POST(req: Request) {
     await supabase.from("audit_logs").insert({
       action: "STRIPE_WEBHOOK_ERROR",
       entity_type: "system",
-      metadata: { error: (err as Error).message, event_id: event.id },
+      metadata: { error: "Webhook processing failed" },
       ip: "stripe_webhook",
     });
     return new Response(null, { status: 200 });

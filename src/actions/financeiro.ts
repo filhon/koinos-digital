@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { withPermission } from "@/lib/auth/with-permission";
 import { logAudit } from "@/actions/audit";
 import { encrypt, decrypt } from "@/lib/encryption/aes";
+import { validateUpload } from "@/lib/upload";
 import type { AuthUser } from "@/lib/auth/session";
 import {
   createAccountSchema,
@@ -509,20 +510,15 @@ export const uploadReceipt = withPermission(
     const file = formData.get("file") as File | null;
     if (!file) return { data: null, error: "Arquivo não enviado." };
 
-    const ALLOWED = [
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-      "application/pdf",
-    ];
-    if (!ALLOWED.includes(file.type))
-      return { data: null, error: "Tipo de arquivo não permitido." };
-
     if (file.size > 10 * 1024 * 1024)
       return { data: null, error: "Arquivo maior que 10 MB." };
 
-    const ext = file.name.split(".").pop() ?? "bin";
-    const path = `${user.church_id}/${transactionId}.${ext}`;
+    const buffer = new Uint8Array(await file.arrayBuffer());
+    const validated = validateUpload(file, buffer);
+    if (!validated)
+      return { data: null, error: "Tipo de arquivo não permitido." };
+
+    const path = `${user.church_id}/${transactionId}.${validated.ext}`;
 
     const supabase = await createClient();
     const { error: uploadErr } = await supabase.storage

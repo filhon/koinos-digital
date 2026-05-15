@@ -228,9 +228,10 @@ export async function validateCheckin(
     return { success: false, message: "Token inválido." };
   }
 
-  // Verifica janela de tempo (60s)
-  const age = Date.now() - payload.timestamp;
-  if (age > 60_000) {
+  // Verifica janela de tempo (60s) e proteção contra replay/clock skew
+  const now = Date.now();
+  const age = now - payload.timestamp;
+  if (age > 60_000 || age < -5_000) {
     return {
       success: false,
       message: "QR Code expirado. Aguarde a próxima rotação.",
@@ -266,17 +267,31 @@ export async function validateCheckin(
     }
   }
 
-  // Geolocalização opcional (raio fixo configurável, padrão 500m)
+  // Geolocalização: valida coordenadas do cliente contra localização do evento no banco
   const maxRadius = parseInt(process.env.CHECKIN_MAX_RADIUS_METERS ?? "500");
-  const eventLat = parseFloat(process.env.CHECKIN_EVENT_LAT ?? "0");
-  const eventLng = parseFloat(process.env.CHECKIN_EVENT_LNG ?? "0");
-  if (geoLat && geoLng && eventLat && eventLng) {
-    const distance = haversineMeters(geoLat, geoLng, eventLat, eventLng);
-    if (distance > maxRadius) {
-      return {
-        success: false,
-        message: `Você está fora do raio de check-in (${Math.round(distance)}m do local).`,
-      };
+  if (geoLat && geoLng) {
+    const admin = createAdminClient();
+    const { data: eventGeo } = await admin
+      .from("events")
+      .select("geo_lat, geo_lng")
+      .eq("id", payload.eventId)
+      .single();
+
+    const eventLat = eventGeo?.geo_lat
+      ? parseFloat(String(eventGeo.geo_lat))
+      : 0;
+    const eventLng = eventGeo?.geo_lng
+      ? parseFloat(String(eventGeo.geo_lng))
+      : 0;
+
+    if (eventLat && eventLng) {
+      const distance = haversineMeters(geoLat, geoLng, eventLat, eventLng);
+      if (distance > maxRadius) {
+        return {
+          success: false,
+          message: `Você está fora do raio de check-in (${Math.round(distance)}m do local).`,
+        };
+      }
     }
   }
 

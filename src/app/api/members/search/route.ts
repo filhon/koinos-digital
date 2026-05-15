@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function GET(request: NextRequest) {
   const supabase = createServerClient(
@@ -23,6 +24,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
   }
 
+  const { success } = await rateLimit({
+    identifier: `members-search:${user.id}`,
+    limit: 30,
+    window: 60,
+  });
+  if (!success) {
+    return NextResponse.json(
+      { error: "Muitas requisições. Tente novamente em breve." },
+      { status: 429 }
+    );
+  }
+
   const churchId = user.app_metadata?.church_id as string | undefined;
   if (!churchId) {
     return NextResponse.json(
@@ -34,15 +47,21 @@ export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams.get("q")?.trim() ?? "";
   const exclude = request.nextUrl.searchParams.get("exclude") ?? "";
 
+  if (q.length > 0 && (q.length < 2 || q.length > 100)) {
+    return NextResponse.json(
+      { error: "Busca deve ter entre 2 e 100 caracteres." },
+      { status: 400 }
+    );
+  }
+
   let query = supabase
-    .from("members")
+    .from("public_members")
     .select("id, name, role, avatar_url")
-    .eq("church_id", churchId)
     .eq("is_active", true)
     .order("name")
     .limit(8);
 
-  if (q.length > 0) {
+  if (q.length >= 2) {
     query = query.ilike("name", `%${q}%`);
   }
 

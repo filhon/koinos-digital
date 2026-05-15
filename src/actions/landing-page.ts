@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { withPermission } from "@/lib/auth/with-permission";
 import { logAudit } from "@/actions/audit";
 import { getRedis } from "@/lib/redis";
+import { validateUpload } from "@/lib/upload";
 import {
   updateLandingPageSchema,
   updateDomainSettingsSchema,
@@ -150,8 +151,13 @@ export const uploadHeroImage = withPermission(
     if (file.size > 5 * 1024 * 1024)
       return { data: null, error: "Arquivo maior que 5 MB." };
 
-    const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-    const path = `${user.church_id}/hero.${ext}`;
+    const IMAGE_MIMES = ["image/jpeg", "image/png", "image/webp"];
+    const buffer = new Uint8Array(await file.arrayBuffer());
+    const validated = validateUpload(file, buffer, IMAGE_MIMES);
+    if (!validated)
+      return { data: null, error: "Tipo de imagem não permitido." };
+
+    const path = `${user.church_id}/hero.${validated.ext}`;
 
     const supabase = await createClient();
     const { error: uploadError } = await supabase.storage
@@ -189,8 +195,13 @@ export const uploadPastorPhoto = withPermission(
     if (file.size > 5 * 1024 * 1024)
       return { data: null, error: "Arquivo maior que 5 MB." };
 
-    const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-    const path = `${user.church_id}/pastor.${ext}`;
+    const IMAGE_MIMES = ["image/jpeg", "image/png", "image/webp"];
+    const buffer = new Uint8Array(await file.arrayBuffer());
+    const validated = validateUpload(file, buffer, IMAGE_MIMES);
+    if (!validated)
+      return { data: null, error: "Tipo de imagem não permitido." };
+
+    const path = `${user.church_id}/pastor.${validated.ext}`;
 
     const supabase = await createClient();
     const { error: uploadError } = await supabase.storage

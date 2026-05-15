@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { validateCPF } from "@/lib/utils/cpf";
 import { usernameSchema } from "@/lib/validators/profile";
+import { passwordSchema } from "@/lib/validators/auth";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -40,13 +41,7 @@ export const personalDataSchema = z.object({
     .min(1, { message: "CPF é obrigatório" })
     .refine((v) => validateCPF(v), { message: "CPF inválido" }),
   email: z.email({ message: "E-mail inválido" }),
-  password: z
-    .string()
-    .min(8, { message: "Senha deve ter no mínimo 8 caracteres" })
-    .regex(/[A-Z]/, {
-      message: "Senha deve conter ao menos uma letra maiúscula",
-    })
-    .regex(/[0-9]/, { message: "Senha deve conter ao menos um número" }),
+  password: passwordSchema,
 });
 
 // ─── Step 2: Consentimentos LGPD ─────────────────────────────────────────────
@@ -166,13 +161,7 @@ export const registerMemberSchema = z.object({
     .min(1, { message: "CPF é obrigatório" })
     .refine((v) => validateCPF(v), { message: "CPF inválido" }),
   email: z.email({ message: "E-mail inválido" }),
-  password: z
-    .string()
-    .min(8, { message: "Senha deve ter no mínimo 8 caracteres" })
-    .regex(/[A-Z]/, {
-      message: "Senha deve conter ao menos uma letra maiúscula",
-    })
-    .regex(/[0-9]/, { message: "Senha deve conter ao menos um número" }),
+  password: passwordSchema,
   phone: z.string().optional(),
   inviteCode: z.string().min(1),
   consents: z
