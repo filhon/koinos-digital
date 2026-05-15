@@ -7,6 +7,7 @@ import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { PublicProfileData } from "@/actions/profile";
 import { LevelBadgeCompact } from "@/app/(dashboard)/perfil/level-section";
+import { AvatarWithFrame } from "@/components/ui/avatar-with-frame";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -27,19 +28,26 @@ function badgeTextColor(hex: string): string {
 
 // ─── Cover ────────────────────────────────────────────────────────────────────
 
-function ProfileCover({ teamColor }: { teamColor: string | null }) {
+function ProfileCover({
+  teamColor,
+  themeGradient,
+}: {
+  teamColor: string | null;
+  themeGradient: string | null;
+}) {
   const accent = teamColor ?? "#3b6e8c";
+  const background =
+    themeGradient ??
+    `
+    radial-gradient(ellipse 80% 60% at 20% 110%, oklch(0.32 0.096 224 / 0.9) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 80% at 80% -10%, ${accent}66 0%, transparent 60%),
+    oklch(0.26 0.072 220)
+  `;
 
   return (
     <div
       className="relative h-40 w-full overflow-hidden sm:h-52"
-      style={{
-        background: `
-          radial-gradient(ellipse 80% 60% at 20% 110%, oklch(0.32 0.096 224 / 0.9) 0%, transparent 70%),
-          radial-gradient(ellipse 60% 80% at 80% -10%, ${accent}66 0%, transparent 60%),
-          oklch(0.26 0.072 220)
-        `,
-      }}
+      style={{ background }}
     >
       {/* Geometric texture layer */}
       <svg
@@ -151,7 +159,10 @@ export function PublicProfile({ data }: { data: PublicProfileData }) {
   return (
     <div className="min-h-screen bg-[oklch(0.982_0.004_80)]">
       {/* Cover */}
-      <ProfileCover teamColor={data.team_color} />
+      <ProfileCover
+        teamColor={data.team_color}
+        themeGradient={data.equipped_theme_gradient ?? null}
+      />
 
       {/* Content */}
       <div className="mx-auto max-w-xl px-4 pb-16">
@@ -163,20 +174,25 @@ export function PublicProfile({ data }: { data: PublicProfileData }) {
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             className="relative inline-block"
           >
-            {data.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+            <div className="rounded-full border-4 border-[oklch(0.982_0.004_80)] shadow-[0_4px_16px_oklch(0.32_0.096_224/0.18)]">
+              <AvatarWithFrame
                 src={data.avatar_url}
-                alt={data.name}
-                className="h-24 w-24 rounded-full border-4 border-[oklch(0.982_0.004_80)] object-cover shadow-[0_4px_16px_oklch(0.32_0.096_224/0.18)]"
+                fallback={initials(data.name)}
+                size="xl"
+                frameStyle={
+                  (data.equipped_frame?.style as
+                    | "silver"
+                    | "gold"
+                    | "tribal"
+                    | "glow"
+                    | null) ?? null
+                }
+                frameColor={
+                  (data.equipped_frame?.color as string | null) ?? null
+                }
+                teamColor={data.team_color}
               />
-            ) : (
-              <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-[oklch(0.982_0.004_80)] bg-primary-700 shadow-[0_4px_16px_oklch(0.32_0.096_224/0.18)]">
-                <span className="font-display text-2xl font-light tracking-tight text-[oklch(0.97_0.006_220)]">
-                  {initials(data.name)}
-                </span>
-              </div>
-            )}
+            </div>
           </motion.div>
         </div>
 
@@ -205,6 +221,12 @@ export function PublicProfile({ data }: { data: PublicProfileData }) {
           <p className="mt-0.5 text-sm font-medium text-[oklch(0.52_0.016_220)]">
             @{data.username}
           </p>
+          {/* Título especial equipado */}
+          {data.equipped_title && (
+            <span className="mt-2 inline-block rounded-full border border-[oklch(0.32_0.096_224/0.2)] bg-[oklch(0.32_0.096_224/0.07)] px-3 py-1 text-xs font-medium text-primary-700">
+              ✨ {data.equipped_title}
+            </span>
+          )}
 
           {/* Info pública condicional */}
           {(data.email || data.phone || data.birth_date) && (
@@ -235,6 +257,31 @@ export function PublicProfile({ data }: { data: PublicProfileData }) {
             </div>
           )}
         </motion.div>
+
+        {/* Badges especiais da Loja */}
+        {data.special_badges.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.14, duration: 0.3 }}
+            className="mb-4 flex flex-wrap gap-2"
+          >
+            {data.special_badges.map((sb, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold shadow-sm"
+                style={{
+                  borderColor: sb.color,
+                  background: `${sb.color}18`,
+                  color: sb.color,
+                }}
+              >
+                <span>{sb.icon}</span>
+                <span>{sb.name}</span>
+              </div>
+            ))}
+          </motion.div>
+        )}
 
         {/* Conquistas */}
         {data.badges.length > 0 && (

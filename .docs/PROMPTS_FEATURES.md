@@ -701,9 +701,7 @@ ENTREGÁVEIS: 30 níveis, Talentos como moeda virtual, progressão integrada com
 > **UI:** Use `/impeccable` para implementar as telas desta sessão.
 
 ```
-CONTEXTO: Os Talentos (moeda virtual) foram implementados na sessão 8.1. Agora vamos criar
-a Loja onde os membros podem gastar seus Talentos em itens digitais. A compra diminui
-o saldo (wallet_balance) mas NÃO afeta o nível (total_xp permanece inalterado).
+CONTEXTO: Os Talentos (moeda virtual) foram implementados na sessão 8.1. Agora vamos criar a Loja onde os membros podem gastar seus Talentos em itens digitais. A compra diminui o saldo (wallet_balance) mas NÃO afeta o nível (total_xp permanece inalterado).
 
 REFERÊNCIA: FEATURES.md seção "Módulo: Loja"
 

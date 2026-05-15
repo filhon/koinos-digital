@@ -124,7 +124,7 @@ function RoadmapCard({ item, index }: { item: RoadmapItem; index: number }) {
         {/* Icon */}
         <div className={cn("mt-0.5 shrink-0 rounded-lg p-1.5", col.iconWrapBg)}>
           <Icon
-            className={cn("w-[18px] h-[18px]", col.iconClass)}
+            className={cn("w-4.5 h-4.5", col.iconClass)}
             strokeWidth={1.75}
             aria-hidden="true"
           />

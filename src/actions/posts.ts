@@ -50,6 +50,9 @@ export interface PostAuthor {
   tags: string[];
   level: number;
   level_name: string;
+  equipped_frame: Record<string, unknown> | null;
+  equipped_title: string | null;
+  has_boost: boolean;
 }
 
 export interface PostRow {
@@ -135,6 +138,9 @@ export const listPosts = withPermission(
       author_tags: string[] | null;
       author_level: number | null;
       author_level_name: string | null;
+      author_equipped_frame: Record<string, unknown> | null;
+      author_equipped_title: string | null;
+      author_has_boost: boolean | null;
       comment_count: number;
       reaction_orar: number;
       reaction_gratidao: number;
@@ -164,6 +170,9 @@ export const listPosts = withPermission(
             tags: row.author_tags ?? [],
             level: Number(row.author_level ?? 1),
             level_name: row.author_level_name ?? "Semente",
+            equipped_frame: row.author_equipped_frame ?? null,
+            equipped_title: row.author_equipped_title ?? null,
+            has_boost: row.author_has_boost ?? false,
           }
         : null,
       comment_count: Number(row.comment_count ?? 0),
@@ -279,6 +288,9 @@ export const createPost = withPermission(
           tags: [],
           level: 1,
           level_name: "Semente",
+          equipped_frame: null,
+          equipped_title: null,
+          has_boost: false,
         };
       })(),
       comment_count: 0,

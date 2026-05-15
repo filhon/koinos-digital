@@ -380,6 +380,10 @@ export type PublicProfileData = {
   current_level: number;
   level_name: string;
   level_icon: string;
+  equipped_frame: Record<string, unknown> | null;
+  equipped_title: string | null;
+  equipped_theme_gradient: string | null;
+  special_badges: Array<{ name: string; icon: string; color: string }>;
 };
 
 export type GetPublicProfileResult =
@@ -468,6 +472,39 @@ export async function getPublicProfile(
     .eq("level", memberLevel)
     .maybeSingle();
 
+  // Itens equipados
+  const { data: equippedRows } = await admin
+    .from("member_equipped_items")
+    .select("category, shop_items(name, metadata)")
+    .eq("member_id", member.id as string);
+
+  let equippedFrame: Record<string, unknown> | null = null;
+  let equippedTitle: string | null = null;
+  let equippedThemeGradient: string | null = null;
+  const specialBadges: Array<{ name: string; icon: string; color: string }> =
+    [];
+
+  for (const row of equippedRows ?? []) {
+    const item = row.shop_items as unknown as {
+      name: string;
+      metadata: Record<string, unknown>;
+    } | null;
+    if (!item) continue;
+    const cat = row.category as string;
+    if (cat === "avatar_frame") equippedFrame = item.metadata;
+    if (cat === "title") equippedTitle = item.name;
+    if (cat === "theme")
+      equippedThemeGradient =
+        (item.metadata?.gradient as string | null) ?? null;
+    if (cat === "badge_special") {
+      specialBadges.push({
+        name: item.name,
+        icon: (item.metadata?.icon as string | null) ?? "🏆",
+        color: (item.metadata?.color as string | null) ?? "oklch(0.75 0.18 56)",
+      });
+    }
+  }
+
   return {
     success: true,
     data: {
@@ -489,6 +526,10 @@ export async function getPublicProfile(
       current_level: memberLevel,
       level_name: (levelRow?.name as string) ?? "Semente",
       level_icon: (levelRow?.icon as string) ?? "🌱",
+      equipped_frame: equippedFrame,
+      equipped_title: equippedTitle,
+      equipped_theme_gradient: equippedThemeGradient,
+      special_badges: specialBadges,
     },
   };
 }

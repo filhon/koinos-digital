@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -23,6 +22,7 @@ import { CommentsSection } from "./comments-section";
 import { TribeBadge } from "@/app/(dashboard)/liga/tribe-badge";
 import { TagChip } from "@/app/(dashboard)/membros/[id]/tags-editor";
 import { LevelBadgeCompact } from "@/app/(dashboard)/perfil/level-section";
+import { AvatarWithFrame } from "@/components/ui/avatar-with-frame";
 import { cn } from "@/lib/utils";
 
 const ROLE_CONFIG: Record<string, { label: string; className: string }> = {
@@ -227,22 +227,24 @@ export function PostCard({
         {/* Header: avatar + author + meta + actions */}
         <div className="flex items-start gap-3 mb-3">
           {/* Avatar */}
-          <div className="shrink-0">
-            {author?.avatar_url ? (
-              <Image
-                src={author.avatar_url}
-                alt={author.name}
-                width={40}
-                height={40}
-                className="w-10 h-10 rounded-full object-cover ring-2 ring-border"
-                unoptimized
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 flex items-center justify-center text-sm font-semibold ring-2 ring-border">
-                {initials}
-              </div>
-            )}
-          </div>
+          <AvatarWithFrame
+            src={author?.avatar_url}
+            fallback={initials}
+            size="md"
+            frameStyle={
+              (author?.equipped_frame?.style as
+                | "silver"
+                | "gold"
+                | "tribal"
+                | "glow"
+                | null) ?? null
+            }
+            frameColor={
+              (author?.equipped_frame?.color as string | null) ?? null
+            }
+            teamColor={author?.team_color ?? null}
+            hasBoost={author?.has_boost ?? false}
+          />
 
           {/* Author info */}
           <div className="flex-1 min-w-0">
@@ -301,6 +303,12 @@ export function PostCard({
                 </motion.span>
               )}
             </div>
+            {/* Título especial equipado */}
+            {author?.equipped_title && (
+              <span className="mt-0.5 inline-block rounded-full bg-[oklch(0.32_0.096_224/0.08)] px-2 py-0.5 text-[10px] font-medium text-primary-700 dark:bg-[oklch(0.64_0.102_232/0.15)] dark:text-[oklch(0.78_0.08_224)]">
+                ✨ {author.equipped_title}
+              </span>
+            )}
             <p className="text-[11px] text-muted-foreground mt-0.5">
               {formatDistanceToNow(new Date(post.created_at), {
                 addSuffix: true,

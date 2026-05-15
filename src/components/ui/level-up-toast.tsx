@@ -22,7 +22,7 @@ export function LevelUpToastContent({
       animate={{ scale: 1, opacity: 1, y: 0 }}
       exit={{ scale: 0.9, opacity: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 22 }}
-      className="flex items-center gap-3 rounded-2xl px-4 py-3 shadow-[0_8px_24px_oklch(0.32_0.096_224/0.22)] bg-[oklch(0.32_0.096_224)] text-[oklch(0.97_0.006_220)] min-w-[260px]"
+      className="flex items-center gap-3 rounded-2xl px-4 py-3 shadow-[0_8px_24px_oklch(0.32_0.096_224/0.22)] bg-primary-700 text-[oklch(0.97_0.006_220)] min-w-65"
     >
       {/* Animated icon */}
       <motion.div
@@ -84,7 +84,7 @@ function GlowParticles() {
             delay: p.delay,
             ease: "easeOut",
           }}
-          className="absolute left-1/2 top-1/2 h-1.5 w-1.5 rounded-full bg-[oklch(0.62_0.148_58)]"
+          className="absolute left-1/2 top-1/2 h-1.5 w-1.5 rounded-full bg-accent-500"
         />
       ))}
     </div>

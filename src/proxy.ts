@@ -139,7 +139,8 @@ export async function proxy(request: NextRequest) {
     !pathname.startsWith("/landing-page") &&
     !pathname.startsWith("/termos") &&
     !pathname.startsWith("/privacidade") &&
-    !pathname.startsWith("/roadmap")
+    !pathname.startsWith("/roadmap") &&
+    !pathname.startsWith("/loja")
   ) {
     const slug = await resolveTenantSlug(hostname, request);
     if (slug) {

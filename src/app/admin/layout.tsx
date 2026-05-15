@@ -10,6 +10,7 @@ import {
   Shield,
   Building2,
   MessageCircle,
+  ShoppingBag,
 } from "lucide-react";
 
 const NAV = [
@@ -42,6 +43,11 @@ const NAV = [
     href: "/admin/feedbacks",
     label: "Feedbacks",
     icon: MessageCircle,
+  },
+  {
+    href: "/admin/loja",
+    label: "Loja",
+    icon: ShoppingBag,
   },
 ];
 
