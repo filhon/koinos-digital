@@ -317,8 +317,10 @@ function StepPreCheck({
 
 function StepPersonal({
   onNext,
+  onBack,
 }: {
   onNext: (data: PersonalDataInput) => void;
+  onBack: () => void;
 }) {
   const [showPw, setShowPw] = useState(false);
   const [usernameValue, setUsernameValue] = useState("");
@@ -510,10 +512,18 @@ function StepPersonal({
           <FieldError message={errors.password?.message} />
         </motion.div>
 
-        <motion.div variants={staggerItem} className="pt-1">
+        <motion.div variants={staggerItem} className="flex gap-3 pt-1">
+          <button
+            type="button"
+            onClick={onBack}
+            className="btn-secondary flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar
+          </button>
           <button
             type="submit"
-            className="btn-primary flex w-full items-center justify-center gap-2"
+            className="btn-primary flex flex-1 items-center justify-center gap-2"
           >
             Continuar
             <ArrowRight className="h-4 w-4" />
@@ -928,6 +938,7 @@ function StepConfirm({
   turnstileReady,
   isPending,
   serverError,
+  existingChurch,
 }: {
   personal: PersonalDataInput;
   consent: ConsentInput;
@@ -940,6 +951,7 @@ function StepConfirm({
   serverError: string | null;
   turnstileReady: boolean;
   isDev: boolean;
+  existingChurch: { id: string; name: string } | null;
 }) {
   const consentedPurposes = Object.entries(consent.consents)
     .filter(([, v]) => v)
@@ -1021,10 +1033,35 @@ function StepConfirm({
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3"
         >
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
-          <p className="text-sm text-amber-800">{serverError}</p>
+          {existingChurch ? (
+            <div className="rounded-xl border border-green-200 bg-green-50 p-4 space-y-3">
+              <div className="flex items-start gap-2.5">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-green-900">
+                    {existingChurch.name} já está cadastrada!
+                  </p>
+                  <p className="text-sm text-green-800">
+                    Você foi adicionado como visitante. A liderança poderá
+                    atualizar seu papel.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/auth/login"
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-88"
+              >
+                Fazer login
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          ) : (
+            <div className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+              <p className="text-sm text-amber-800">{serverError}</p>
+            </div>
+          )}
         </motion.div>
       )}
 
@@ -1142,6 +1179,10 @@ export default function SignupIgrejaPage() {
   const [consent, setConsent] = useState<ConsentInput | null>(null);
   const [church, setChurch] = useState<ChurchDataInput | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [existingChurch, setExistingChurch] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [isPending, startTransition] = useTransition();
   const isDev = process.env.NODE_ENV === "development";
   const turnstileToken = useRef<string>(isDev ? "dev-bypass" : "");
@@ -1165,6 +1206,7 @@ export default function SignupIgrejaPage() {
   function handleConfirm() {
     if (!personal || !consent || !church) return;
     setServerError(null);
+    setExistingChurch(null);
 
     const payload: CreateChurchInput = {
       personal,
@@ -1177,6 +1219,7 @@ export default function SignupIgrejaPage() {
       const result = await createChurch(payload);
       if (!result.success) {
         setServerError(result.error);
+        if (result.existingChurch) setExistingChurch(result.existingChurch);
         return;
       }
       router.push(result.redirectTo ?? "/dashboard");
@@ -1265,7 +1308,12 @@ export default function SignupIgrejaPage() {
           exit={{ opacity: 0, x: -16 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
         >
-          {step === 0 && <StepPersonal onNext={handlePersonal} />}
+          {step === 0 && (
+            <StepPersonal
+              onNext={handlePersonal}
+              onBack={() => setPreChecked(false)}
+            />
+          )}
           {step === 1 && (
             <StepConsent onNext={handleConsent} onBack={() => setStep(0)} />
           )}
@@ -1298,6 +1346,7 @@ export default function SignupIgrejaPage() {
               onTurnstileError={() => setTurnstileReady(false)}
               isPending={isPending}
               serverError={serverError}
+              existingChurch={existingChurch}
               turnstileReady={turnstileReady}
               isDev={isDev}
             />

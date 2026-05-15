@@ -250,7 +250,10 @@ export function OnboardingChecklist({
   const [conditions, setConditions] = useState(initialConditions);
   const [minimized, setMinimized] = useState(false);
   const [celebrating, setCelebrating] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("koinos:onboarding-dismissed") === "true";
+  });
   const [closing, setClosing] = useState(false);
 
   const particles = useMemo(() => makeParticles(16), []);
@@ -312,6 +315,7 @@ export function OnboardingChecklist({
     try {
       await completeOnboarding();
     } finally {
+      localStorage.setItem("koinos:onboarding-dismissed", "true");
       setDismissed(true);
     }
   }

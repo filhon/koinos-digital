@@ -304,59 +304,35 @@ export async function createChurch(
     }
   }
 
-  // 4. Create tenant via admin
+  // 4+5. Create tenant + member atomically via RPC (single transaction)
   const slug = await uniqueSlug(admin, church.churchName);
   const addressJson = JSON.stringify(church.address);
+  const encryptedCpf = encrypt(personal.cpf.replace(/\D/g, ""));
 
-  const { data: tenant, error: tenantError } = await admin
-    .from("tenants")
-    .insert({
-      name: church.churchName,
-      cnpj: church.cnpj ?? null,
-      slug,
-      plan: "gratuito",
-      shared_finances: false,
-    })
-    .select("id")
-    .single();
+  const { data: rpcResult, error: rpcError } = await admin.rpc(
+    "create_church_with_pastor",
+    {
+      p_church_name: church.churchName,
+      p_cnpj: church.cnpj ?? "",
+      p_slug: slug,
+      p_member_name: personal.name,
+      p_username: personal.username ?? "",
+      p_cpf: encryptedCpf,
+      p_email: personal.email,
+      p_phone: church.phone,
+    }
+  );
 
-  if (tenantError || !tenant) {
-    console.error("[onboarding] Erro ao criar tenant:", tenantError);
+  if (rpcError || !rpcResult) {
+    console.error("[onboarding] Erro ao criar igreja+pastor:", rpcError);
     return {
       success: false,
       error: "Erro ao criar a igreja. Tente novamente.",
     };
   }
 
-  const churchId = tenant.id;
-
-  // 5. Encrypt CPF and create member (pastor) via admin
-  const encryptedCpf = encrypt(personal.cpf.replace(/\D/g, ""));
-
-  const { data: member, error: memberError } = await admin
-    .from("members")
-    .insert({
-      church_id: churchId,
-      home_church_id: churchId,
-      name: personal.name,
-      username: personal.username ?? null,
-      cpf: encryptedCpf,
-      email: personal.email,
-      role: "pastor",
-      phone: church.phone,
-      is_active: true,
-    })
-    .select("id")
-    .single();
-
-  if (memberError || !member) {
-    console.error("[onboarding] Erro ao criar member:", memberError);
-    await admin.from("tenants").delete().eq("id", churchId);
-    return {
-      success: false,
-      error: "Erro ao criar o perfil. Tente novamente.",
-    };
-  }
+  const churchId = rpcResult.church_id as string;
+  const member = { id: rpcResult.member_id as string };
 
   // 6. Create general invite link via admin
   let inviteCode = randomCode();
@@ -466,12 +442,19 @@ export async function registerMember(
   // 1. Validate invite code
   const { data: invite, error: inviteError } = await admin
     .from("invite_links")
-    .select("id, church_id, member_id, active, invite_type")
+    .select("id, church_id, member_id, active, invite_type, expires_at")
     .eq("code", inviteCode)
     .maybeSingle();
 
   if (inviteError || !invite || !invite.active) {
     return { success: false, error: "Link de convite inválido ou revogado." };
+  }
+
+  if (invite.expires_at && new Date(invite.expires_at as string) < new Date()) {
+    return {
+      success: false,
+      error: "Link de convite expirado. Solicite um novo convite.",
+    };
   }
 
   const churchId = invite.church_id as string;
@@ -557,6 +540,13 @@ export async function registerMember(
         .from("members")
         .update({ email, updated_at: new Date().toISOString() })
         .eq("id", existingMemberId);
+
+      // Sync email in Supabase Auth so login works with the new email
+      try {
+        await admin.auth.admin.updateUserById(userId, { email });
+      } catch (err) {
+        console.error("[onboarding] Erro ao sincronizar email no Auth:", err);
+      }
 
       await logAudit({
         churchId,

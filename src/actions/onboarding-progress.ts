@@ -171,7 +171,7 @@ export async function checkAndUpdateProgress(): Promise<OnboardingResult> {
       .from("invite_links")
       .select("id", { count: "exact", head: true })
       .eq("church_id", user.church_id)
-      .eq("member_id", memberId),
+      .eq("active", true),
     admin
       .from("ministries")
       .select("id", { count: "exact", head: true })
