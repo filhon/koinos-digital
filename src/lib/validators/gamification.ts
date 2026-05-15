@@ -83,6 +83,25 @@ export interface GamificationAnalyticsData {
   monthlyCheckins: MonthlyCheckinRow[];
 }
 
+// ─── Liga Geral (ranking entre igrejas) ──────────────────────────────────────
+
+export const getChurchLeaderboardSchema = z.object({
+  period: z.enum(["month", "year"]).default("month"),
+});
+
+export type GetChurchLeaderboardInput = z.infer<
+  typeof getChurchLeaderboardSchema
+>;
+
+export interface ChurchRankRow {
+  church_id: string;
+  church_name: string;
+  total_points: number;
+  active_members: number;
+  normalized_score: number;
+  rank: number;
+}
+
 // ─── My Progress types ────────────────────────────────────────────────────────
 
 export interface ActionBreakdownItem {

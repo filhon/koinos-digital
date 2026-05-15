@@ -2,14 +2,18 @@ import Link from "next/link";
 import { BarChart2 } from "lucide-react";
 import { getUser } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
-import { getLeaderboard, getMyProgress } from "@/actions/gamification";
+import {
+  getLeaderboard,
+  getMyProgress,
+  getChurchLeaderboard,
+} from "@/actions/gamification";
 import { markStepCompleted } from "@/actions/onboarding-progress";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { GamificationView } from "./gamification-view";
-import { MyProgressCard } from "./my-progress-card";
+import { LigaView } from "./liga-view";
 import type {
   LeaderboardData,
   MyProgressData,
+  ChurchRankRow,
 } from "@/lib/validators/gamification";
 
 export const metadata = {
@@ -26,21 +30,18 @@ export default async function LigaPage() {
     user.role as (typeof ANALYTICS_ROLES)[number]
   );
 
-  const [leaderboardResult, progressResult] = await Promise.all([
+  const [leaderboardResult, progressResult, churchResult] = await Promise.all([
     getLeaderboard({ period: "monthly" }),
     getMyProgress(),
-    // Mark explore_league step for pastors visiting this page
+    getChurchLeaderboard({ period: "month" }),
     user.role === "pastor"
       ? markStepCompleted("explore_league").catch(() => {})
       : Promise.resolve(),
   ]);
 
-  const initialData: LeaderboardData = ("data" in leaderboardResult
+  const initialLeaderboard: LeaderboardData = ("data" in leaderboardResult
     ? leaderboardResult.data
-    : undefined) ?? {
-    teams: [],
-    individuals: [],
-  };
+    : undefined) ?? { teams: [], individuals: [] };
 
   const myProgress: MyProgressData =
     "data" in progressResult && progressResult.data
@@ -54,12 +55,15 @@ export default async function LigaPage() {
           badgeCount: 0,
         };
 
+  const initialChurchLeaderboard: ChurchRankRow[] =
+    "data" in churchResult && churchResult.data ? churchResult.data : [];
+
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-6">
       <div className="flex items-start justify-between gap-4">
         <PageHeader
           title="Liga"
-          description="Placar das 12 Tribos de Israel: pontuação mensal e anual"
+          description="Placar das tribos, ranking entre igrejas e seu progresso"
         />
         {canViewAnalytics && (
           <Link
@@ -71,8 +75,13 @@ export default async function LigaPage() {
           </Link>
         )}
       </div>
-      <MyProgressCard data={myProgress} />
-      <GamificationView initialData={initialData} />
+
+      <LigaView
+        initialLeaderboard={initialLeaderboard}
+        myProgress={myProgress}
+        initialChurchLeaderboard={initialChurchLeaderboard}
+        myChurchId={user.church_id}
+      />
     </div>
   );
 }

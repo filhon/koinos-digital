@@ -51,10 +51,7 @@ export function MyLevelWidget({ levelData }: MyLevelWidgetProps) {
 
           {/* Talentos */}
           <div className="shrink-0 flex items-center gap-1 px-2 py-1 rounded-full bg-[oklch(0.62_0.148_58/0.08)]">
-            <Coins
-              className="w-3 h-3 text-[oklch(0.62_0.148_58)]"
-              strokeWidth={2}
-            />
+            <Coins className="w-3 h-3 text-accent-500" strokeWidth={2} />
             <span className="text-[11px] font-semibold tabular-nums text-[oklch(0.52_0.12_58)]">
               {wallet_balance.toLocaleString("pt-BR")}
             </span>

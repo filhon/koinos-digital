@@ -947,8 +947,7 @@ TAREFAS:
    - Exibir mensagem amigável: "A Liga Geral será ativada quando mais igrejas entrarem no Koinos!"
    - Mostrar a igreja do usuário em 1º lugar (pódio solo)
 
-NÃO FAÇA: Não exiba dados de membros individuais de outras igrejas. Apenas nome da igreja e
-dados agregados. Não crie sistema de desafios entre igrejas.
+NÃO FAÇA: Não exiba dados de membros individuais de outras igrejas. Apenas nome da igreja e dados agregados. Não crie sistema de desafios entre igrejas.
 ENTREGÁVEIS: Liga Geral com ranking normalizado entre igrejas, layout 3 colunas na página da Liga.
 ```
 

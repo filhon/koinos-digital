@@ -11,6 +11,7 @@ import type { AuthUser } from "@/lib/auth/session";
 import {
   getLeaderboardSchema,
   getGamificationAnalyticsSchema,
+  getChurchLeaderboardSchema,
   type GetLeaderboardInput,
   type LeaderboardData,
   type TeamRankRow,
@@ -23,6 +24,8 @@ import {
   type MonthlyCheckinRow,
   type MyProgressData,
   type ActionBreakdownItem,
+  type GetChurchLeaderboardInput,
+  type ChurchRankRow,
 } from "@/lib/validators/gamification";
 
 type ActionResult<T> = { data: T; error: null } | { data: null; error: string };
@@ -541,6 +544,42 @@ export const getMyProgress = withPermission(
       },
       error: null,
     };
+  },
+  { minRole: "visitante" }
+);
+
+// ─── getChurchLeaderboard ─────────────────────────────────────────────────────
+// Liga Geral: ranking normalizado entre todas as igrejas do sistema.
+// Usa RPC SECURITY DEFINER para cruzar tenants (apenas dados agregados).
+
+export const getChurchLeaderboard = withPermission(
+  async (
+    _user: AuthUser,
+    input: GetChurchLeaderboardInput = { period: "month" }
+  ): Promise<ActionResult<ChurchRankRow[]>> => {
+    const parsed = getChurchLeaderboardSchema.safeParse(input);
+    if (!parsed.success)
+      return { data: null, error: parsed.error.issues[0].message };
+
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("get_church_leaderboard", {
+      p_period: parsed.data.period,
+    });
+
+    if (error) return { data: null, error: error.message };
+
+    const rows: ChurchRankRow[] = (data ?? []).map(
+      (row: Record<string, unknown>) => ({
+        church_id: row.church_id as string,
+        church_name: row.church_name as string,
+        total_points: Number(row.total_points ?? 0),
+        active_members: Number(row.active_members ?? 0),
+        normalized_score: Number(row.normalized_score ?? 0),
+        rank: Number(row.rank ?? 0),
+      })
+    );
+
+    return { data: rows, error: null };
   },
   { minRole: "visitante" }
 );
