@@ -106,7 +106,7 @@ export const getAssemblyById = withPermission(
       .single();
 
     if (error || !data)
-      return { data: null, error: "Assembléia não encontrada." };
+      return { data: null, error: "Assembleia não encontrada." };
     return { data: data as AssemblyRow, error: null };
   },
   { module: "assembleia", minRole: "visitante" }
@@ -335,7 +335,7 @@ export const createElection = withPermission(
       .eq("church_id", user.church_id)
       .single();
 
-    if (!assembly) return { data: null, error: "Assembléia não encontrada." };
+    if (!assembly) return { data: null, error: "Assembleia não encontrada." };
 
     const { data, error } = await supabase
       .from("elections")
@@ -785,7 +785,7 @@ export const requestVoteCode = withPermission(
 
     const assemblyName =
       (election.assemblies as unknown as { name: string })?.name ??
-      "Assembléia";
+      "Assembleia";
 
     await sendEmail({
       to: member.email,

@@ -43,8 +43,8 @@ export default async function EleicaoDetailPage({ params }: Props) {
         title={election.name}
         description={election.description ?? undefined}
         breadcrumbs={[
-          { label: "Assembléias", href: "/assembleia" },
-          { label: "Assembléia", href: `/assembleia/${id}` },
+          { label: "Assembleias", href: "/assembleia" },
+          { label: "Assembleia", href: `/assembleia/${id}` },
         ]}
       />
 

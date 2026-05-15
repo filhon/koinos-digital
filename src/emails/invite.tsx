@@ -37,9 +37,8 @@ export default function InviteEmail({
             {inviteeName ? `Olá, ${inviteeName}!` : "Olá!"}
           </Text>
           <Text style={text}>
-            <strong>{inviterName}</strong> te convidou para fazer parte da{" "}
-            <strong>{churchName}</strong> no Koinos, a plataforma de gestão da
-            sua comunidade.
+            <strong>{inviterName}</strong> te convidou para a{" "}
+            <strong>{churchName}</strong> no Koinos.
           </Text>
           <Text style={text}>
             Clique no botão abaixo para aceitar o convite e criar sua conta:

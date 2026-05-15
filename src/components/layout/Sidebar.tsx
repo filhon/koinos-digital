@@ -89,7 +89,7 @@ const navigation: NavGroup[] = [
         roles: ["admin", "pastor", "presbítero", "diácono", "tesoureiro"],
       },
       { label: "Liga", href: "/liga", icon: Trophy },
-      { label: "Assembléia", href: "/assembleia", icon: Vote },
+      { label: "Assembleia", href: "/assembleia", icon: Vote },
       {
         label: "Landing Page",
         href: "/landing-page",

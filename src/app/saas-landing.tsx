@@ -12,12 +12,12 @@ function TrustSignals() {
   const signals = [
     {
       icon: Shield,
-      label: "LGPD Compliant",
+      label: "Em conformidade com a LGPD",
       desc: "Consentimento, exportação e exclusão de dados",
     },
     {
       icon: Zap,
-      label: "Mobile-first",
+      label: "100% responsivo",
       desc: "100% responsivo, otimizado para celular",
     },
     {
@@ -128,9 +128,9 @@ function Pricing() {
             Preços
           </p>
           <h2 className="font-display text-4xl md:text-5xl text-foreground leading-tight">
-            Simples e transparente.
+            Quatro planos.
             <br />
-            <span className="text-primary">Cresça no seu ritmo.</span>
+            <span className="text-primary">O gratuito já faz muita coisa.</span>
           </h2>
           <p className="mt-4 text-base text-text-body">
             Comece grátis. Faça upgrade quando precisar.
@@ -149,7 +149,7 @@ function Pricing() {
             >
               {plan.highlight && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-accent text-primary-900 text-[10px] font-bold tracking-widest uppercase">
-                  Popular
+                  Mais escolhido
                 </div>
               )}
 
@@ -254,8 +254,8 @@ function CtaBanner() {
             <span className="text-accent-300">É gratuito.</span>
           </h2>
           <p className="text-primary-300 text-lg mb-10 max-w-lg mx-auto">
-            Cadastre sua igreja em minutos e comece a usar todos os módulos do
-            plano Grátis imediatamente.
+            O cadastro tem 3 passos. O plano Grátis já inclui membros, agenda,
+            mural e gamificação.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
@@ -323,7 +323,8 @@ function Footer() {
           </Link>
         </div>
         <p className="text-xs text-text-body">
-          Versão Beta · © {new Date().getFullYear()} Koinos · LGPD Compliant
+          Versão Beta · © {new Date().getFullYear()} Koinos · Em conformidade
+          com a LGPD
         </p>
       </div>
     </footer>

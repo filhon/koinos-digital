@@ -35,7 +35,7 @@ export default async function AssembleiaDetailPage({ params }: Props) {
       <PageHeader
         title={assembly.name}
         description={assembly.reason}
-        breadcrumbs={[{ label: "Assembléias", href: "/assembleia" }]}
+        breadcrumbs={[{ label: "Assembleias", href: "/assembleia" }]}
         action={
           isPastor ? (
             <Link

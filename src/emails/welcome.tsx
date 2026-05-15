@@ -31,8 +31,8 @@ export default function WelcomeEmail({
           <Heading style={h1}>Bem-vindo ao Koinos</Heading>
           <Text style={text}>Olá, {memberName}!</Text>
           <Text style={text}>
-            Sua conta na {churchName} foi criada com sucesso. Agora você tem
-            acesso à plataforma de gestão da sua comunidade.
+            Sua conta na {churchName} foi criada. Você já pode acessar o
+            sistema.
           </Text>
           <Section style={buttonSection}>
             <Button href={appUrl} style={button}>

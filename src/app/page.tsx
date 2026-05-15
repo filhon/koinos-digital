@@ -3,7 +3,7 @@ import { SaasLanding } from "./saas-landing";
 export const metadata = {
   title: "Koinos — Gestão completa para igrejas",
   description:
-    "SaaS de gestão para igrejas evangélicas. Membros, agenda, eventos, financeiro, mural, gamificação e muito mais. Plano gratuito para sempre.",
+    "Gestão para igrejas evangélicas. Membros, agenda, financeiro, mural e gamificação. Gratuito para até 100 membros.",
 };
 
 export default function HomePage() {

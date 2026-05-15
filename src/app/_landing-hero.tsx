@@ -140,8 +140,8 @@ export function LandingHero() {
               <span className="sr-only" aria-live="polite" aria-atomic="true">
                 {words[wordIndex]}
               </span>
-              , mural de interação, gamificação e muito mais. Tudo pensado para
-              igrejas brasileiras.
+              , mural, gamificação por tribos e check-in por QR Code. Feito para
+              igrejas evangélicas brasileiras.
             </motion.p>
 
             <motion.div

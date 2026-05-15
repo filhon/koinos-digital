@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     apple: "/favicon.svg",
   },
   description:
-    "Plataforma SaaS 360° de gestão para igrejas evangélicas brasileiras. Membros, agenda, financeiro, liturgia, gamificação e muito mais em um único sistema.",
+    "Sistema de gestão para igrejas evangélicas. Membros, agenda, financeiro e comunicação em um lugar só.",
   keywords:
     "gestão de igrejas, sistema para igrejas, SaaS igreja, controle de membros, agenda eclesiástica",
   authors: [{ name: "Koinos" }],
@@ -47,13 +47,12 @@ export const metadata: Metadata = {
     locale: "pt_BR",
     siteName: "Koinos",
     title: "Koinos — Sistema de Gestão para Igrejas",
-    description:
-      "Plataforma SaaS 360° de gestão para igrejas evangélicas brasileiras.",
+    description: "Sistema de gestão para igrejas evangélicas brasileiras.",
   },
   twitter: {
     card: "summary_large_image",
     title: "Koinos — Sistema de Gestão para Igrejas",
-    description: "Plataforma SaaS 360° de gestão para igrejas evangélicas.",
+    description: "Sistema de gestão para igrejas evangélicas brasileiras.",
   },
   robots: {
     index: true,

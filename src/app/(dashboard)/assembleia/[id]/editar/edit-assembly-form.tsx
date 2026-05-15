@@ -73,7 +73,7 @@ export function EditAssemblyForm({ assembly }: EditAssemblyFormProps) {
         toast.error(result.error);
         return;
       }
-      toast.success("Assembléia atualizada!");
+      toast.success("Assembleia atualizada!");
       router.push(`/assembleia/${assembly.id}`);
     } finally {
       setLoading(false);
@@ -88,7 +88,7 @@ export function EditAssemblyForm({ assembly }: EditAssemblyFormProps) {
         toast.error(result.error);
         return;
       }
-      toast.success("Assembléia excluída.");
+      toast.success("Assembleia excluída.");
       router.push("/assembleia");
     } finally {
       setDeleting(false);

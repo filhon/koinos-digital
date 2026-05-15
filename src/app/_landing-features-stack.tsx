@@ -546,7 +546,7 @@ const features = [
     description:
       "Cadastro completo com CPF criptografado, vínculos familiares, papéis por hierarquia e portal de privacidade LGPD integrado.",
     detail:
-      "Gerencie toda a sua congregação em um só lugar, com segurança e conformidade.",
+      "Cadastro com CPF criptografado e portal LGPD. O membro controla seus próprios dados.",
     bg: "oklch(0.26 0.082 226)",
     Screen: MembrosUI,
   },
@@ -556,7 +556,7 @@ const features = [
     description:
       "Calendário mensal e semanal, eventos recorrentes, ministérios, escalas automáticas e liturgia editável com arrastar e soltar.",
     detail:
-      "Nunca mais perca um compromisso. Toda a agenda da sua igreja sincronizada.",
+      "Calendário com recorrência semanal e mensal. Cada líder vê só os eventos dos seus ministérios.",
     bg: "oklch(0.24 0.072 220)",
     Screen: AgendaUI,
   },
@@ -566,7 +566,7 @@ const features = [
     description:
       'Feed de posts com reações "Orar" e "Gratidão", gamificação com as 12 Tribos de Israel, streaks de devoção e QR code de check-in.',
     detail:
-      "Aproxime sua comunidade com ferramentas pensadas para a cultura da sua igreja.",
+      "Mural com reações e gamificação por tribos. Membros interagem sem precisar de WhatsApp.",
     bg: "oklch(0.26 0.086 228)",
     Screen: MuralUI,
   },
@@ -576,7 +576,7 @@ const features = [
     description:
       "Controle de contas e transações imutáveis com comprovantes, relatórios gráficos, suporte a múltiplas congregações e exportação PDF.",
     detail:
-      "Transparência total para a liderança. Relatórios prontos para prestação de contas.",
+      "Cada transação é imutável. Estornos geram lançamento inverso, nunca apagam o original.",
     bg: "oklch(0.22 0.068 222)",
     Screen: FinanceiroUI,
   },
@@ -586,7 +586,7 @@ const features = [
     description:
       "Gestão de assembleias com eleições anônimas (SHA-256), votação presencial e remota com OTP por e-mail e apuração em tempo real.",
     detail:
-      "Processos democráticos com segurança e credibilidade para toda a congregação.",
+      "Votação anônima com hash SHA-256 e código OTP por e-mail. O resultado sai na hora.",
     bg: "oklch(0.24 0.078 224)",
     Screen: AssembleiaUI,
   },
@@ -596,7 +596,7 @@ const features = [
     description:
       "Estruture cultos com itens arrastáveis. Com o add-on premium, a IA sugere leituras e cânticos do repertório baseados no objetivo do culto.",
     detail:
-      "Do planejamento à execução. Cada culto com a qualidade que a sua congregação merece.",
+      "Monte a ordem do culto arrastando itens. O add-on de IA sugere músicas do repertório.",
     bg: "oklch(0.26 0.082 226)",
     Screen: LiturgiaUI,
   },
@@ -733,8 +733,8 @@ export function FeatureStackSection() {
             </span>
           </h2>
           <p className="mt-4 text-base text-text-body max-w-lg mx-auto">
-            Um sistema completo que cresce com a sua comunidade. Scroll para
-            explorar.
+            Seis módulos. Cada um resolve um problema real de gestão
+            eclesiástica.
           </p>
         </div>
 

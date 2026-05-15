@@ -45,7 +45,7 @@ export default function PlanPanel({
         window.location.href = res.url;
       }
     } catch (e: unknown) {
-      toast.error("Erro ao abrir portal de gerencimento", {
+      toast.error("Erro ao abrir portal de gerenciamento", {
         description: (e as Error).message,
       });
     }
@@ -105,8 +105,9 @@ export default function PlanPanel({
               <CardHeader>
                 <CardTitle className="capitalize">{key}</CardTitle>
                 <CardDescription>
-                  Até {plan.limit === Infinity ? "Ilimitado" : plan.limit}{" "}
-                  membros
+                  {plan.limit === Infinity
+                    ? "Membros ilimitados"
+                    : `Até ${plan.limit} membros`}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -129,7 +130,7 @@ export default function PlanPanel({
                   </Button>
                 ) : !plan.priceId ? (
                   <Button variant="outline" className="w-full" disabled>
-                    Downgrade (Não automático)
+                    Plano inferior
                   </Button>
                 ) : (
                   <Button

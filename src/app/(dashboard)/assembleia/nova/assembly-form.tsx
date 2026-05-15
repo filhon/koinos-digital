@@ -44,7 +44,7 @@ export function AssemblyForm() {
         toast.error(result.error);
         return;
       }
-      toast.success("Assembléia criada com sucesso!");
+      toast.success("Assembleia criada com sucesso!");
       const id = "data" in result ? result.data?.id : null;
       router.push(`/assembleia/${id}`);
     } finally {
@@ -57,10 +57,10 @@ export function AssemblyForm() {
       <Card>
         <CardContent className="pt-6 space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Nome da Assembléia *</Label>
+            <Label htmlFor="name">Nome da Assembleia *</Label>
             <Input
               id="name"
-              placeholder="Ex: Assembléia Geral Ordinária, Abril 2026"
+              placeholder="Ex: Assembleia Geral Ordinária, Abril 2026"
               {...register("name")}
             />
             {errors.name && (
@@ -164,7 +164,7 @@ export function AssemblyForm() {
         </Button>
         <Button type="submit" disabled={loading}>
           {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Criar Assembléia
+          Criar Assembleia
         </Button>
       </div>
     </form>

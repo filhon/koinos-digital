@@ -20,7 +20,7 @@ export default async function AssembleiaPage() {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <PageHeader
-        title="Assembléias"
+        title="Assembleias"
         description="Registro de assembléias da igreja e sistemas de eleição."
         action={
           isPastor ? (
@@ -29,7 +29,7 @@ export default async function AssembleiaPage() {
               className={cn(buttonVariants({ size: "sm" }))}
             >
               <Plus className="mr-2 h-4 w-4" />
-              Nova Assembléia
+              Nova Assembleia
             </Link>
           ) : undefined
         }

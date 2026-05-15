@@ -19,10 +19,10 @@ export default async function EditarAssembleiaPage({ params }: Props) {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <PageHeader
-        title="Editar Assembléia"
+        title="Editar Assembleia"
         description={assembly.name}
         breadcrumbs={[
-          { label: "Assembléias", href: "/assembleia" },
+          { label: "Assembleias", href: "/assembleia" },
           { label: assembly.name, href: `/assembleia/${id}` },
         ]}
       />

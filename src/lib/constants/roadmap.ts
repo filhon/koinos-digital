@@ -85,7 +85,7 @@ export const ROADMAP_ITEMS: RoadmapItem[] = [
     id: "checkin",
     title: "Check-in por QR Code",
     description:
-      "Token Ed25519 rotativo, geolocalização opcional, scanner pelo celular e formulário para visitantes sem conta.",
+      "QR Code seguro que muda a cada evento. Funciona pelo celular, sem instalar app. Visitantes preenchem um formulário rápido.",
     category: "Gestão",
     status: "launched",
     icon: ScanLine,
@@ -94,7 +94,7 @@ export const ROADMAP_ITEMS: RoadmapItem[] = [
     id: "liturgy-ai",
     title: "Liturgia com sugestões de IA",
     description:
-      "Editor drag-and-drop com sugestões de músicas e leituras bíblicas geradas por GPT-4, com delegação ao líder musical.",
+      "Monte o culto arrastando itens. A IA sugere músicas e leituras com base no tema, com delegação ao líder musical.",
     category: "IA",
     status: "launched",
     icon: Sparkles,
@@ -119,7 +119,7 @@ export const ROADMAP_ITEMS: RoadmapItem[] = [
   },
   {
     id: "assembly",
-    title: "Assembléia e votação anônima",
+    title: "Assembleia e votação anônima",
     description:
       "Eleições com hash anônimo, quórum automático, voto remoto por OTP e resultados em tempo real.",
     category: "Gestão",
@@ -141,7 +141,7 @@ export const ROADMAP_ITEMS: RoadmapItem[] = [
     id: "bible-reading",
     title: "Leitura bíblica diária",
     description:
-      "Plano de leitura em 4 anos com bíblia inline, calendário de progresso, streaks e widget no início.",
+      "Plano de leitura em 4 anos com texto bíblico integrado, calendário de progresso e streaks.",
     category: "Comunidade",
     status: "in_progress",
     icon: BookOpen,

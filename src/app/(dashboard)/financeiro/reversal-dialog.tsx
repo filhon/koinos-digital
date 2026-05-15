@@ -79,11 +79,8 @@ export function ReversalDialog({
           <AlertTriangle className="size-4 shrink-0 text-warning-dark mt-0.5" />
           <div className="text-sm text-warning-dark space-y-1">
             <p className="font-medium">
-              Esta ação criará uma transação inversa.
-            </p>
-            <p className="text-xs opacity-80">
-              A transação original permanece imutável nos registros, conforme
-              exigido para auditoria financeira.
+              O estorno gera um lançamento inverso. A transação original não é
+              alterada.
             </p>
           </div>
         </div>

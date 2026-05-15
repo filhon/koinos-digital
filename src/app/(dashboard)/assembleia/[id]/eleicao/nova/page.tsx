@@ -20,9 +20,9 @@ export default async function NovaEleicaoPage({ params }: Props) {
     <div className="max-w-2xl mx-auto space-y-6">
       <PageHeader
         title="Nova Eleição"
-        description={`Assembléia: ${assembly.name}`}
+        description={`Assembleia: ${assembly.name}`}
         breadcrumbs={[
-          { label: "Assembléias", href: "/assembleia" },
+          { label: "Assembleias", href: "/assembleia" },
           { label: assembly.name, href: `/assembleia/${id}` },
         ]}
       />

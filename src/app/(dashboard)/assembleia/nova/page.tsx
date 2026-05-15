@@ -8,9 +8,9 @@ export default async function NovaAssembleiaPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <PageHeader
-        title="Nova Assembléia"
+        title="Nova Assembleia"
         description="Registre uma nova assembléia da igreja."
-        breadcrumbs={[{ label: "Assembléias", href: "/assembleia" }]}
+        breadcrumbs={[{ label: "Assembleias", href: "/assembleia" }]}
       />
       <AssemblyForm />
     </div>

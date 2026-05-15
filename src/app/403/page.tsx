@@ -40,9 +40,8 @@ export default function ForbiddenPage() {
           className="text-sm leading-relaxed"
           style={{ color: "var(--muted-foreground)" }}
         >
-          Você não tem permissão para acessar esta página. Entre em contato com
-          o pastor ou administrador da sua igreja caso acredite que isso é um
-          erro.
+          Você não tem permissão para acessar esta página. Se precisar de
+          acesso, fale com o pastor ou administrador da sua igreja.
         </p>
       </div>
 

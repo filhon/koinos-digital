@@ -24,7 +24,7 @@ const PLAN_FEATURES: { key: string; label: string; plan: string }[] = [
   { key: "repertorio", label: "Repertório", plan: "Crescimento" },
   { key: "recursos", label: "Recursos", plan: "Crescimento" },
   { key: "financeiro_basico", label: "Financeiro Básico", plan: "Igreja" },
-  { key: "assembleia", label: "Assembléia", plan: "Igreja" },
+  { key: "assembleia", label: "Assembleia", plan: "Igreja" },
   { key: "multi_congregacao", label: "Multi-Congregação", plan: "Catedral" },
   {
     key: "suporte_prioritario",
@@ -38,7 +38,7 @@ const ADDON_FEATURES: { key: string; label: string }[] = [
   { key: "escala_ia", label: "Escala IA" },
   { key: "landing_dominio", label: "Domínio Personalizado" },
   { key: "financeiro_avancado", label: "Financeiro Avançado" },
-  { key: "assembleia_votacao", label: "Votação em Assembléia" },
+  { key: "assembleia_votacao", label: "Votação em Assembleia" },
   { key: "analytics_gamificacao", label: "Analytics de Gamificação" },
 ];
 
