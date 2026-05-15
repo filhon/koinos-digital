@@ -6,6 +6,7 @@ import { Award, Star, Users, Mail, Phone, Calendar } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { PublicProfileData } from "@/actions/profile";
+import { LevelBadgeCompact } from "@/app/(dashboard)/perfil/level-section";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -186,9 +187,21 @@ export function PublicProfile({ data }: { data: PublicProfileData }) {
           transition={{ delay: 0.1, duration: 0.35 }}
           className="mb-6"
         >
-          <h1 className="font-display text-[1.75rem] font-normal leading-tight tracking-[-0.015em] text-[oklch(0.18_0.012_230)]">
-            {data.name}
-          </h1>
+          <div className="flex items-start gap-2">
+            <h1 className="font-display text-[1.75rem] font-normal leading-tight tracking-[-0.015em] text-[oklch(0.18_0.012_230)]">
+              {data.name}
+            </h1>
+            {(data.current_level ?? 1) >= 1 && (
+              <div className="mt-1.5">
+                <LevelBadgeCompact
+                  level={data.current_level}
+                  name={data.level_name}
+                  icon={data.level_icon}
+                  size="sm"
+                />
+              </div>
+            )}
+          </div>
           <p className="mt-0.5 text-sm font-medium text-[oklch(0.52_0.016_220)]">
             @{data.username}
           </p>

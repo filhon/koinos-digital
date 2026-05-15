@@ -48,6 +48,8 @@ export interface PostAuthor {
   team_color: string | null;
   streak: number;
   tags: string[];
+  level: number;
+  level_name: string;
 }
 
 export interface PostRow {
@@ -131,6 +133,8 @@ export const listPosts = withPermission(
       author_team_color: string | null;
       author_streak: number | null;
       author_tags: string[] | null;
+      author_level: number | null;
+      author_level_name: string | null;
       comment_count: number;
       reaction_orar: number;
       reaction_gratidao: number;
@@ -158,6 +162,8 @@ export const listPosts = withPermission(
             team_color: row.author_team_color ?? null,
             streak: Number(row.author_streak ?? 0),
             tags: row.author_tags ?? [],
+            level: Number(row.author_level ?? 1),
+            level_name: row.author_level_name ?? "Semente",
           }
         : null,
       comment_count: Number(row.comment_count ?? 0),
@@ -265,7 +271,15 @@ export const createPost = withPermission(
           ? (row.author[0] ?? null)
           : row.author;
         if (!a) return null;
-        return { ...a, team_name: null, team_color: null, streak: 0, tags: [] };
+        return {
+          ...a,
+          team_name: null,
+          team_color: null,
+          streak: 0,
+          tags: [],
+          level: 1,
+          level_name: "Semente",
+        };
       })(),
       comment_count: 0,
       reaction_orar: 0,

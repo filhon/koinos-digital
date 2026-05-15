@@ -377,6 +377,9 @@ export type PublicProfileData = {
   email: string | null;
   phone: string | null;
   birth_date: string | null;
+  current_level: number;
+  level_name: string;
+  level_icon: string;
 };
 
 export type GetPublicProfileResult =
@@ -391,7 +394,7 @@ export async function getPublicProfile(
   const { data: member, error } = await admin
     .from("members")
     .select(
-      "id, name, username, avatar_url, email, phone, birth_date, public_email, public_phone, public_birth_date, church_id"
+      "id, name, username, avatar_url, email, phone, birth_date, public_email, public_phone, public_birth_date, church_id, current_level"
     )
     .ilike("username", username)
     .eq("is_active", true)
@@ -457,6 +460,14 @@ export async function getPublicProfile(
     0
   );
 
+  // Nível atual
+  const memberLevel = (member.current_level as number) ?? 1;
+  const { data: levelRow } = await admin
+    .from("levels")
+    .select("name, icon")
+    .eq("level", memberLevel)
+    .maybeSingle();
+
   return {
     success: true,
     data: {
@@ -475,6 +486,9 @@ export async function getPublicProfile(
       birth_date: member.public_birth_date
         ? (member.birth_date as string | null)
         : null,
+      current_level: memberLevel,
+      level_name: (levelRow?.name as string) ?? "Semente",
+      level_icon: (levelRow?.icon as string) ?? "🌱",
     },
   };
 }

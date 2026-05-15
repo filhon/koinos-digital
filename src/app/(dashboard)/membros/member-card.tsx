@@ -27,6 +27,7 @@ import {
 import { RoleBadge } from "./role-badge";
 import { updateMemberRole } from "@/actions/members";
 import type { MemberRow } from "@/actions/members";
+import { LevelBadgeCompact } from "@/app/(dashboard)/perfil/level-section";
 
 const ROLE_ORDER = [
   "pastor",
@@ -126,8 +127,16 @@ export function MemberCard({
             <p className="text-sm font-medium truncate text-foreground group-hover:text-primary transition-colors duration-150">
               {member.name}
             </p>
-            <div className="flex items-center gap-1.5 mt-0.5">
+            <div className="flex items-center flex-wrap gap-1 mt-0.5">
               <RoleBadge role={member.role} />
+              {(member.current_level ?? 1) > 1 && (
+                <LevelBadgeCompact
+                  level={member.current_level}
+                  name=""
+                  icon=""
+                  size="xs"
+                />
+              )}
               {!member.is_active && (
                 <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium bg-error-light text-error-dark">
                   Inativo

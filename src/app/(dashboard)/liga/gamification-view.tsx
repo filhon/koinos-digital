@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Trophy, Users, Star, Crown, Medal, Award } from "lucide-react";
 import { toast } from "sonner";
 import { getLeaderboard } from "@/actions/gamification";
+import { LevelBadgeCompact } from "@/app/(dashboard)/perfil/level-section";
 import type {
   LeaderboardData,
   TeamRankRow,
@@ -243,11 +244,21 @@ function IndividualRow({
         )}
       </div>
 
-      {/* Name + tribe */}
+      {/* Name + tribe + level */}
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-foreground">
-          {person.member_name}
-        </p>
+        <div className="flex items-center gap-1.5">
+          <p className="truncate text-sm font-medium text-foreground">
+            {person.member_name}
+          </p>
+          {(person.current_level ?? 1) > 1 && (
+            <LevelBadgeCompact
+              level={person.current_level}
+              name={person.level_name}
+              icon=""
+              size="xs"
+            />
+          )}
+        </div>
         <TribeBadge teamName={person.team_name} teamColor={person.team_color} />
       </div>
 

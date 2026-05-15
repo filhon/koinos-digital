@@ -32,6 +32,8 @@ export interface IndividualRankRow {
   team_name: string;
   team_color: string;
   total_points: number;
+  current_level: number;
+  level_name: string;
 }
 
 export interface LeaderboardData {

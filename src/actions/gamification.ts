@@ -83,6 +83,8 @@ export const getLeaderboard = withPermission(
           team_name: row.team_name as string,
           team_color: row.team_color as string,
           total_points: Number(row.total_points ?? 0),
+          current_level: Number(row.current_level ?? 1),
+          level_name: (row.level_name as string) ?? "Semente",
         }));
 
         return { data: { teams, individuals }, error: null };

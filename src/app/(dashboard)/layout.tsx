@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AppShell } from "@/components/layout/AppShell";
 import { OnboardingChecklist } from "@/components/layout/OnboardingTour";
 import { PushPermissionBanner } from "@/components/layout/PushPermissionBanner";
+import { LevelUpChecker } from "@/components/ui/level-up-toast";
 import { checkAndUpdateProgress } from "@/actions/onboarding-progress";
 import type {
   OnboardingProgressData,
@@ -62,6 +63,7 @@ export default async function DashboardLayout({
         />
       )}
       {member?.id && <PushPermissionBanner memberId={member.id as string} />}
+      <LevelUpChecker />
       {children}
     </AppShell>
   );

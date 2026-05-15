@@ -22,6 +22,7 @@ import type { PostRow } from "@/actions/posts";
 import { CommentsSection } from "./comments-section";
 import { TribeBadge } from "@/app/(dashboard)/liga/tribe-badge";
 import { TagChip } from "@/app/(dashboard)/membros/[id]/tags-editor";
+import { LevelBadgeCompact } from "@/app/(dashboard)/perfil/level-section";
 import { cn } from "@/lib/utils";
 
 const ROLE_CONFIG: Record<string, { label: string; className: string }> = {
@@ -268,6 +269,15 @@ export function PostCard({
               {(author?.tags ?? []).map((tag) => (
                 <TagChip key={tag} tag={tag} size="sm" />
               ))}
+              {/* Nível */}
+              {(author?.level ?? 1) > 1 && (
+                <LevelBadgeCompact
+                  level={author!.level}
+                  name={author!.level_name}
+                  icon=""
+                  size="xs"
+                />
+              )}
               {/* Streak */}
               {(author?.streak ?? 0) >= 3 && (
                 <motion.span

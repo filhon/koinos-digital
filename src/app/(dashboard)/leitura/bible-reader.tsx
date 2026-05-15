@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { markRead } from "@/actions/devotion";
+import { showLevelUpToast } from "@/components/ui/level-up-toast";
 import { cn } from "@/lib/utils";
 import type { TodayReadingFull, ReadingHistoryDay } from "@/actions/leitura";
 import { format, parseISO } from "date-fns";
@@ -260,7 +261,16 @@ export function BibleReader({ initialReading, history }: BibleReaderProps) {
       setShowCelebration(true);
       setTimeout(() => setShowCelebration(false), 1000);
 
-      if (result.data.bonus_points > 0) {
+      // Mostrar toast de level-up se houve promoção de nível
+      if (result.data.level_up) {
+        // Buscar o ícone do nível via localStorage (gravado pelo getMyLevel no perfil)
+        // Como não temos o ícone aqui, usamos um emoji genérico baseado no nível
+        showLevelUpToast({
+          level: result.data.level_up.new_level,
+          name: result.data.level_up.level_name,
+          icon: "⭐",
+        });
+      } else if (result.data.bonus_points > 0) {
         toast.success(
           `Parabéns! +${result.data.bonus_points} pts bônus — ${result.data.current_streak} dias seguidos!`,
           { duration: 5000 }

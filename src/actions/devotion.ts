@@ -110,7 +110,11 @@ export const markRead = withPermission(
     user: AuthUser,
     input: MarkReadInput
   ): Promise<
-    ActionResult<{ current_streak: number; bonus_points: number }>
+    ActionResult<{
+      current_streak: number;
+      bonus_points: number;
+      level_up: { new_level: number; level_name: string } | null;
+    }>
   > => {
     const parsed = markReadSchema.safeParse(input);
     if (!parsed.success)
@@ -134,6 +138,7 @@ export const markRead = withPermission(
       current_streak?: number;
       bonus_points?: number;
       base_points?: number;
+      level_up?: { new_level: number; level_name: string } | null;
     };
 
     if (result?.error) return { data: null, error: result.error };
@@ -142,6 +147,7 @@ export const markRead = withPermission(
       data: {
         current_streak: result.current_streak ?? 0,
         bonus_points: result.bonus_points ?? 0,
+        level_up: result.level_up ?? null,
       },
       error: null,
     };

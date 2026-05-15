@@ -47,6 +47,7 @@ export interface MemberRow {
   baptized_at: string | null;
   address: Record<string, string> | null;
   tags: string[];
+  current_level: number;
   created_at: string;
   updated_at: string;
 }

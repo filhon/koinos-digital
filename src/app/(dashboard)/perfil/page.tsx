@@ -4,19 +4,22 @@ import { requireAuth } from "@/lib/auth/session";
 import { getProfile } from "@/actions/profile";
 import { getMyStreak } from "@/actions/devotion";
 import { getMyBadges } from "@/actions/badges";
+import { getMyLevel } from "@/actions/levels";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ProfileForm } from "./profile-form";
 import { BadgesSection } from "./badges-section";
 import { PublicProfileSection } from "./public-profile-section";
+import { LevelSection } from "./level-section";
 
 export const metadata = { title: "Meu Perfil — Koinos" };
 
 export default async function PerfilPage() {
   const user = await requireAuth();
-  const [result, streakResult, badgesResult] = await Promise.all([
+  const [result, streakResult, badgesResult, levelResult] = await Promise.all([
     getProfile(),
     getMyStreak(),
     getMyBadges(),
+    getMyLevel(),
   ]);
   const streak =
     streakResult && "data" in streakResult && streakResult.data
@@ -51,6 +54,11 @@ export default async function PerfilPage() {
 
       {/* Perfil público */}
       <PublicProfileSection profile={result.data} />
+
+      {/* Nível e Talentos */}
+      {levelResult && "data" in levelResult && levelResult.data && (
+        <LevelSection initialData={levelResult.data} />
+      )}
 
       {/* Conquistas */}
       <div className="rounded-2xl border border-border bg-card p-4">
