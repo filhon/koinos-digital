@@ -84,7 +84,7 @@ export default async function RootLayout({
       )}
       suppressHydrationWarning
     >
-      <body className="antialiased" nonce={nonce}>
+      <body className="antialiased" nonce={nonce} suppressHydrationWarning>
         <a href="#main-content" className="skip-to-content">
           Ir para o conteúdo principal
         </a>
