@@ -301,6 +301,12 @@ function Footer() {
             Cadastrar
           </Link>
           <Link
+            href="/roadmap"
+            className="hover:text-primary transition-colors rounded-sm"
+          >
+            Roadmap
+          </Link>
+          <Link
             href="/termos"
             className="hover:text-primary transition-colors rounded-sm"
           >

@@ -24,6 +24,7 @@ import {
   Package,
   BookOpen,
   MessageCircle,
+  Map,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { sidebarSpring } from "@/lib/motion";
@@ -36,6 +37,8 @@ interface NavItem {
   icon: React.ElementType;
   /** Se definido, apenas esses roles veem o item. */
   roles?: MemberRole[];
+  /** Abre em nova aba. */
+  external?: boolean;
 }
 
 interface NavGroup {
@@ -117,6 +120,12 @@ const navigation: NavGroup[] = [
         href: "/admin/dashboard",
         icon: Shield,
         roles: ["admin"],
+      },
+      {
+        label: "Roadmap",
+        href: "/roadmap",
+        icon: Map,
+        external: true,
       },
     ],
   },
@@ -207,12 +216,17 @@ export function Sidebar() {
                     ? pathname === "/dashboard"
                     : pathname.startsWith(item.href);
 
+                const linkProps = item.external
+                  ? { target: "_blank", rel: "noopener noreferrer" }
+                  : {};
+
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
                     aria-label={collapsed ? item.label : undefined}
                     aria-current={isActive ? "page" : undefined}
+                    {...linkProps}
                     className={cn(
                       "flex items-center rounded-lg py-2 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-1",
                       collapsed ? "justify-center px-0" : "gap-3 px-2",
