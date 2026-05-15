@@ -4,36 +4,42 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   CalendarDays,
-  Users,
-  MessageSquare,
   Clock,
   MapPin,
   Video,
   Trophy,
   ArrowRight,
   BookOpen,
-  Vote,
-  Banknote,
-  ListTodo,
 } from "lucide-react";
 import { staggerContainer, staggerItem } from "@/lib/motion";
 import { DailyReadingWidget } from "./daily-reading-widget";
+import { MyLevelWidget } from "./my-level-widget";
+import { MobileWidgetsStrip } from "./mobile-widgets-strip";
+import { HomeFeed } from "./home-feed";
 import type { TodayReadingData } from "@/lib/validators/devotion";
 import type { EventWithResponsible } from "@/actions/events";
 import type { TeamRankRow } from "@/lib/validators/gamification";
 import type { MemberRole } from "@/lib/auth/session";
+import type { MyLevelData } from "@/lib/validators/levels";
+import type { PostRow } from "@/actions/posts";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface HomeContentProps {
   userName: string | null;
   userRole: MemberRole;
+  userAvatar: string | null;
+  currentMemberId: string;
   memberCount: number;
   upcomingEvents: EventWithResponsible[];
   myTeam: { team_name: string; team_color: string } | null;
   teamRanking: TeamRankRow[];
   devotionData: TodayReadingData | null;
   previewVerses?: Array<{ verse: number; text: string }>;
+  levelData: MyLevelData | null;
+  initialFeedPosts: PostRow[];
+  initialFeedHasMore: boolean;
+  initialFeedNextCursor: { created_at: string; id: string } | null;
 }
 
 // ─── Greeting ─────────────────────────────────────────────────────────────────
@@ -45,52 +51,7 @@ function getGreeting() {
   return "Boa noite";
 }
 
-function getRoleLabel(role: MemberRole): string {
-  const labels: Record<MemberRole, string> = {
-    admin: "Admin SaaS",
-    pastor: "Pastor",
-    presbítero: "Presbítero",
-    diácono: "Diácono",
-    tesoureiro: "Tesoureiro",
-    líder: "Líder",
-    membro: "Membro",
-    visitante: "Visitante",
-  };
-  return labels[role] ?? role;
-}
-
-// ─── Quick stats ──────────────────────────────────────────────────────────────
-
-function StatCard({
-  label,
-  value,
-  icon: Icon,
-  href,
-}: {
-  label: string;
-  value: string | number;
-  icon: React.ElementType;
-  href?: string;
-}) {
-  const content = (
-    <div className="group rounded-xl border border-border bg-card p-4 shadow-[0_2px_4px_oklch(0.32_0.096_224/0.06),0_4px_12px_oklch(0.32_0.096_224/0.05)] hover:border-primary/20 hover:shadow-md transition-all">
-      <div className="flex items-center justify-between mb-3">
-        <div className="w-9 h-9 rounded-xl bg-primary/8 flex items-center justify-center">
-          <Icon className="w-4.5 h-4.5 text-primary" strokeWidth={1.75} />
-        </div>
-      </div>
-      <p className="text-2xl font-semibold text-foreground leading-none mb-1">
-        {value}
-      </p>
-      <p className="text-xs text-muted-foreground">{label}</p>
-    </div>
-  );
-
-  if (href) return <Link href={href}>{content}</Link>;
-  return content;
-}
-
-// ─── Upcoming Events ──────────────────────────────────────────────────────────
+// ─── Upcoming Events widget ───────────────────────────────────────────────────
 
 function formatEventDate(dateStr: string, timeStr: string): string {
   const [year, month, day] = dateStr.split("-").map(Number);
@@ -124,9 +85,9 @@ function formatEventDate(dateStr: string, timeStr: string): string {
   else if (eventDay.getTime() === tomorrow.getTime()) dayLabel = "Amanhã";
   else dayLabel = `${weekdays[d.getDay()]}, ${day} ${months[month - 1]}`;
 
-  const h = String(hour).padStart(2, "0");
+  const h2 = String(hour).padStart(2, "0");
   const m = String(minute).padStart(2, "0");
-  return `${dayLabel} · ${h}:${m}`;
+  return `${dayLabel} · ${h2}:${m}`;
 }
 
 function UpcomingEventsCard({ events }: { events: EventWithResponsible[] }) {
@@ -144,17 +105,11 @@ function UpcomingEventsCard({ events }: { events: EventWithResponsible[] }) {
             Ver todos <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
-        <div className="flex flex-col items-center justify-center py-8 text-center">
-          <CalendarDays className="w-10 h-10 text-muted-foreground/40 mb-3" />
+        <div className="flex flex-col items-center justify-center py-6 text-center">
+          <CalendarDays className="w-8 h-8 text-muted-foreground/30 mb-2" />
           <p className="text-sm text-muted-foreground">
             Nenhum evento agendado
           </p>
-          <Link
-            href="/eventos/novo"
-            className="mt-3 text-xs font-semibold text-primary hover:underline"
-          >
-            Criar evento
-          </Link>
         </div>
       </div>
     );
@@ -162,7 +117,7 @@ function UpcomingEventsCard({ events }: { events: EventWithResponsible[] }) {
 
   return (
     <div className="rounded-xl border border-border bg-card p-4 shadow-[0_2px_4px_oklch(0.32_0.096_224/0.06),0_4px_12px_oklch(0.32_0.096_224/0.05)]">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <h2 className="font-display font-medium text-[1.375rem] tracking-[-0.01em] text-foreground">
           Próximos eventos
         </h2>
@@ -170,21 +125,21 @@ function UpcomingEventsCard({ events }: { events: EventWithResponsible[] }) {
           href="/agenda"
           className="text-xs text-primary font-medium hover:underline flex items-center gap-1"
         >
-          Ver agenda <ArrowRight className="w-3 h-3" />
+          Agenda <ArrowRight className="w-3 h-3" />
         </Link>
       </div>
 
-      <div className="space-y-2">
-        {events.map((event, i) => (
+      <div className="space-y-1">
+        {events.slice(0, 4).map((event, i) => (
           <Link key={event.id} href={`/eventos/${event.id}`}>
             <motion.div
               initial={{ opacity: 0, x: -8 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 + i * 0.07, duration: 0.3 }}
-              className="group flex items-center gap-3 rounded-xl p-3 hover:bg-secondary/50 transition-colors"
+              transition={{ delay: 0.1 + i * 0.06, duration: 0.25 }}
+              className="group flex items-center gap-3 rounded-xl p-2.5 hover:bg-secondary/50 transition-colors"
             >
               {/* Date strip */}
-              <div className="shrink-0 w-10 h-10 rounded-xl bg-primary/8 flex flex-col items-center justify-center">
+              <div className="shrink-0 w-9 h-9 rounded-xl bg-primary/8 flex flex-col items-center justify-center">
                 {(() => {
                   const [, m, d] = event.date.split("-").map(Number);
                   const months = [
@@ -203,10 +158,10 @@ function UpcomingEventsCard({ events }: { events: EventWithResponsible[] }) {
                   ];
                   return (
                     <>
-                      <span className="text-[10px] font-semibold text-primary/70 uppercase leading-none">
+                      <span className="text-[9px] font-semibold text-primary/70 uppercase leading-none">
                         {months[m - 1]}
                       </span>
-                      <span className="text-base font-bold text-primary leading-tight">
+                      <span className="text-sm font-bold text-primary leading-tight">
                         {d}
                       </span>
                     </>
@@ -216,23 +171,23 @@ function UpcomingEventsCard({ events }: { events: EventWithResponsible[] }) {
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                <p className="text-xs font-medium text-foreground truncate group-hover:text-primary transition-colors">
                   {event.name}
                 </p>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <Clock className="w-3 h-3 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">
+                <div className="flex items-center gap-1 mt-0.5">
+                  <Clock className="w-2.5 h-2.5 text-muted-foreground" />
+                  <span className="text-[10px] text-muted-foreground">
                     {formatEventDate(event.date, event.start_time)}
                   </span>
                 </div>
               </div>
 
-              {/* Modality badge */}
+              {/* Modality */}
               <div className="shrink-0">
                 {event.modality === "online" ? (
-                  <Video className="w-4 h-4 text-muted-foreground/60" />
+                  <Video className="w-3.5 h-3.5 text-muted-foreground/50" />
                 ) : (
-                  <MapPin className="w-4 h-4 text-muted-foreground/60" />
+                  <MapPin className="w-3.5 h-3.5 text-muted-foreground/50" />
                 )}
               </div>
             </motion.div>
@@ -243,9 +198,9 @@ function UpcomingEventsCard({ events }: { events: EventWithResponsible[] }) {
   );
 }
 
-// ─── Team Card ───────────────────────────────────────────────────────────────
+// ─── Team widget ──────────────────────────────────────────────────────────────
 
-function TeamCard({
+function TeamWidget({
   myTeam,
   ranking,
 }: {
@@ -258,7 +213,7 @@ function TeamCard({
 
   return (
     <div className="rounded-xl border border-border bg-card p-4 shadow-[0_2px_4px_oklch(0.32_0.096_224/0.06),0_4px_12px_oklch(0.32_0.096_224/0.05)]">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <h2 className="font-display font-medium text-[1.375rem] tracking-[-0.01em] text-foreground">
           Minha tribo
         </h2>
@@ -271,115 +226,64 @@ function TeamCard({
       </div>
 
       {myTeam ? (
-        <div className="flex items-center gap-4 mb-5">
+        <div className="flex items-center gap-3 mb-3">
           <div
-            className="w-12 h-12 rounded-full flex items-center justify-center text-[oklch(0.97_0.006_220)] font-bold text-lg shrink-0"
+            className="w-9 h-9 rounded-full flex items-center justify-center text-[oklch(0.97_0.006_220)] font-bold text-base shrink-0"
             style={{ backgroundColor: myTeam.team_color }}
           >
             {myTeam.team_name.charAt(0)}
           </div>
           <div>
-            <p className="font-semibold text-foreground">{myTeam.team_name}</p>
+            <p className="text-sm font-semibold text-foreground">
+              {myTeam.team_name}
+            </p>
             {myPosition && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                <Trophy className="w-3 h-3 text-accent" />
-                {myPosition}º lugar este mês
+              <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                <Trophy className="w-2.5 h-2.5 text-accent-500" />
+                {myPosition}º este mês
               </p>
             )}
           </div>
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground mb-5">
+        <p className="text-xs text-muted-foreground mb-3">
           Nenhuma tribo ainda
         </p>
       )}
 
-      {/* Top 3 mini */}
-      <div className="space-y-1.5">
+      <div className="space-y-1">
         {ranking.slice(0, 3).map((team, i) => {
           const isMe = myTeam?.team_name === team.team_name;
           const medals = ["🥇", "🥈", "🥉"];
           return (
             <div
               key={team.team_id}
-              className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs ${
+              className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs ${
                 isMe ? "bg-primary/8 border border-primary/15" : ""
               }`}
             >
-              <span className="text-sm w-5 text-center">{medals[i]}</span>
+              <span className="text-sm w-4 text-center shrink-0">
+                {medals[i]}
+              </span>
               <div
-                className="w-2 h-2 rounded-full shrink-0"
+                className="w-1.5 h-1.5 rounded-full shrink-0"
                 style={{ backgroundColor: team.team_color }}
               />
               <span
-                className={`flex-1 font-medium truncate ${isMe ? "text-primary" : "text-foreground"}`}
+                className={`flex-1 font-medium truncate ${
+                  isMe ? "text-primary" : "text-foreground"
+                }`}
               >
                 {team.team_name}
               </span>
               <span
-                className={`font-semibold tabular-nums ${isMe ? "text-primary" : "text-muted-foreground"}`}
+                className={`font-semibold tabular-nums text-[10px] ${
+                  isMe ? "text-primary" : "text-muted-foreground"
+                }`}
               >
-                {team.total_points.toLocaleString("pt-BR")} pts
+                {team.total_points.toLocaleString("pt-BR")}
               </span>
             </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ─── Quick Actions ────────────────────────────────────────────────────────────
-
-const quickActions = [
-  { label: "Comunicação", href: "/comunicacao", icon: MessageSquare },
-  { label: "Membros", href: "/membros", icon: Users },
-  { label: "Eventos", href: "/eventos", icon: CalendarDays },
-  { label: "Ministérios", href: "/ministerios", icon: ListTodo },
-  { label: "Financeiro", href: "/financeiro", icon: Banknote },
-  { label: "Assembleia", href: "/assembleia", icon: Vote },
-];
-
-function QuickActions({ role }: { role: MemberRole }) {
-  const leadershipRoles: MemberRole[] = [
-    "admin",
-    "pastor",
-    "presbítero",
-    "diácono",
-    "tesoureiro",
-    "líder",
-  ];
-  const isLeadership = leadershipRoles.includes(role);
-
-  const visible = quickActions.filter((a) => {
-    if (a.href === "/financeiro" || a.href === "/assembleia") {
-      return isLeadership;
-    }
-    return true;
-  });
-
-  return (
-    <div className="rounded-xl border border-border bg-card p-4 shadow-[0_2px_4px_oklch(0.32_0.096_224/0.06),0_4px_12px_oklch(0.32_0.096_224/0.05)]">
-      <h2 className="font-display font-medium text-[1.375rem] tracking-[-0.01em] text-foreground mb-4">
-        Atalhos
-      </h2>
-      <div className="grid grid-cols-2 gap-0.5">
-        {visible.map((action) => {
-          const Icon = action.icon;
-          return (
-            <Link
-              key={action.href}
-              href={action.href}
-              className="group flex items-center gap-2.5 px-3 py-3 rounded-xl hover:bg-secondary/60 transition-colors"
-            >
-              <Icon
-                className="w-4 h-4 text-primary/60 group-hover:text-primary transition-colors shrink-0"
-                strokeWidth={1.75}
-              />
-              <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
-                {action.label}
-              </span>
-            </Link>
           );
         })}
       </div>
@@ -392,60 +296,64 @@ function QuickActions({ role }: { role: MemberRole }) {
 export function HomeContent({
   userName,
   userRole,
-  memberCount,
+  userAvatar,
+  currentMemberId,
   upcomingEvents,
   myTeam,
   teamRanking,
   devotionData,
   previewVerses,
+  levelData,
+  initialFeedPosts,
+  initialFeedHasMore,
+  initialFeedNextCursor,
 }: HomeContentProps) {
   const firstName = userName?.split(" ")[0] ?? null;
   const greeting = getGreeting();
+
+  const nextEvent = upcomingEvents[0] ?? null;
+  const streak = devotionData?.streak?.current_streak ?? 0;
+  const talentBalance = levelData?.wallet_balance ?? 0;
 
   return (
     <motion.div
       variants={staggerContainer}
       initial="hidden"
       animate="show"
-      className="max-w-5xl mx-auto flex flex-col gap-5 pb-10"
+      className="pb-10"
     >
-      {/* Header greeting */}
-      <motion.div variants={staggerItem} className="pt-4 pb-1">
+      {/* ── Header greeting ─────────────────────────────── */}
+      <motion.div variants={staggerItem} className="pt-4 pb-3">
         <p className="text-sm text-muted-foreground">
           {greeting}
           {firstName ? `, ${firstName}` : ""}
         </p>
-        <h1 className="font-display text-[1.75rem] tracking-[-0.015em] text-foreground leading-tight mt-1">
-          Bem-vindo ao Koinos
+        <h1 className="font-display text-[1.75rem] tracking-[-0.015em] text-foreground leading-tight mt-0.5">
+          Início
         </h1>
-        <span className="inline-flex items-center mt-2 px-2.5 py-0.5 rounded-full bg-secondary text-[11px] font-medium text-muted-foreground">
-          {getRoleLabel(userRole)}
-        </span>
       </motion.div>
 
-      {/* Quick stats */}
-      <motion.div variants={staggerItem} className="grid grid-cols-2 gap-3">
-        <StatCard
-          label="Membros"
-          value={memberCount}
-          icon={Users}
-          href="/membros"
-        />
-        <StatCard
-          label="Próximos eventos"
-          value={upcomingEvents.length}
-          icon={CalendarDays}
-          href="/agenda"
+      {/* ── Mobile widgets strip (hidden on lg+) ─────────── */}
+      <motion.div variants={staggerItem} className="lg:hidden mb-4">
+        <MobileWidgetsStrip
+          nextEventName={nextEvent?.name ?? null}
+          nextEventDate={nextEvent?.date ?? null}
+          streak={streak}
+          talentBalance={talentBalance}
         />
       </motion.div>
 
-      {/* Two-column body on desktop */}
+      {/* ── 2-column layout ──────────────────────────────── */}
       <motion.div
         variants={staggerItem}
-        className="grid grid-cols-1 lg:grid-cols-2 gap-5"
+        className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-6 items-start"
       >
-        {/* Left: reading + events */}
-        <div className="flex flex-col gap-5">
+        {/* ── LEFT: widgets sidebar (hidden on mobile) ──── */}
+        <div className="hidden lg:flex flex-col gap-4 lg:sticky lg:top-6">
+          {/* Próximos eventos */}
+          <UpcomingEventsCard events={upcomingEvents} />
+
+          {/* Leitura bíblica */}
           {devotionData ? (
             <DailyReadingWidget
               initialData={devotionData}
@@ -453,21 +361,33 @@ export function HomeContent({
             />
           ) : (
             <Link href="/comunicacao">
-              <div className="rounded-xl border border-border bg-card p-4 flex items-center gap-3 shadow-[0_2px_4px_oklch(0.32_0.096_224/0.06),0_4px_12px_oklch(0.32_0.096_224/0.05)] hover:border-primary/20 hover:shadow-md transition-all">
-                <BookOpen className="w-5 h-5 text-muted-foreground/60 shrink-0" />
+              <div className="rounded-xl border border-border bg-card p-4 flex items-center gap-3 shadow-[0_2px_4px_oklch(0.32_0.096_224/0.06),0_4px_12px_oklch(0.32_0.096_224/0.05)] hover:border-primary/20 transition-all">
+                <BookOpen className="w-4 h-4 text-muted-foreground/50 shrink-0" />
                 <p className="text-sm text-muted-foreground">
-                  Nenhuma leitura programada hoje; visite a Comunicação.
+                  Nenhuma leitura hoje
                 </p>
               </div>
             </Link>
           )}
-          <UpcomingEventsCard events={upcomingEvents} />
+
+          {/* Meu Nível */}
+          {levelData && <MyLevelWidget levelData={levelData} />}
+
+          {/* Tribo */}
+          <TeamWidget myTeam={myTeam} ranking={teamRanking} />
         </div>
 
-        {/* Right: team + quick actions */}
-        <div className="flex flex-col gap-5">
-          <TeamCard myTeam={myTeam} ranking={teamRanking} />
-          <QuickActions role={userRole} />
+        {/* ── RIGHT: feed ───────────────────────────────── */}
+        <div className="min-w-0">
+          <HomeFeed
+            initialPosts={initialFeedPosts}
+            initialHasMore={initialFeedHasMore}
+            initialNextCursor={initialFeedNextCursor}
+            currentMemberId={currentMemberId}
+            currentUserRole={userRole}
+            currentUserName={userName ?? "Membro"}
+            currentUserAvatar={userAvatar}
+          />
         </div>
       </motion.div>
     </motion.div>

@@ -1,8 +1,12 @@
+export const dynamic = "force-dynamic";
+
 import { unstable_cache } from "next/cache";
 import { getUser, getAccessToken } from "@/lib/auth/session";
 import { getTodayReading } from "@/actions/devotion";
 import { listEvents } from "@/actions/events";
 import { getLeaderboard, getMyTeam } from "@/actions/gamification";
+import { getMyLevel } from "@/actions/levels";
+import { listFeedPosts } from "@/actions/posts";
 import { createCachedClient } from "@/lib/supabase/cached";
 import { tag, CACHE_TTL } from "@/lib/cache";
 import { HomeContent } from "./home-content";
@@ -41,12 +45,17 @@ async function getMemberData(
   churchId: string,
   email: string | undefined,
   accessToken: string
-): Promise<{ count: number; name: string | null }> {
+): Promise<{
+  count: number;
+  name: string | null;
+  memberId: string | null;
+  avatarUrl: string | null;
+}> {
   const cached = unstable_cache(
     async (token: string) => {
       const supabase = createCachedClient(token);
 
-      const [countResult, nameResult] = await Promise.all([
+      const [countResult, meResult] = await Promise.all([
         supabase
           .from("members")
           .select("id", { count: "exact", head: true })
@@ -55,7 +64,7 @@ async function getMemberData(
         email
           ? supabase
               .from("members")
-              .select("name")
+              .select("id, name, avatar_url")
               .eq("church_id", churchId)
               .eq("email", email)
               .maybeSingle()
@@ -64,7 +73,9 @@ async function getMemberData(
 
       return {
         count: countResult.count ?? 0,
-        name: (nameResult.data?.name as string | null) ?? null,
+        name: (meResult.data?.name as string | null) ?? null,
+        memberId: (meResult.data?.id as string | null) ?? null,
+        avatarUrl: (meResult.data?.avatar_url as string | null) ?? null,
       };
     },
     ["member-data", churchId, email ?? ""],
@@ -88,12 +99,16 @@ export default async function DashboardPage() {
     leaderboardResult,
     myTeamResult,
     memberData,
+    levelResult,
+    feedResult,
   ] = await Promise.all([
     getTodayReading(),
     listEvents({ upcoming: true, pageSize: 5 }),
     getLeaderboard({ period: "monthly" }),
     getMyTeam(),
     getMemberData(user.church_id, user.email, accessToken ?? ""),
+    getMyLevel(),
+    listFeedPosts({ sort_by: "relevance", offset: 0, limit: 10 }),
   ]);
 
   const devotionData =
@@ -125,16 +140,42 @@ export default async function DashboardPage() {
       ? myTeamResult.data
       : null;
 
+  const levelData =
+    levelResult && "data" in levelResult && levelResult.data
+      ? levelResult.data
+      : null;
+
+  const initialFeedPosts =
+    feedResult && "data" in feedResult && feedResult.data
+      ? feedResult.data.posts
+      : [];
+
+  const initialFeedHasMore =
+    feedResult && "data" in feedResult && feedResult.data
+      ? feedResult.data.hasMore
+      : false;
+
+  const initialFeedNextCursor =
+    feedResult && "data" in feedResult && feedResult.data
+      ? feedResult.data.nextCursor
+      : null;
+
   return (
     <HomeContent
       userName={memberData.name}
       userRole={user.role}
+      userAvatar={memberData.avatarUrl}
+      currentMemberId={memberData.memberId ?? ""}
       memberCount={memberData.count}
       upcomingEvents={upcomingEvents}
       myTeam={myTeam}
       teamRanking={teamRanking}
       devotionData={devotionData}
       previewVerses={previewVerses}
+      levelData={levelData}
+      initialFeedPosts={initialFeedPosts}
+      initialFeedHasMore={initialFeedHasMore}
+      initialFeedNextCursor={initialFeedNextCursor}
     />
   );
 }

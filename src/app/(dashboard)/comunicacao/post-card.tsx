@@ -14,6 +14,7 @@ import {
   PinOff,
   HandHeart,
   Sparkles,
+  Building2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { deletePost, reactToPost, pinPost, unpinPost } from "@/actions/posts";
@@ -66,6 +67,7 @@ interface PostCardProps {
   currentUserAvatar: string | null;
   onDeleted: (postId: string) => void;
   onPinChanged: (postId: string, pinnedUntil: string | null) => void;
+  showChurchBadge?: boolean;
 }
 
 interface ReactionState {
@@ -88,6 +90,7 @@ export function PostCard({
   currentUserAvatar,
   onDeleted,
   onPinChanged,
+  showChurchBadge = false,
 }: PostCardProps) {
   const [showComments, setShowComments] = useState(false);
   const [commentCount] = useState(post.comment_count);
@@ -222,6 +225,16 @@ export function PostCard({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Igreja badge */}
+      {showChurchBadge && (
+        <div className="flex items-center gap-1.5 px-4 py-1.5 bg-primary/5 border-b border-primary/10">
+          <Building2 className="w-3 h-3 text-primary/70" />
+          <span className="text-[11px] font-medium text-primary/80">
+            Publicado pela Igreja
+          </span>
+        </div>
+      )}
 
       <div className="p-4">
         {/* Header: avatar + author + meta + actions */}

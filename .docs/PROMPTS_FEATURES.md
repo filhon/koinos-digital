@@ -826,15 +826,11 @@ ENTREGÁVEIS: Loja funcional com itens digitais, compra com Talentos, itens equi
 > **UI:** Use `/impeccable` para implementar as telas desta sessão.
 
 ```
-CONTEXTO: A tela de Início (/dashboard) é um dashboard com widgets. O usuário quer transformá-la
-num feed social, pois o foco do Koinos é comunidade. No MVP, como não existem os conceitos de
-"seguir igrejas" ou "irmãos" (módulo Comunhão, posterior), o feed exibirá apenas:
+CONTEXTO: A tela de Início (/dashboard) é um dashboard com widgets. O usuário quer transformá-la num feed social, pois o foco do Koinos é comunidade. No MVP, como não existem os conceitos de "seguir igrejas" ou "irmãos" (módulo Comunhão, posterior), o feed exibirá apenas:
 - Posts públicos da igreja do usuário (publicados por pastor/presbítero)
 - Posts dos membros da mesma igreja (todos os posts do Comunicação)
 
-A Comunicação (/comunicacao, antigo Mural) continua existindo como módulo de quadro de avisos.
-O feed do Início é uma VISUALIZAÇÃO diferente dos mesmos dados, potencialmente com posts de
-outras igrejas no futuro.
+A Comunicação (/comunicacao, antigo Mural) continua existindo como módulo de quadro de avisos. O feed do Início é uma VISUALIZAÇÃO diferente dos mesmos dados, potencialmente com posts de outras igrejas no futuro.
 
 REFERÊNCIA: FEATURES.md seção "Início"
 
@@ -905,9 +901,7 @@ ENTREGÁVEIS: Feed social na tela de início com 2 colunas, rolagem infinita, to
 > **UI:** Use `/impeccable` para implementar as telas desta sessão.
 
 ```
-CONTEXTO: A Liga interna (entre tribos da mesma igreja) já funciona. Agora vamos adicionar a
-Liga Geral entre todas as igrejas que usam o sistema. A pontuação é balanceada pela quantidade
-de membros ativos para não beneficiar igrejas maiores.
+CONTEXTO: A Liga interna (entre tribos da mesma igreja) já funciona. Agora vamos adicionar a Liga Geral entre todas as igrejas que usam o sistema. A pontuação é balanceada pela quantidade de membros ativos para não beneficiar igrejas maiores.
 
 REFERÊNCIA: FEATURES.md seção "Gamificação" itens 2-5
 

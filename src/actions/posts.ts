@@ -1,18 +1,23 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { withPermission } from "@/lib/auth/with-permission";
 import { logAudit } from "@/actions/audit";
 import { sendPushToChurch } from "@/lib/onesignal/server";
 import {
   createPostSchema,
+  createFeedPostSchema,
   createCommentSchema,
   listPostsSchema,
+  listFeedPostsSchema,
   reactToPostSchema,
   pinPostSchema,
   type CreatePostInput,
+  type CreateFeedPostInput,
   type CreateCommentInput,
   type ListPostsInput,
+  type ListFeedPostsInput,
   type ReactToPostInput,
   type PinPostInput,
 } from "@/lib/validators/posts";
@@ -68,6 +73,8 @@ export interface PostRow {
   reaction_gratidao: number;
   user_orar: boolean;
   user_gratidao: boolean;
+  is_public?: boolean;
+  post_source?: string;
 }
 
 export interface CommentRow {
@@ -658,6 +665,219 @@ export const deleteComment = withPermission(
     });
 
     return { data: { id: commentId }, error: null };
+  },
+  { minRole: "visitante" }
+);
+
+// ─── createFeedPost ───────────────────────────────────────────────────────────
+// Qualquer membro autenticado pode criar posts no feed do Início.
+// Pastor/presbítero podem setar is_public = true ("Publicar como Igreja").
+
+export const createFeedPost = withPermission(
+  async (
+    user: AuthUser,
+    input: CreateFeedPostInput
+  ): Promise<ActionResult<{ post: PostRow }>> => {
+    const parsed = createFeedPostSchema.safeParse(input);
+    if (!parsed.success)
+      return { data: null, error: parsed.error.issues[0].message };
+
+    const content = sanitizeText(parsed.data.content);
+    if (!content.trim())
+      return { data: null, error: "O conteúdo do post não pode estar vazio." };
+
+    // is_public só pode ser true para pastor/presbítero/admin
+    const canPublishAsChurch = ["admin", "pastor", "presbítero"].includes(
+      user.role
+    );
+    const isPublic = canPublishAsChurch && (parsed.data.is_public ?? false);
+
+    const supabase = await createClient();
+    const memberId = await getMemberId(supabase, user);
+    if (!memberId)
+      return {
+        data: null,
+        error: "Perfil não encontrado. Faça login novamente.",
+      };
+
+    const { data, error } = await supabase
+      .from("posts")
+      .insert({
+        church_id: user.church_id,
+        author_id: memberId,
+        content,
+        post_source: "feed",
+        is_public: isPublic,
+      })
+      .select(
+        `id, church_id, author_id, content, pinned_until, created_at, is_public, post_source,
+         author:members!posts_author_id_fkey(id, name, avatar_url, role)`
+      )
+      .single();
+
+    if (error) return { data: null, error: error.message };
+
+    await logAudit({
+      churchId: user.church_id,
+      userId: user.id,
+      action: "create",
+      entityType: "post",
+      entityId: data.id,
+      metadata: { post_source: "feed", is_public: isPublic },
+    });
+
+    revalidatePath("/dashboard");
+
+    const row = data as typeof data & {
+      author: PostAuthor | PostAuthor[] | null;
+    };
+
+    const post: PostRow = {
+      id: row.id,
+      church_id: row.church_id,
+      author_id: row.author_id,
+      content: row.content,
+      pinned_until: row.pinned_until,
+      created_at: row.created_at,
+      is_public: row.is_public ?? false,
+      post_source: row.post_source ?? "feed",
+      author: (() => {
+        const a = Array.isArray(row.author)
+          ? (row.author[0] ?? null)
+          : row.author;
+        if (!a) return null;
+        return {
+          ...a,
+          team_name: null,
+          team_color: null,
+          streak: 0,
+          tags: [],
+          level: 1,
+          level_name: "Semente",
+          equipped_frame: null,
+          equipped_title: null,
+          has_boost: false,
+        };
+      })(),
+      comment_count: 0,
+      reaction_orar: 0,
+      reaction_gratidao: 0,
+      user_orar: false,
+      user_gratidao: false,
+    };
+
+    return { data: { post }, error: null };
+  },
+  { minRole: "visitante" }
+);
+
+// ─── listFeedPosts ────────────────────────────────────────────────────────────
+// Cursor-based ('recent') ou offset-based ('relevance') para o feed do Início.
+
+export const listFeedPosts = withPermission(
+  async (
+    user: AuthUser,
+    input: ListFeedPostsInput = {}
+  ): Promise<
+    ActionResult<{
+      posts: PostRow[];
+      hasMore: boolean;
+      nextCursor: { created_at: string; id: string } | null;
+    }>
+  > => {
+    const parsed = listFeedPostsSchema.safeParse(input);
+    if (!parsed.success)
+      return { data: null, error: parsed.error.issues[0].message };
+
+    const { sort_by, cursor_created_at, cursor_id, offset, limit } =
+      parsed.data;
+
+    const supabase = await createClient();
+    const memberId = await getMemberId(supabase, user);
+
+    const { data, error } = await supabase.rpc("get_feed_posts", {
+      p_church_id: user.church_id,
+      p_member_id: memberId ?? "00000000-0000-0000-0000-000000000000",
+      p_sort_by: sort_by,
+      p_cursor_created_at: cursor_created_at ?? null,
+      p_cursor_id: cursor_id ?? null,
+      p_offset: offset,
+      p_limit: limit + 1,
+    });
+
+    if (error) return { data: null, error: error.message };
+
+    const rows = (data ?? []) as Array<{
+      id: string;
+      church_id: string;
+      author_id: string;
+      content: string;
+      pinned_until: string | null;
+      created_at: string;
+      is_public: boolean;
+      post_source: string;
+      author_name: string | null;
+      author_avatar_url: string | null;
+      author_role: string | null;
+      author_team_name: string | null;
+      author_team_color: string | null;
+      author_streak: number | null;
+      author_tags: string[] | null;
+      author_level: number | null;
+      author_level_name: string | null;
+      author_equipped_frame: Record<string, unknown> | null;
+      author_equipped_title: string | null;
+      author_has_boost: boolean | null;
+      comment_count: number;
+      reaction_orar: number;
+      reaction_gratidao: number;
+      user_orar: boolean;
+      user_gratidao: boolean;
+    }>;
+
+    const hasMore = rows.length > limit;
+    const slice = hasMore ? rows.slice(0, limit) : rows;
+
+    const posts: PostRow[] = slice.map((row) => ({
+      id: row.id,
+      church_id: row.church_id,
+      author_id: row.author_id,
+      content: row.content,
+      pinned_until: row.pinned_until,
+      created_at: row.created_at,
+      is_public: row.is_public ?? false,
+      post_source: row.post_source ?? "feed",
+      author: row.author_name
+        ? {
+            id: row.author_id,
+            name: row.author_name,
+            avatar_url: row.author_avatar_url,
+            role: row.author_role ?? "membro",
+            team_name: row.author_team_name ?? null,
+            team_color: row.author_team_color ?? null,
+            streak: Number(row.author_streak ?? 0),
+            tags: row.author_tags ?? [],
+            level: Number(row.author_level ?? 1),
+            level_name: row.author_level_name ?? "Semente",
+            equipped_frame: row.author_equipped_frame ?? null,
+            equipped_title: row.author_equipped_title ?? null,
+            has_boost: row.author_has_boost ?? false,
+          }
+        : null,
+      comment_count: Number(row.comment_count ?? 0),
+      reaction_orar: Number(row.reaction_orar ?? 0),
+      reaction_gratidao: Number(row.reaction_gratidao ?? 0),
+      user_orar: row.user_orar ?? false,
+      user_gratidao: row.user_gratidao ?? false,
+    }));
+
+    const lastPost = slice[slice.length - 1];
+    const nextCursor =
+      hasMore && lastPost
+        ? { created_at: lastPost.created_at, id: lastPost.id }
+        : null;
+
+    return { data: { posts, hasMore, nextCursor }, error: null };
   },
   { minRole: "visitante" }
 );
