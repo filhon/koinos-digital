@@ -9,7 +9,15 @@ import { AvatarWithFrame } from "@/components/ui/avatar-with-frame";
 
 // ─── Category-specific preview ────────────────────────────────────────────────
 
-function ItemPreview({ item }: { item: ShopItemWithStatus }) {
+function ItemPreview({
+  item,
+  viewerAvatarUrl,
+  viewerFallback,
+}: {
+  item: ShopItemWithStatus;
+  viewerAvatarUrl: string | null;
+  viewerFallback: string;
+}) {
   const meta = item.metadata;
 
   switch (item.category) {
@@ -19,8 +27,8 @@ function ItemPreview({ item }: { item: ShopItemWithStatus }) {
       return (
         <div className="flex items-center justify-center">
           <AvatarWithFrame
-            src={null}
-            fallback="Eu"
+            src={viewerAvatarUrl}
+            fallback={viewerFallback}
             size="xl"
             frameStyle={style as "silver" | "gold" | "tribal" | "glow"}
             frameColor={color}
@@ -62,8 +70,8 @@ function ItemPreview({ item }: { item: ShopItemWithStatus }) {
     case "title":
       return (
         <div className="flex items-center justify-center py-2">
-          <div className="rounded-full border border-[oklch(0.88_0.01_220)] bg-gradient-to-r from-[oklch(0.32_0.096_224/0.08)] to-[oklch(0.62_0.148_58/0.08)] px-5 py-2">
-            <span className="text-sm font-semibold text-[oklch(0.32_0.096_224)]">
+          <div className="rounded-full border border-[oklch(0.88_0.01_220)] bg-linear-to-r from-[oklch(0.32_0.096_224/0.08)] to-[oklch(0.62_0.148_58/0.08)] px-5 py-2">
+            <span className="text-sm font-semibold text-primary-700">
               {item.name}
             </span>
           </div>
@@ -78,12 +86,10 @@ function ItemPreview({ item }: { item: ShopItemWithStatus }) {
       return (
         <div className="flex items-center justify-center gap-3 py-2">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[oklch(0.78_0.14_82/0.12)]">
-            <Zap className="h-7 w-7 text-[oklch(0.62_0.148_58)]" />
+            <Zap className="h-7 w-7 text-accent-500" />
           </div>
           <div className="text-left">
-            <p className="text-2xl font-bold text-[oklch(0.62_0.148_58)]">
-              {multiplier}×
-            </p>
+            <p className="text-2xl font-bold text-accent-500">{multiplier}×</p>
             <p className="text-xs text-[oklch(0.52_0.016_220)]">por {label}</p>
           </div>
         </div>
@@ -115,6 +121,8 @@ interface ShopItemCardProps {
   walletBalance: number;
   index: number;
   isCelebrating: boolean;
+  viewerAvatarUrl: string | null;
+  viewerFallback: string;
   onBuyClick: () => void;
   onEquipClick: () => void;
   isEquipLoading: boolean;
@@ -125,6 +133,8 @@ export function ShopItemCard({
   walletBalance,
   index,
   isCelebrating,
+  viewerAvatarUrl,
+  viewerFallback,
   onBuyClick,
   onEquipClick,
   isEquipLoading,
@@ -143,9 +153,9 @@ export function ShopItemCard({
       className={cn(
         "group relative flex flex-col overflow-hidden rounded-xl border bg-[oklch(0.99_0.003_75)]",
         "shadow-[0_2px_4px_oklch(0.32_0.096_224/0.06),0_4px_12px_oklch(0.32_0.096_224/0.05)]",
-        "transition-shadow duration-200 hover:shadow-[0_4px_6px_oklch(0.32_0.096_224/0.08),0_2px_8px_oklch(0.32_0.096_224/0.06)]",
+        "transition-shadow duration-200 hover:shadow-md",
         isCelebrating
-          ? "border-[oklch(0.62_0.148_58)] ring-2 ring-[oklch(0.62_0.148_58/0.3)]"
+          ? "border-accent-500 ring-2 ring-[oklch(0.62_0.148_58/0.3)]"
           : "border-[oklch(0.88_0.01_220)/0.6]"
       )}
     >
@@ -156,20 +166,20 @@ export function ShopItemCard({
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}
-            className="flex items-center gap-1 rounded-full bg-[oklch(0.62_0.148_58)] px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm"
+            className="flex items-center gap-1 rounded-full bg-accent-500 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm"
           >
             <Sparkles className="h-2.5 w-2.5" />
             Adquirido!
           </motion.span>
         )}
         {!isCelebrating && item.already_owned && !isBoost && (
-          <span className="flex items-center gap-1 rounded-full bg-[oklch(0.92_0.012_220)] px-2 py-0.5 text-[10px] font-medium text-[oklch(0.32_0.096_224)]">
+          <span className="flex items-center gap-1 rounded-full bg-[oklch(0.92_0.012_220)] px-2 py-0.5 text-[10px] font-medium text-primary-700">
             <CheckCircle2 className="h-2.5 w-2.5" />
             Adquirido
           </span>
         )}
         {item.is_equipped && (
-          <span className="rounded-full bg-[oklch(0.32_0.096_224)] px-2 py-0.5 text-[10px] font-medium text-white">
+          <span className="rounded-full bg-primary-700 px-2 py-0.5 text-[10px] font-medium text-white">
             Equipado
           </span>
         )}
@@ -177,7 +187,11 @@ export function ShopItemCard({
 
       {/* Preview area */}
       <div className="border-b border-[oklch(0.88_0.01_220)/0.6] bg-[oklch(0.982_0.004_80)] px-6 py-5">
-        <ItemPreview item={item} />
+        <ItemPreview
+          item={item}
+          viewerAvatarUrl={viewerAvatarUrl}
+          viewerFallback={viewerFallback}
+        />
       </div>
 
       {/* Info */}
@@ -199,7 +213,7 @@ export function ShopItemCard({
               className={cn(
                 "text-lg font-bold",
                 canAfford || item.already_owned
-                  ? "text-[oklch(0.62_0.148_58)]"
+                  ? "text-accent-500"
                   : "text-[oklch(0.55_0.148_28)]"
               )}
             >
@@ -228,7 +242,7 @@ export function ShopItemCard({
                 className={cn(
                   "h-8 rounded-full px-4 text-xs font-semibold",
                   canAfford
-                    ? "bg-[oklch(0.32_0.096_224)] text-white hover:bg-[oklch(0.28_0.09_224)]"
+                    ? "bg-primary-700 text-white hover:bg-[oklch(0.28_0.09_224)]"
                     : "cursor-not-allowed opacity-50"
                 )}
               >

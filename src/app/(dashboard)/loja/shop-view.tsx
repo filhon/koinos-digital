@@ -243,6 +243,10 @@ export function ShopView({ initialData }: ShopViewProps) {
                   walletBalance={shopData.wallet_balance}
                   index={i}
                   isCelebrating={celebratingId === item.id}
+                  viewerAvatarUrl={shopData.viewer_avatar_url}
+                  viewerFallback={
+                    shopData.viewer_name?.charAt(0).toUpperCase() ?? "?"
+                  }
                   onBuyClick={() => setSelectedItem(item)}
                   onEquipClick={() => handleEquip(item)}
                   isEquipLoading={isEquipping}

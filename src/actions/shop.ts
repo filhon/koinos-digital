@@ -29,11 +29,16 @@ type ActionResult<T> = { data: T; error: null } | { data: null; error: string };
 async function findMember(
   supabase: Awaited<ReturnType<typeof createClient>>,
   user: AuthUser
-): Promise<{ id: string; wallet_balance: number } | null> {
+): Promise<{
+  id: string;
+  wallet_balance: number;
+  name: string | null;
+  avatar_url: string | null;
+} | null> {
   if (!user.email) return null;
   const { data } = await supabase
     .from("members")
-    .select("id, wallet_balance")
+    .select("id, wallet_balance, name, avatar_url")
     .eq("church_id", user.church_id)
     .eq("email", user.email)
     .maybeSingle();
@@ -127,6 +132,8 @@ export const listShopItems = withPermission(
         wallet_balance:
           (memberFresh?.wallet_balance as number) ?? member.wallet_balance,
         equipped,
+        viewer_avatar_url: member.avatar_url,
+        viewer_name: member.name,
       },
       error: null,
     };

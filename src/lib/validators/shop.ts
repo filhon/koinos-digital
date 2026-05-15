@@ -65,6 +65,8 @@ export type MyShopData = {
   items: ShopItemWithStatus[];
   wallet_balance: number;
   equipped: Record<ShopCategory, EquippedItem | null>;
+  viewer_avatar_url: string | null;
+  viewer_name: string | null;
 };
 
 export type PurchaseResult = {

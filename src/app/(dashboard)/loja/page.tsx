@@ -15,6 +15,8 @@ const DEFAULT_SHOP_DATA: MyShopData = {
     title: null,
     boost: null,
   },
+  viewer_avatar_url: null,
+  viewer_name: null,
 };
 
 export default async function LojaPage() {

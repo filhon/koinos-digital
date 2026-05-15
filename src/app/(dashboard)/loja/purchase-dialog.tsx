@@ -60,7 +60,7 @@ export function PurchaseDialog({
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 12, scale: 0.97 }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        className="relative w-full max-w-sm overflow-hidden rounded-2xl bg-[oklch(0.995_0.002_70)] shadow-[0_16px_32px_oklch(0.32_0.096_224/0.12),0_8px_40px_oklch(0.32_0.096_224/0.08)]"
+        className="relative w-full max-w-sm overflow-hidden rounded-2xl bg-[oklch(0.995_0.002_70)] shadow-xl"
       >
         {/* Header */}
         <div className="flex items-start justify-between border-b border-[oklch(0.88_0.01_220)/0.6] p-5">
@@ -103,7 +103,7 @@ export function PurchaseDialog({
               <span
                 className={
                   canAfford
-                    ? "font-bold text-[oklch(0.62_0.148_58)]"
+                    ? "font-bold text-accent-500"
                     : "font-bold text-[oklch(0.55_0.148_28)]"
                 }
               >
@@ -151,7 +151,7 @@ export function PurchaseDialog({
             size="sm"
             onClick={onConfirm}
             disabled={!canAfford || isPurchasing}
-            className="flex-1 rounded-xl bg-[oklch(0.32_0.096_224)] text-white hover:bg-[oklch(0.28_0.09_224)]"
+            className="flex-1 rounded-xl bg-primary-700 text-white hover:bg-[oklch(0.28_0.09_224)]"
           >
             {isPurchasing ? (
               <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
