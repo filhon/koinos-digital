@@ -5,6 +5,8 @@ import InviteEmail from "@/emails/invite";
 import ResetPasswordEmail from "@/emails/reset-password";
 import VoteCodeEmail from "@/emails/vote-code";
 import PaymentFailedEmail from "@/emails/payment-failed";
+import WeeklyDigestEmail from "@/emails/weekly-digest";
+import type { WeeklyDigestEmailProps } from "@/emails/weekly-digest";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -41,6 +43,10 @@ type EmailTemplate =
   | {
       template: "payment-failed";
       data: { churchName: string; managePlanUrl: string };
+    }
+  | {
+      template: "weekly-digest";
+      data: WeeklyDigestEmailProps;
     };
 
 type SendEmailParams = {
@@ -68,6 +74,9 @@ export async function sendEmail(params: SendEmailParams): Promise<void> {
       break;
     case "payment-failed":
       reactElement = createElement(PaymentFailedEmail, data);
+      break;
+    case "weekly-digest":
+      reactElement = createElement(WeeklyDigestEmail, data);
       break;
   }
 

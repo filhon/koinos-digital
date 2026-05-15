@@ -3,7 +3,9 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import {
+  Bell,
   Download,
+  Mail,
   Trash2,
   ToggleLeft,
   ToggleRight,
@@ -29,7 +31,12 @@ import {
   updateConsent,
   exportMyData,
   requestDeletion,
+  updateEmailDigestConsent,
 } from "@/actions/privacy";
+import {
+  getPushPermissionStatus,
+  requestPushPermission,
+} from "@/lib/onesignal/client";
 import { formatPhone } from "@/lib/utils/formatters";
 import type { MemberProfile, MemberAddress } from "@/actions/profile";
 import type { ConsentRecord } from "@/actions/privacy";
@@ -404,14 +411,147 @@ function DeleteTab() {
   );
 }
 
+// ─── Tab: Notificações ────────────────────────────────────────────────────────
+
+function NotificationsTab({
+  initialEmailDigest,
+}: {
+  initialEmailDigest: boolean;
+}) {
+  const [emailDigest, setEmailDigest] = useState(initialEmailDigest);
+  const [pushEnabled, setPushEnabled] = useState<boolean>(() => {
+    if (typeof Notification === "undefined") return false;
+    return Notification.permission === "granted";
+  });
+  const [digestPending, startDigestTransition] = useTransition();
+  const [pushPending, setPushPending] = useState(false);
+
+  function toggleEmailDigest() {
+    const next = !emailDigest;
+    startDigestTransition(async () => {
+      const result = await updateEmailDigestConsent(next);
+      if (result.success) {
+        setEmailDigest(next);
+        toast.success(
+          next ? "Email digest ativado." : "Email digest desativado."
+        );
+      } else {
+        toast.error(result.error);
+      }
+    });
+  }
+
+  async function handlePushToggle() {
+    if (pushEnabled) {
+      // Não há API de opt-out granular sem lib completa — oriente o usuário
+      toast.info(
+        "Para desativar, ajuste as permissões de notificação no seu navegador."
+      );
+      return;
+    }
+    setPushPending(true);
+    try {
+      const status = getPushPermissionStatus();
+      if (status === "denied") {
+        toast.error(
+          "Notificações bloqueadas. Permita nas configurações do navegador."
+        );
+        return;
+      }
+      await requestPushPermission();
+      if (getPushPermissionStatus() === "granted") {
+        setPushEnabled(true);
+        toast.success("Notificações push ativadas!");
+      }
+    } finally {
+      setPushPending(false);
+    }
+  }
+
+  return (
+    <div className="divide-y divide-border">
+      {/* Push */}
+      <div className="flex items-start justify-between gap-4 py-4">
+        <div className="flex-1 space-y-0.5">
+          <div className="flex items-center gap-2">
+            <Bell className="size-4 text-muted-foreground" aria-hidden="true" />
+            <p className="text-sm font-medium">Notificações push</p>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Receba alertas de escalas, avisos e novidades diretamente no
+            dispositivo.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={handlePushToggle}
+          disabled={pushPending}
+          aria-label={pushEnabled ? "Desativar push" : "Ativar push"}
+          className="shrink-0 text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
+        >
+          {pushPending ? (
+            <Loader2 className="size-6 animate-spin" aria-hidden="true" />
+          ) : pushEnabled ? (
+            <ToggleRight
+              className="size-6"
+              style={{ color: "var(--primary)" }}
+              aria-hidden="true"
+            />
+          ) : (
+            <ToggleLeft className="size-6" aria-hidden="true" />
+          )}
+        </button>
+      </div>
+
+      {/* Email digest */}
+      <div className="flex items-start justify-between gap-4 py-4">
+        <div className="flex-1 space-y-0.5">
+          <div className="flex items-center gap-2">
+            <Mail className="size-4 text-muted-foreground" aria-hidden="true" />
+            <p className="text-sm font-medium">Email digest semanal</p>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Resumo semanal com próximos eventos, comunicados e sua posição na
+            Liga. Enviado todo domingo.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={toggleEmailDigest}
+          disabled={digestPending}
+          aria-label={emailDigest ? "Desativar digest" : "Ativar digest"}
+          className="shrink-0 text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
+        >
+          {digestPending ? (
+            <Loader2 className="size-6 animate-spin" aria-hidden="true" />
+          ) : emailDigest ? (
+            <ToggleRight
+              className="size-6"
+              style={{ color: "var(--primary)" }}
+              aria-hidden="true"
+            />
+          ) : (
+            <ToggleLeft className="size-6" aria-hidden="true" />
+          )}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 interface PrivacyPortalProps {
   profile: MemberProfile;
   consents: ConsentRecord[];
+  emailDigestEnabled: boolean;
 }
 
-export function PrivacyPortal({ profile, consents }: PrivacyPortalProps) {
+export function PrivacyPortal({
+  profile,
+  consents,
+  emailDigestEnabled,
+}: PrivacyPortalProps) {
   return (
     <Card>
       <CardHeader>
@@ -427,7 +567,7 @@ export function PrivacyPortal({ profile, consents }: PrivacyPortalProps) {
 
       <CardContent>
         <Tabs defaultValue="dados">
-          <TabsList className="mb-6 grid w-full grid-cols-4">
+          <TabsList className="mb-6 grid w-full grid-cols-5">
             <TabsTrigger value="dados" className="gap-1.5 text-xs sm:text-sm">
               <User className="size-3.5 hidden sm:block" aria-hidden="true" />
               Meus Dados
@@ -453,6 +593,13 @@ export function PrivacyPortal({ profile, consents }: PrivacyPortalProps) {
               Exportar
             </TabsTrigger>
             <TabsTrigger
+              value="notificacoes"
+              className="gap-1.5 text-xs sm:text-sm"
+            >
+              <Bell className="size-3.5 hidden sm:block" aria-hidden="true" />
+              Notif.
+            </TabsTrigger>
+            <TabsTrigger
               value="excluir"
               className="gap-1.5 text-xs sm:text-sm text-destructive data-[state=active]:text-destructive"
             >
@@ -471,6 +618,10 @@ export function PrivacyPortal({ profile, consents }: PrivacyPortalProps) {
 
           <TabsContent value="exportar">
             <ExportTab />
+          </TabsContent>
+
+          <TabsContent value="notificacoes">
+            <NotificationsTab initialEmailDigest={emailDigestEnabled} />
           </TabsContent>
 
           <TabsContent value="excluir">

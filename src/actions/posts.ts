@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { withPermission } from "@/lib/auth/with-permission";
 import { logAudit } from "@/actions/audit";
+import { sendPushToChurch } from "@/lib/onesignal/server";
 import {
   createPostSchema,
   createCommentSchema,
@@ -230,6 +231,23 @@ export const createPost = withPermission(
       entityType: "post",
       entityId: data.id,
     });
+
+    // Push para todos os membros ativos da igreja (fire-and-forget)
+    void supabase
+      .from("members")
+      .select("id")
+      .eq("church_id", user.church_id)
+      .eq("is_active", true)
+      .then(({ data: memberRows }) => {
+        if (!memberRows || memberRows.length === 0) return;
+        const ids = memberRows.map((m: { id: string }) => m.id);
+        void sendPushToChurch({
+          memberIds: ids,
+          title: "Nova comunicação",
+          message: content.substring(0, 100),
+          url: `${process.env.NEXT_PUBLIC_APP_URL}/comunicacao`,
+        });
+      });
 
     const row = data as typeof data & {
       author: PostAuthor | PostAuthor[] | null;

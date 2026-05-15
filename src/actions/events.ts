@@ -8,6 +8,7 @@ import { withPermission } from "@/lib/auth/with-permission";
 import { tag, CACHE_TTL } from "@/lib/cache";
 import { getAccessToken } from "@/lib/auth/session";
 import { logAudit } from "@/actions/audit";
+import { sendPushToChurch } from "@/lib/onesignal/server";
 import { createNotification } from "@/actions/notifications";
 import { generateInstanceDates } from "@/lib/utils/recurrence";
 import {
@@ -230,6 +231,23 @@ export const createEvent = withPermission(
       entityId: row.id,
       metadata: { name: row.name, modality: row.modality, date: row.date },
     }).catch(() => {});
+
+    // Push para todos os membros ativos da igreja (fire-and-forget)
+    void supabase
+      .from("members")
+      .select("id")
+      .eq("church_id", user.church_id)
+      .eq("is_active", true)
+      .then(({ data: memberRows }) => {
+        if (!memberRows || memberRows.length === 0) return;
+        const ids = memberRows.map((m: { id: string }) => m.id);
+        void sendPushToChurch({
+          memberIds: ids,
+          title: "Novo evento",
+          message: `${(row as EventRow).name} — ${(row as EventRow).date}`,
+          url: `${process.env.NEXT_PUBLIC_APP_URL}/eventos/${(row as EventRow).id}`,
+        });
+      });
 
     revalidateTag(tag.events(user.church_id), "default");
     return { data: row as EventRow, error: null };

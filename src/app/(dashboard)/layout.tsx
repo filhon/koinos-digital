@@ -3,6 +3,7 @@ import { getUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { AppShell } from "@/components/layout/AppShell";
 import { OnboardingChecklist } from "@/components/layout/OnboardingTour";
+import { PushPermissionBanner } from "@/components/layout/PushPermissionBanner";
 import { checkAndUpdateProgress } from "@/actions/onboarding-progress";
 import type {
   OnboardingProgressData,
@@ -22,7 +23,7 @@ export default async function DashboardLayout({
   const supabase = await createClient();
   const { data: member } = await supabase
     .from("members")
-    .select("name, avatar_url, created_at")
+    .select("id, name, avatar_url, created_at")
     .eq("church_id", user.church_id)
     .eq("email", user.email ?? "")
     .maybeSingle();
@@ -60,6 +61,7 @@ export default async function DashboardLayout({
           memberId={user.id}
         />
       )}
+      {member?.id && <PushPermissionBanner memberId={member.id as string} />}
       {children}
     </AppShell>
   );

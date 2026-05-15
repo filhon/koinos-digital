@@ -237,6 +237,58 @@ export async function exportMyData(): Promise<ExportResult> {
   return { success: true, json: jsonStr, csv: csvStr };
 }
 
+// ─── getEmailDigestStatus ─────────────────────────────────────────────────────
+// Retorna true se o membro optou-in (ou nunca registrou = opt-in por padrão).
+
+export async function getEmailDigestStatus(): Promise<{
+  enabled: boolean;
+}> {
+  const user = await requireAuth();
+  const admin = createAdminClient();
+
+  const memberId = await getMemberId(admin, user.church_id, user.email!);
+  if (!memberId) return { enabled: true }; // padrão habilitado
+
+  const { data } = await admin
+    .from("consent_records")
+    .select("consented")
+    .eq("member_id", memberId)
+    .eq("purpose", "email_digest")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  // sem registro = opted-in por padrão
+  return { enabled: data ? (data.consented as boolean) : true };
+}
+
+// ─── updateEmailDigestConsent ─────────────────────────────────────────────────
+
+export async function updateEmailDigestConsent(
+  enabled: boolean
+): Promise<PrivacyActionResult> {
+  const user = await requireAuth();
+  const admin = createAdminClient();
+  const headerStore = await headers();
+  const ip =
+    headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+
+  const memberId = await getMemberId(admin, user.church_id, user.email!);
+  if (!memberId) return { success: false, error: "Membro não encontrado." };
+
+  const { error } = await admin.from("consent_records").insert({
+    member_id: memberId,
+    purpose: "email_digest",
+    consented: enabled,
+    ip,
+    terms_version: "1.0",
+  });
+
+  if (error) return { success: false, error: "Erro ao salvar preferência." };
+
+  return { success: true };
+}
+
 // ─── requestDeletion ──────────────────────────────────────────────────────────
 
 export async function requestDeletion(): Promise<PrivacyActionResult> {

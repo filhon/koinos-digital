@@ -405,3 +405,10 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 [functions.anonymize-members]
 # Agendamento deve ser criado no banco via pg_cron + pg_net.
 # A CLI Supabase nao aceita `schedule` em [functions.*].
+
+[functions.weekly-digest]
+# Digest semanal — domingos às 08h BRT (11h UTC = segunda 11h UTC).
+# Agendamento via pg_cron + pg_net no banco:
+#   SELECT cron.schedule('weekly-digest','0 11 * * 1',
+#     $$SELECT net.http_post(url:='<SUPABASE_URL>/functions/v1/weekly-digest',
+#       headers:='{"Authorization":"Bearer <SERVICE_ROLE_KEY>"}'::jsonb)$$);

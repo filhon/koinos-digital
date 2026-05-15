@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { requireAuth } from "@/lib/auth/session";
 import { getProfile } from "@/actions/profile";
-import { getConsents } from "@/actions/privacy";
+import { getConsents, getEmailDigestStatus } from "@/actions/privacy";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PrivacyPortal } from "./privacy-portal";
 
@@ -11,9 +11,10 @@ export const metadata = { title: "Privacidade — Koinos" };
 export default async function PrivacidadePage() {
   await requireAuth();
 
-  const [profileResult, consentsResult] = await Promise.all([
+  const [profileResult, consentsResult, emailDigestStatus] = await Promise.all([
     getProfile(),
     getConsents(),
+    getEmailDigestStatus(),
   ]);
 
   if (!profileResult.success || !consentsResult.success) {
@@ -51,6 +52,7 @@ export default async function PrivacidadePage() {
       <PrivacyPortal
         profile={profileResult.data}
         consents={consentsResult.data}
+        emailDigestEnabled={emailDigestStatus.enabled}
       />
     </div>
   );

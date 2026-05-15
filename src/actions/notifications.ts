@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { withPermission } from "@/lib/auth/with-permission";
+import { sendPushNotification } from "@/lib/onesignal/server";
 import type { AuthUser } from "@/lib/auth/session";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -27,6 +28,8 @@ export async function createNotification(opts: {
   churchId: string;
   type: string;
   message: string;
+  pushTitle?: string;
+  pushUrl?: string;
 }): Promise<void> {
   const supabase = await createClient();
   await supabase.from("notifications").insert({
@@ -35,6 +38,14 @@ export async function createNotification(opts: {
     type: opts.type,
     message: opts.message,
   });
+
+  // Dispara push notification em paralelo (fire-and-forget)
+  sendPushNotification({
+    memberIds: [opts.memberId],
+    title: opts.pushTitle ?? "Koinos",
+    message: opts.message,
+    url: opts.pushUrl ?? process.env.NEXT_PUBLIC_APP_URL,
+  }).catch(() => {});
 }
 
 // ─── getNotifications ─────────────────────────────────────────────────────────
