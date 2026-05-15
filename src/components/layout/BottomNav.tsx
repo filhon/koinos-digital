@@ -38,13 +38,8 @@ export function BottomNav() {
 
   return (
     <nav
-      className="sm:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border/60"
-      style={{
-        background: "oklch(from var(--surface-1) l c h / 0.92)",
-        backdropFilter: "blur(12px) saturate(1.3)",
-        WebkitBackdropFilter: "blur(12px) saturate(1.3)",
-        paddingBottom: "env(safe-area-inset-bottom)",
-      }}
+      className="glass sm:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border/60"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       aria-label="Navegação inferior"
     >
       <div className="flex items-center justify-around h-14 px-1">
@@ -62,7 +57,7 @@ export function BottomNav() {
               aria-label={item.label}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2",
+                "relative flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2",
                 isActive
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
@@ -77,6 +72,9 @@ export function BottomNav() {
               >
                 {item.label}
               </span>
+              {isActive && (
+                <span className="absolute bottom-1 left-1/2 -translate-x-1/2 h-0.5 w-4 rounded-full bg-primary" />
+              )}
             </Link>
           );
         })}

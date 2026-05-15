@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect, useCallback } from "react";
+import { useState, useTransition, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   format,
@@ -54,11 +54,7 @@ export function AgendaView({
   const [unitFilter, setUnitFilter] = useState<UnitFilter>("todos");
   const [events, setEvents] = useState<EventWithResponsible[]>(initialEvents);
   const [isPending, startTransition] = useTransition();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useRef(false);
 
   // Calcula o range visível para a view/data atual
   const getVisibleRange = useCallback(
@@ -102,10 +98,12 @@ export function AgendaView({
 
   // Re-fetch quando muda a data, view ou filtro de unidade
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted.current) {
+      mounted.current = true;
+      return;
+    }
     fetchEvents(currentDate, view, unitFilter);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentDate, view, unitFilter]);
+  }, [currentDate, view, unitFilter, fetchEvents]);
 
   const navigatePrev = () => {
     setSelectedDay(null);

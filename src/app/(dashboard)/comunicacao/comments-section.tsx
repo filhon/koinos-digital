@@ -54,16 +54,19 @@ export function CommentsSection({
   const remaining = MAX - content.length;
 
   useEffect(() => {
-    if (!loaded) {
-      listComments(postId).then((result) => {
-        setIsLoading(false);
-        setLoaded(true);
-        if (result && "data" in result && result.data) {
-          setComments(result.data.comments);
-        }
-      });
-    }
-  }, [loaded, postId]);
+    let cancelled = false;
+    listComments(postId).then((result) => {
+      if (cancelled) return;
+      setIsLoading(false);
+      setLoaded(true);
+      if (result && "data" in result && result.data) {
+        setComments(result.data.comments);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [postId]);
 
   function onSubmit(data: CreateCommentInput) {
     startTransition(async () => {
@@ -140,7 +143,6 @@ export function CommentsSection({
                     width={28}
                     height={28}
                     className="w-7 h-7 rounded-full object-cover ring-1 ring-border"
-                    unoptimized
                   />
                 ) : (
                   <div className="w-7 h-7 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-[9px] font-semibold ring-1 ring-border">
@@ -163,7 +165,7 @@ export function CommentsSection({
                       })}
                     </span>
                   </div>
-                  <p className="text-xs text-foreground/90 leading-relaxed break-words">
+                  <p className="text-xs text-foreground/90 leading-relaxed wrap-break-word">
                     {comment.content}
                   </p>
                 </div>
@@ -224,7 +226,7 @@ export function CommentsSection({
               }}
               placeholder="Escreva um comentário…"
               rows={1}
-              className="flex-1 resize-none bg-transparent text-xs text-foreground placeholder:text-muted-foreground/60 outline-none leading-relaxed min-h-[20px] max-h-[120px]"
+              className="flex-1 resize-none bg-transparent text-xs text-foreground placeholder:text-muted-foreground/60 outline-none leading-relaxed min-h-5 max-h-30"
               onInput={(e) => {
                 const el = e.currentTarget;
                 el.style.height = "auto";

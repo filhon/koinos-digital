@@ -1,10 +1,10 @@
 import { getUser } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
-import { CheckinScanner } from "./checkin-scanner";
+import { CheckinLoader } from "./checkin-loader";
 
 export default async function CheckinScannerPage() {
   const user = await getUser();
   if (!user) redirect("/login");
 
-  return <CheckinScanner memberId={user.id} />;
+  return <CheckinLoader memberId={user.id} />;
 }

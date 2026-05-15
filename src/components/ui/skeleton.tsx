@@ -6,7 +6,7 @@ function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="skeleton"
       className={cn(
         // Shimmer sutil com gradiente — não pulse genérico
-        "rounded-lg",
+        "min-h-4 rounded-lg",
         "skeleton-shimmer",
         className
       )}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import {
   format,
   startOfMonth,
@@ -36,13 +37,14 @@ export function CalendarMonth({
   const days = eachDayOfInterval({ start: calStart, end: calEnd });
 
   // Agrupa eventos por data (formato yyyy-MM-dd)
-  const eventsByDate = events.reduce<Record<string, EventWithResponsible[]>>(
-    (acc, event) => {
-      if (!acc[event.date]) acc[event.date] = [];
-      acc[event.date].push(event);
-      return acc;
-    },
-    {}
+  const eventsByDate = useMemo(
+    () =>
+      events.reduce<Record<string, EventWithResponsible[]>>((acc, event) => {
+        if (!acc[event.date]) acc[event.date] = [];
+        acc[event.date].push(event);
+        return acc;
+      }, {}),
+    [events]
   );
 
   return (

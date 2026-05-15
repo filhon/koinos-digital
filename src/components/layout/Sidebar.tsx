@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -8,8 +8,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   CalendarDays,
+  CalendarCheck,
+  PartyPopper,
   Users,
   Music,
+  ListMusic,
   ListTodo,
   Banknote,
   Megaphone,
@@ -63,8 +66,8 @@ const navigation: NavGroup[] = [
     items: [
       { label: "Membros", href: "/membros", icon: Users },
       { label: "Ministérios", href: "/ministerios", icon: ListTodo },
-      { label: "Escalas", href: "/escalas", icon: CalendarDays },
-      { label: "Eventos", href: "/eventos", icon: CalendarDays },
+      { label: "Escalas", href: "/escalas", icon: CalendarCheck },
+      { label: "Eventos", href: "/eventos", icon: PartyPopper },
       { label: "Check-in", href: "/checkin", icon: ScanLine },
       { label: "Recursos", href: "/recursos", icon: Package },
     ],
@@ -73,7 +76,7 @@ const navigation: NavGroup[] = [
     group: "Conteúdo",
     items: [
       { label: "Grupos Musicais", href: "/grupos-musicais", icon: Music },
-      { label: "Repertório", href: "/repertorio", icon: Music },
+      { label: "Repertório", href: "/repertorio", icon: ListMusic },
     ],
   },
   {
@@ -135,8 +138,15 @@ const navigation: NavGroup[] = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("sidebar-collapsed") === "true";
+  });
   const { role } = usePermissions();
+
+  useEffect(() => {
+    localStorage.setItem("sidebar-collapsed", String(collapsed));
+  }, [collapsed]);
 
   return (
     <motion.aside

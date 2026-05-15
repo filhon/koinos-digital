@@ -177,7 +177,7 @@ export default function AuthLayout({
       </motion.div>
 
       {/* ── Form Panel ── */}
-      <div className="flex-1 lg:w-1/2 flex items-center justify-center bg-white px-6 py-12 lg:px-16">
+      <div className="flex-1 lg:w-1/2 flex items-center justify-center bg-background px-6 py-12 lg:px-16">
         <div className="w-full max-w-105">{children}</div>
       </div>
     </div>

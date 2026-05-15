@@ -11,6 +11,7 @@ import { Turnstile } from "@marsidev/react-turnstile";
 import { loginSchema, type LoginInput } from "@/lib/validators/auth";
 import { signIn } from "@/actions/auth";
 import { staggerContainer, fadeUp } from "@/lib/motion";
+import { Input } from "@/components/ui/input";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -57,10 +58,10 @@ export default function LoginPage() {
     >
       {/* Heading */}
       <motion.div variants={fadeUp} className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           Bem-vindo de volta
         </h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           Entre na sua conta para continuar
         </p>
       </motion.div>
@@ -70,10 +71,10 @@ export default function LoginPage() {
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-5 flex items-start gap-2.5 rounded-lg border border-red-200 bg-red-50 px-4 py-3"
+          className="mb-5 flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3"
         >
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
-          <p className="text-sm text-red-700">{serverError}</p>
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+          <p className="text-sm text-destructive">{serverError}</p>
         </motion.div>
       )}
 
@@ -84,26 +85,20 @@ export default function LoginPage() {
           <motion.div variants={fadeUp}>
             <label
               htmlFor="email"
-              className="mb-1.5 block text-sm font-medium text-gray-700"
+              className="mb-1.5 block text-sm font-medium text-foreground"
             >
               E-mail
             </label>
-            <input
+            <Input
               id="email"
               type="email"
               autoComplete="email"
               placeholder="voce@exemplo.com"
+              aria-invalid={!!errors.email}
               {...register("email")}
-              className={`w-full rounded-lg border px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none transition-all
-                focus:ring-2 focus:ring-offset-0
-                ${
-                  errors.email
-                    ? "border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-200"
-                    : "border-gray-200 bg-white focus:border-gray-400 focus:ring-gray-100"
-                }`}
             />
             {errors.email && (
-              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-red-600">
+              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-destructive">
                 <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                 {errors.email.message}
               </p>
@@ -115,36 +110,31 @@ export default function LoginPage() {
             <div className="mb-1.5 flex items-center justify-between">
               <label
                 htmlFor="password"
-                className="text-sm font-medium text-gray-700"
+                className="text-sm font-medium text-foreground"
               >
                 Senha
               </label>
               <Link
                 href="/esqueci-senha"
-                className="text-xs text-gray-500 underline-offset-2 hover:text-gray-900 hover:underline transition-colors"
+                className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline transition-colors"
               >
                 Esqueceu a senha?
               </Link>
             </div>
             <div className="relative">
-              <input
+              <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
                 autoComplete="current-password"
                 placeholder="••••••••"
+                aria-invalid={!!errors.password}
+                className="pr-11"
                 {...register("password")}
-                className={`w-full rounded-lg border px-4 py-3 pr-11 text-sm text-gray-900 placeholder-gray-400 outline-none transition-all
-                  focus:ring-2 focus:ring-offset-0
-                  ${
-                    errors.password
-                      ? "border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-200"
-                      : "border-gray-200 bg-white focus:border-gray-400 focus:ring-gray-100"
-                  }`}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
               >
                 {showPassword ? (
@@ -155,7 +145,7 @@ export default function LoginPage() {
               </button>
             </div>
             {errors.password && (
-              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-red-600">
+              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-destructive">
                 <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                 {errors.password.message}
               </p>
@@ -194,10 +184,9 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isPending || !turnstileReady}
-              className="flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold text-white transition-all
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground px-4 py-3 text-sm font-semibold transition-all
                 disabled:opacity-60 disabled:cursor-not-allowed
-                hover:opacity-90 active:scale-[0.99]"
-              style={{ background: "oklch(0.205 0 0)" }}
+                hover:brightness-90 active:scale-[0.99]"
             >
               {isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -215,12 +204,12 @@ export default function LoginPage() {
       {/* Sign up link */}
       <motion.p
         variants={fadeUp}
-        className="mt-6 text-center text-sm text-gray-500"
+        className="mt-6 text-center text-sm text-muted-foreground"
       >
         Não tem uma conta?{" "}
         <Link
           href="/signup"
-          className="font-medium text-gray-900 underline-offset-2 hover:underline transition-colors"
+          className="font-medium text-foreground underline-offset-2 hover:underline transition-colors"
         >
           Criar conta
         </Link>

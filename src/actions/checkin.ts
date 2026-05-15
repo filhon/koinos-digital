@@ -5,7 +5,6 @@ import {
   createVerify,
   createPrivateKey,
   createPublicKey,
-  createHmac,
   randomBytes,
 } from "crypto";
 import { createClient } from "@/lib/supabase/server";
@@ -40,9 +39,7 @@ function getPublicKey() {
 function signPayload(data: string): string {
   const key = getPrivateKey();
   if (!key) {
-    return createHmac("sha256", "dev-checkin-secret")
-      .update(data)
-      .digest("base64url");
+    throw new Error("CHECKIN_PRIVATE_KEY_PEM is required");
   }
   return createSign("SHA512").update(data).sign(key).toString("base64url");
 }
@@ -50,10 +47,7 @@ function signPayload(data: string): string {
 function verifyPayload(data: string, signature: string): boolean {
   const key = getPublicKey();
   if (!key) {
-    const expected = createHmac("sha256", "dev-checkin-secret")
-      .update(data)
-      .digest("base64url");
-    return signature === expected;
+    throw new Error("CHECKIN_PUBLIC_KEY_PEM is required");
   }
   try {
     const verify = createVerify("SHA512");

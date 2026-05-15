@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, Sparkles, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,6 +21,22 @@ function ItemPreview({
 }) {
   const meta = item.metadata;
 
+  const themeGradient =
+    (meta.gradient as string | null) ?? "oklch(0.32 0.096 224)";
+  const badgeColor = (meta.color as string | null) ?? "oklch(0.75 0.18 56)";
+
+  const themeStyle = useMemo(
+    () => ({ background: themeGradient }),
+    [themeGradient]
+  );
+  const badgeStyle = useMemo(
+    () => ({
+      background: `radial-gradient(circle, ${badgeColor}33 0%, ${badgeColor}11 100%)`,
+      border: `2px solid ${badgeColor}`,
+    }),
+    [badgeColor]
+  );
+
   switch (item.category) {
     case "avatar_frame": {
       const style = (meta.style ?? "silver") as string;
@@ -38,28 +55,16 @@ function ItemPreview({
       );
     }
 
-    case "theme": {
-      const gradient =
-        (meta.gradient as string | null) ?? "oklch(0.32 0.096 224)";
-      return (
-        <div
-          className="h-16 w-full rounded-lg"
-          style={{ background: gradient }}
-        />
-      );
-    }
+    case "theme":
+      return <div className="h-16 w-full rounded-lg" style={themeStyle} />;
 
     case "badge_special": {
       const icon = (meta.icon as string | null) ?? "🏆";
-      const color = (meta.color as string | null) ?? "oklch(0.75 0.18 56)";
       return (
         <div className="flex items-center justify-center">
           <div
             className="flex h-16 w-16 items-center justify-center rounded-full text-3xl shadow-lg"
-            style={{
-              background: `radial-gradient(circle, ${color}33 0%, ${color}11 100%)`,
-              border: `2px solid ${color}`,
-            }}
+            style={badgeStyle}
           >
             {icon}
           </div>

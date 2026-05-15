@@ -114,7 +114,6 @@ export function PostForm({
                 width={36}
                 height={36}
                 className="w-9 h-9 rounded-full object-cover ring-2 ring-border"
-                unoptimized
               />
             ) : (
               <div className="w-9 h-9 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 flex items-center justify-center text-xs font-semibold ring-2 ring-border">

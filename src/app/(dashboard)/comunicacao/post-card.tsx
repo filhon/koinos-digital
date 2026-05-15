@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { memo, useMemo, useState, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -82,7 +82,7 @@ function isPinnedNow(pinned_until: string | null): boolean {
   return new Date(pinned_until) > new Date();
 }
 
-export function PostCard({
+export const PostCard = memo(function PostCard({
   post,
   currentMemberId,
   currentUserRole,
@@ -113,12 +113,16 @@ export function PostCard({
   const canPin = ["admin", "pastor", "presbítero"].includes(currentUserRole);
 
   const author = post.author;
-  const initials = (author?.name ?? "?")
-    .split(" ")
-    .slice(0, 2)
-    .map((w: string) => w[0])
-    .join("")
-    .toUpperCase();
+  const initials = useMemo(
+    () =>
+      (author?.name ?? "?")
+        .split(" ")
+        .slice(0, 2)
+        .map((w: string) => w[0])
+        .join("")
+        .toUpperCase(),
+    [author?.name]
+  );
 
   const roleConfig =
     ROLE_CONFIG[author?.role ?? ""] ?? ROLE_CONFIG["visitante"];
@@ -440,7 +444,7 @@ export function PostCard({
       </AnimatePresence>
     </motion.article>
   );
-}
+});
 
 // ─── ReactionButton ───────────────────────────────────────────────────────────
 

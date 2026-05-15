@@ -4,6 +4,7 @@ import { LandingNav } from "./_landing-nav";
 import { LandingHero } from "./_landing-hero";
 import { FeatureStackSection } from "./_landing-features-stack";
 import { KoinosLogo } from "@/components/ui/koinos-logo";
+import { Card, CardContent } from "@/components/ui/card";
 
 // ─── Trust Signals ────────────────────────────────────────────────────────────
 
@@ -138,12 +139,12 @@ function Pricing() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {plans.map((plan) => (
-            <div
+            <Card
               key={plan.name}
-              className={`relative rounded-2xl border p-6 flex flex-col ${
+              className={`relative rounded-2xl p-0 ${
                 plan.highlight
                   ? "border-primary bg-primary text-primary-foreground shadow-[0_8px_32px_oklch(0.32_0.096_224/0.3)]"
-                  : "border-border bg-card text-foreground"
+                  : ""
               }`}
             >
               {plan.highlight && (
@@ -152,67 +153,69 @@ function Pricing() {
                 </div>
               )}
 
-              <div className="mb-5">
-                <h3
-                  className={`text-sm font-semibold mb-1 ${
-                    plan.highlight ? "text-primary-200" : "text-text-subtle"
-                  }`}
-                >
-                  {plan.name}
-                </h3>
-                <div className="flex items-baseline gap-1">
-                  <span className="font-display text-3xl leading-none">
-                    {plan.price}
-                  </span>
-                  <span
-                    className={`text-sm ${
+              <CardContent className="flex flex-col p-6 h-full">
+                <div className="mb-5">
+                  <h3
+                    className={`text-sm font-semibold mb-1 ${
+                      plan.highlight ? "text-primary-200" : "text-text-subtle"
+                    }`}
+                  >
+                    {plan.name}
+                  </h3>
+                  <div className="flex items-baseline gap-1">
+                    <span className="font-display text-3xl leading-none">
+                      {plan.price}
+                    </span>
+                    <span
+                      className={`text-sm ${
+                        plan.highlight ? "text-primary-200" : "text-text-body"
+                      }`}
+                    >
+                      {plan.period}
+                    </span>
+                  </div>
+                  <p
+                    className={`text-xs mt-1.5 ${
                       plan.highlight ? "text-primary-200" : "text-text-body"
                     }`}
                   >
-                    {plan.period}
-                  </span>
+                    {plan.members}
+                  </p>
                 </div>
-                <p
-                  className={`text-xs mt-1.5 ${
-                    plan.highlight ? "text-primary-200" : "text-text-body"
+
+                <ul className="flex-1 space-y-2.5 mb-6">
+                  {plan.features.map((feat) => (
+                    <li key={feat} className="flex items-start gap-2 text-sm">
+                      <Check
+                        className={`w-4 h-4 shrink-0 mt-0.5 ${
+                          plan.highlight ? "text-accent-400" : "text-primary"
+                        }`}
+                        strokeWidth={2.5}
+                      />
+                      <span
+                        className={
+                          plan.highlight ? "text-primary-100" : "text-text-body"
+                        }
+                      >
+                        {feat}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Link
+                  href={plan.href}
+                  className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                    plan.highlight
+                      ? "bg-background text-primary hover:bg-card"
+                      : "bg-primary text-primary-foreground hover:bg-primary/90"
                   }`}
                 >
-                  {plan.members}
-                </p>
-              </div>
-
-              <ul className="flex-1 space-y-2.5 mb-6">
-                {plan.features.map((feat) => (
-                  <li key={feat} className="flex items-start gap-2 text-sm">
-                    <Check
-                      className={`w-4 h-4 shrink-0 mt-0.5 ${
-                        plan.highlight ? "text-accent-400" : "text-primary"
-                      }`}
-                      strokeWidth={2.5}
-                    />
-                    <span
-                      className={
-                        plan.highlight ? "text-primary-100" : "text-text-body"
-                      }
-                    >
-                      {feat}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-
-              <Link
-                href={plan.href}
-                className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                  plan.highlight
-                    ? "bg-background text-primary hover:bg-card"
-                    : "bg-primary text-primary-foreground hover:bg-primary/90"
-                }`}
-              >
-                {plan.cta}
-                <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
+                  {plan.cta}
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </Link>
+              </CardContent>
+            </Card>
           ))}
         </div>
 

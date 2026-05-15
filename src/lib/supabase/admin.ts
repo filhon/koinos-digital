@@ -1,6 +1,28 @@
 import { createClient } from "@supabase/supabase-js";
 
 /**
+ * Cliente Supabase com anon key (respeita RLS).
+ * Usar para queries públicas server-side sem sessão de usuário.
+ */
+export function createAnonClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !anonKey) {
+    throw new Error(
+      "NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY são obrigatórios"
+    );
+  }
+
+  return createClient(url, anonKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+}
+
+/**
  * Cliente Supabase com service_role key.
  * Bypassa RLS — usar SOMENTE em Server Actions/Route Handlers confiáveis.
  * NUNCA expor ao client.

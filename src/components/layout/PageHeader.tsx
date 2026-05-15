@@ -57,10 +57,7 @@ export function PageHeader({
       {/* Title row */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1
-            className="text-2xl lg:text-3xl tracking-tight"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
+          <h1 className="font-display text-2xl lg:text-3xl tracking-tight">
             {title}
           </h1>
           {description && (

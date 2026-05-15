@@ -38,14 +38,7 @@ export function Header({ userEmail, userName, userAvatar }: HeaderProps) {
     : (userEmail?.[0]?.toUpperCase() ?? "U");
 
   return (
-    <header
-      className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border/60 px-4 lg:px-6"
-      style={{
-        background: "oklch(from var(--surface-1) l c h / 0.85)",
-        backdropFilter: "blur(12px) saturate(1.3)",
-        WebkitBackdropFilter: "blur(12px) saturate(1.3)",
-      }}
-    >
+    <header className="glass sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border/60 px-4 lg:px-6">
       {/* Logo (mobile apenas — desktop usa sidebar) */}
       <div className="flex items-center gap-2 lg:hidden">
         <span
@@ -140,7 +133,10 @@ export function Header({ userEmail, userName, userAvatar }: HeaderProps) {
               <User className="size-4" aria-hidden="true" />
               Meu perfil
             </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2 cursor-pointer">
+            <DropdownMenuItem
+              className="gap-2 cursor-pointer"
+              onClick={() => router.push("/configuracoes")}
+            >
               <Settings className="size-4" aria-hidden="true" />
               Configurações
             </DropdownMenuItem>

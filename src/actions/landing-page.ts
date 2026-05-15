@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient, createAnonClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { withPermission } from "@/lib/auth/with-permission";
 import { logAudit } from "@/actions/audit";
@@ -27,9 +27,10 @@ type ActionResult<T> = { data: T; error: null } | { data: null; error: string };
 export async function getLandingPageBySlug(
   slug: string
 ): Promise<FullLandingData | null> {
-  const admin = createAdminClient();
+  // Usa cliente anon (respeita RLS) para queries públicas
+  const anon = createAnonClient();
 
-  const { data: tenant } = await admin
+  const { data: tenant } = await anon
     .from("tenants")
     .select(
       "id, name, slug, hero_image_url, slogan, about_us, pastor_name, pastor_photo_url, pastor_bio, pastor_quote, streaming_url, address_text, address_embed_url, sections_order, is_published"
@@ -47,7 +48,7 @@ export async function getLandingPageBySlug(
     : [...LANDING_SECTIONS];
 
   // Liderança pública: pastor, presbítero, diácono ativos
-  const { data: leaders } = await admin
+  const { data: leaders } = await anon
     .from("members")
     .select("id, name, role, avatar_url")
     .eq("church_id", tenant.id)
@@ -57,7 +58,7 @@ export async function getLandingPageBySlug(
 
   // Próximos eventos
   const today = new Date().toISOString().split("T")[0];
-  const { data: events } = await admin
+  const { data: events } = await anon
     .from("events")
     .select("id, name, date, start_time, modality, location")
     .eq("church_id", tenant.id)

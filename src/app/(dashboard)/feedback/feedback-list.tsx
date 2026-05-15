@@ -1,5 +1,6 @@
 "use client";
 
+import { memo, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -87,7 +88,7 @@ function FilterPill({
         "px-3 py-1 rounded-full text-[13px] font-medium ring-1 transition-all duration-150",
         active
           ? (color ??
-              "bg-[oklch(0.32_0.096_224)] text-[oklch(0.97_0.006_220)] ring-[oklch(0.32_0.096_224)]")
+              "bg-primary-700 text-[oklch(0.97_0.006_220)] ring-primary-700")
           : "bg-transparent text-[oklch(0.42_0.016_220)] ring-[oklch(0.88_0.01_220)] hover:bg-[oklch(0.88_0.01_220/0.4)]"
       )}
     >
@@ -98,7 +99,7 @@ function FilterPill({
 
 // ─── FeedbackCard ─────────────────────────────────────────────────────────────
 
-function FeedbackCard({
+const FeedbackCard = memo(function FeedbackCard({
   fb,
   currentMemberId,
   onDelete,
@@ -119,7 +120,7 @@ function FeedbackCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -4 }}
       transition={{ duration: 0.18, ease: "easeOut" }}
-      className="group bg-[oklch(0.99_0.003_75)] border border-[oklch(0.88_0.01_220/0.6)] rounded-xl p-4 flex items-start gap-3 hover:shadow-[0_4px_6px_oklch(0.32_0.096_224/0.08),0_2px_8px_oklch(0.32_0.096_224/0.06)] transition-shadow duration-200"
+      className="group bg-[oklch(0.99_0.003_75)] border border-[oklch(0.88_0.01_220/0.6)] rounded-xl p-4 flex items-start gap-3 hover:shadow-md transition-shadow duration-200"
     >
       {/* Type icon */}
       <div
@@ -140,7 +141,7 @@ function FeedbackCard({
         <div className="flex items-start justify-between gap-2 flex-wrap">
           <Link
             href={`/feedback/${fb.id}`}
-            className="text-[15px] font-medium text-[oklch(0.18_0.012_230)] hover:text-[oklch(0.32_0.096_224)] transition-colors line-clamp-1"
+            className="text-[15px] font-medium text-[oklch(0.18_0.012_230)] hover:text-primary-700 transition-colors line-clamp-1"
           >
             {fb.title}
           </Link>
@@ -191,7 +192,7 @@ function FeedbackCard({
             )}
             <Link
               href={`/feedback/${fb.id}`}
-              className="flex items-center gap-0.5 text-[12px] text-[oklch(0.52_0.016_220)] hover:text-[oklch(0.32_0.096_224)] transition-colors"
+              className="flex items-center gap-0.5 text-[12px] text-[oklch(0.52_0.016_220)] hover:text-primary-700 transition-colors"
             >
               Ver
               <ChevronRight className="w-3 h-3" />
@@ -201,7 +202,7 @@ function FeedbackCard({
       </div>
     </motion.div>
   );
-}
+});
 
 // ─── FeedbackList ─────────────────────────────────────────────────────────────
 
@@ -225,14 +226,17 @@ export function FeedbackList({
   const router = useRouter();
   const pathname = usePathname();
 
-  function buildUrl(params: Record<string, string | undefined>) {
-    const sp = new URLSearchParams();
-    Object.entries(params).forEach(([k, v]) => {
-      if (v) sp.set(k, v);
-    });
-    const qs = sp.toString();
-    return qs ? `${pathname}?${qs}` : pathname;
-  }
+  const buildUrl = useCallback(
+    (params: Record<string, string | undefined>) => {
+      const sp = new URLSearchParams();
+      Object.entries(params).forEach(([k, v]) => {
+        if (v) sp.set(k, v);
+      });
+      const qs = sp.toString();
+      return qs ? `${pathname}?${qs}` : pathname;
+    },
+    [pathname]
+  );
 
   function setType(type?: FeedbackType) {
     router.push(buildUrl({ type, status: currentStatus, page: "1" }));
@@ -242,15 +246,18 @@ export function FeedbackList({
     router.push(buildUrl({ type: currentType, status, page: "1" }));
   }
 
-  async function handleDelete(id: string) {
-    const result = await deleteFeedback(id);
-    if ("error" in result && result.error) {
-      toast.error(result.error);
-    } else {
-      toast.success("Feedback excluído.");
-      router.refresh();
-    }
-  }
+  const handleDelete = useCallback(
+    async (id: string) => {
+      const result = await deleteFeedback(id);
+      if ("error" in result && result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Feedback excluído.");
+        router.refresh();
+      }
+    },
+    [router]
+  );
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 

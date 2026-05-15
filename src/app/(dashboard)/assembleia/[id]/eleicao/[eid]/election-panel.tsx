@@ -38,7 +38,11 @@ import {
   Shield,
   Wifi,
 } from "lucide-react";
-import { VoteDialog } from "./vote-dialog";
+import dynamic from "next/dynamic";
+
+const VoteDialog = dynamic(() =>
+  import("./vote-dialog").then((m) => ({ default: m.VoteDialog }))
+);
 import { CandidateSearch } from "./candidate-search";
 import { PremiumGate } from "@/components/ui/premium-gate";
 import { ElectionResults } from "./election-results";

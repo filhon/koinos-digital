@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ChevronRight, Star } from "lucide-react";
 import { AppPreview } from "./_landing-preview";
 import { KoinosLogo } from "@/components/ui/koinos-logo";
@@ -20,14 +20,16 @@ const words = [
 
 export function LandingHero() {
   const [wordIndex, setWordIndex] = useState(0);
+  const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
+    if (prefersReducedMotion) return;
     const id = setInterval(
       () => setWordIndex((i) => (i + 1) % words.length),
       2800
     );
     return () => clearInterval(id);
-  }, []);
+  }, [prefersReducedMotion]);
 
   return (
     <section className="relative pt-24 pb-16 px-6 overflow-hidden">
