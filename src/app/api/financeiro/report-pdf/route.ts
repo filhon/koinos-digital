@@ -8,11 +8,7 @@ import type {
   ReportPeriod,
 } from "@/lib/validators/financeiro";
 
-// Importação compatível com o padrão `export = ReactPDF` da lib
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const ReactPDF = require("@react-pdf/renderer") as {
-  renderToBuffer: (element: React.ReactElement) => Promise<Buffer>;
-};
+import { renderToBuffer } from "@react-pdf/renderer";
 
 const PERIOD_LABELS: Record<ReportPeriod, string> = {
   mes_atual: "Mês Atual",
@@ -55,7 +51,8 @@ export async function GET(request: NextRequest) {
     periodLabel: PERIOD_LABELS[period],
   });
 
-  const pdfBuffer = await ReactPDF.renderToBuffer(element);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pdfBuffer = await renderToBuffer(element as any);
 
   return new NextResponse(pdfBuffer as unknown as BodyInit, {
     status: 200,
