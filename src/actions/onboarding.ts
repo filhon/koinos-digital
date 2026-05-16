@@ -1,5 +1,6 @@
 "use server";
 
+import { createHash } from "node:crypto";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -13,6 +14,10 @@ import { encrypt, decrypt } from "@/lib/encryption/aes";
 import { logAudit } from "@/actions/audit";
 import { requireAuth } from "@/lib/auth/session";
 import { verifyTurnstile } from "@/lib/turnstile";
+
+function hashCpf(raw: string): string {
+  return createHash("sha256").update(raw).digest("hex");
+}
 
 export type ActionResult =
   | { success: true; message?: string; redirectTo?: string }
@@ -137,14 +142,19 @@ export async function lookupCnpj(cnpj: string): Promise<CnpjLookupResult> {
 
   // 1. Validate against Receita Federal via cnpja open API
   let apiData: Record<string, unknown>;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 9000);
   try {
     const res = await fetch(`https://open.cnpja.com/office/${digits}`, {
       next: { revalidate: 0 },
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
     if (res.status === 404) return { status: "not_found" };
     if (!res.ok) return { status: "api_error" };
     apiData = await res.json();
   } catch {
+    clearTimeout(timeoutId);
     return { status: "api_error" };
   }
 
@@ -500,28 +510,51 @@ export async function registerMember(
 
   const userId = user.id;
   const rawCpf = cpf.replace(/\D/g, "");
+  const cpfHash = hashCpf(rawCpf);
 
-  // 3. CPF matching: check if member already exists in this church
-  const { data: allMembers } = await admin
-    .from("members")
-    .select("id, cpf, email, role")
-    .eq("church_id", churchId);
-
+  // 3. CPF matching: fast path via indexed hash, fallback to decrypt-all for legacy records
   let existingMemberId: string | null = null;
   let existingRole: string | null = null;
+  let existingEmail: string | null = null;
 
-  if (allMembers) {
-    for (const m of allMembers) {
-      if (!m.cpf) continue;
-      try {
-        const decrypted = decrypt(m.cpf as string);
-        if (decrypted === rawCpf) {
-          existingMemberId = m.id as string;
-          existingRole = m.role as string;
-          break;
+  const { data: hashedMatch } = await admin
+    .from("members")
+    .select("id, email, role")
+    .eq("church_id", churchId)
+    .eq("cpf_hash", cpfHash)
+    .maybeSingle();
+
+  if (hashedMatch) {
+    existingMemberId = hashedMatch.id as string;
+    existingRole = hashedMatch.role as string;
+    existingEmail = hashedMatch.email as string | null;
+  } else {
+    // Fallback: decrypt legacy records that have no hash yet
+    const { data: unhashedMembers } = await admin
+      .from("members")
+      .select("id, cpf, email, role")
+      .eq("church_id", churchId)
+      .is("cpf_hash", null);
+
+    if (unhashedMembers) {
+      for (const m of unhashedMembers) {
+        if (!m.cpf) continue;
+        try {
+          const decrypted = decrypt(m.cpf as string);
+          if (decrypted === rawCpf) {
+            existingMemberId = m.id as string;
+            existingRole = m.role as string;
+            existingEmail = m.email as string | null;
+            // Backfill hash so future lookups are fast
+            await admin
+              .from("members")
+              .update({ cpf_hash: cpfHash })
+              .eq("id", m.id);
+            break;
+          }
+        } catch {
+          // skip unreadable records
         }
-      } catch {
-        // skip unreadable records
       }
     }
   }
@@ -534,8 +567,7 @@ export async function registerMember(
     memberId = existingMemberId;
     role = existingRole ?? "visitante";
 
-    const memberRow = allMembers!.find((m) => m.id === existingMemberId);
-    if (memberRow && memberRow.email !== email) {
+    if (existingEmail !== email) {
       await admin
         .from("members")
         .update({ email, updated_at: new Date().toISOString() })
@@ -554,7 +586,7 @@ export async function registerMember(
         action: "update_member_email_on_invite",
         entityType: "member",
         entityId: existingMemberId,
-        metadata: { previousEmail: memberRow.email, newEmail: email },
+        metadata: { previousEmail: existingEmail, newEmail: email },
         ip,
       });
     }
@@ -570,6 +602,7 @@ export async function registerMember(
         name,
         username: username ?? null,
         cpf: encryptedCpf,
+        cpf_hash: cpfHash,
         email,
         role: "visitante",
         phone: phone ? phone.replace(/\D/g, "") : null,

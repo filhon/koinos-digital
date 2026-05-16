@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 import {
   Check,
   ChevronDown,
@@ -304,7 +305,7 @@ export function OnboardingChecklist({
         setConditions((prev) => ({ ...prev, visited_league: true }));
         triggerCelebrationIfJustCompleted(newSteps.length);
       } catch {
-        // non-blocking — navigate anyway
+        toast.error("Erro ao registrar etapa. Tente novamente.");
       }
     }
     router.push(step.href);
@@ -314,6 +315,8 @@ export function OnboardingChecklist({
     setClosing(true);
     try {
       await completeOnboarding();
+    } catch {
+      toast.error("Erro ao encerrar o checklist.");
     } finally {
       localStorage.setItem("koinos:onboarding-dismissed", "true");
       setDismissed(true);
@@ -322,14 +325,20 @@ export function OnboardingChecklist({
 
   return (
     <div
-      className="fixed z-80 bottom-0 left-0 right-0 sm:bottom-4 sm:right-4 sm:left-auto sm:w-80 pointer-events-none"
+      className={`fixed z-80 pointer-events-none sm:bottom-4 sm:right-4 sm:left-auto sm:w-80 ${
+        minimized
+          ? "bottom-4 right-4 left-auto w-80"
+          : "bottom-0 left-0 right-0"
+      }`}
       role="complementary"
       aria-label="Checklist de onboarding"
     >
       <motion.div
         layout
         layoutRoot
-        className="pointer-events-auto rounded-t-2xl sm:rounded-2xl overflow-hidden"
+        className={`pointer-events-auto overflow-hidden ${
+          minimized ? "rounded-2xl" : "rounded-t-2xl sm:rounded-2xl"
+        }`}
         style={{
           boxShadow:
             "0 -4px 20px oklch(0.32 0.096 224 / 0.08), 0 8px 24px oklch(0.32 0.096 224 / 0.10)",
@@ -343,12 +352,14 @@ export function OnboardingChecklist({
           className="px-4 py-3 flex items-center gap-3"
           style={{ background: "oklch(0.32 0.096 224)" }}
         >
-          {/* Mobile drag handle affordance */}
-          <div
-            className="absolute top-2 left-1/2 -translate-x-1/2 w-8 h-1 rounded-full sm:hidden"
-            style={{ background: "oklch(0.97 0.006 220 / 0.25)" }}
-            aria-hidden="true"
-          />
+          {/* Mobile drag handle affordance — only when expanded */}
+          {!minimized && (
+            <div
+              className="absolute top-2 left-1/2 -translate-x-1/2 w-8 h-1 rounded-full sm:hidden"
+              style={{ background: "oklch(0.97 0.006 220 / 0.25)" }}
+              aria-hidden="true"
+            />
+          )}
 
           {/* Title + progress bar */}
           <button
@@ -539,6 +550,15 @@ export function OnboardingChecklist({
                               className="mt-1.5 ml-7 space-y-1"
                               aria-label={`Requisitos para ${step.title}`}
                             >
+                              {hasAny && (
+                                <li
+                                  className="text-[10px] font-medium mb-0.5"
+                                  style={{ color: "oklch(0.52 0.016 220)" }}
+                                  aria-hidden="true"
+                                >
+                                  Complete pelo menos um:
+                                </li>
+                              )}
                               {subDone.map((sub) => (
                                 <li
                                   key={sub.conditionKey}
@@ -576,16 +596,6 @@ export function OnboardingChecklist({
                                     }}
                                   >
                                     {sub.label}
-                                    {sub.anyOf && hasAny && (
-                                      <span
-                                        style={{
-                                          color: "oklch(0.64 0.016 220)",
-                                        }}
-                                      >
-                                        {" "}
-                                        (ou)
-                                      </span>
-                                    )}
                                   </span>
                                 </li>
                               ))}
