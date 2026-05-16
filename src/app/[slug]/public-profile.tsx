@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Award, Star, Users, Mail, Phone, Calendar } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import type { PublicProfileData } from "@/actions/profile";
+import type { PublicProfileData } from "@/lib/data/profile";
 import { LevelBadgeCompact } from "@/app/(dashboard)/perfil/level-section";
 import { AvatarWithFrame } from "@/components/ui/avatar-with-frame";
 

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import { getLandingPageBySlug } from "@/actions/landing-page";
-import { getPublicProfile } from "@/actions/profile";
+import { getLandingPageBySlug } from "@/lib/data/landing-page";
+import { getPublicProfile } from "@/lib/data/profile";
 import LandingPageClient from "./landing-page";
 import { PublicProfile } from "./public-profile";
 
