@@ -4,19 +4,6 @@ import { getPublicProfile } from "@/lib/data/profile";
 import LandingPageClient from "./landing-page";
 import { PublicProfile } from "./public-profile";
 
-export const revalidate = 3600;
-
-export async function generateStaticParams() {
-  // Pré-gera paths para tenants publicados (ISR com fallback para novos tenants)
-  const { createAdminClient } = await import("@/lib/supabase/admin");
-  const admin = createAdminClient();
-  const { data } = await admin
-    .from("tenants")
-    .select("slug")
-    .eq("is_published", true);
-  return (data ?? []).map((t) => ({ slug: t.slug }));
-}
-
 interface Props {
   params: Promise<{ slug: string }>;
 }
