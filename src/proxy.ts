@@ -7,7 +7,11 @@ import { buildCsp } from "@/lib/csp";
 // ─── Hostname → tenant slug resolver ─────────────────────────────────────────
 
 const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN ?? "koinos.digital";
-const APP_HOSTNAME = `app.${APP_DOMAIN}`;
+const APP_HOSTNAMES = new Set([
+  APP_DOMAIN,
+  `www.${APP_DOMAIN}`,
+  `app.${APP_DOMAIN}`,
+]);
 
 /**
  * Retorna o slug do tenant se o hostname for:
@@ -24,7 +28,7 @@ async function resolveTenantSlug(
 
   // É o app principal ou ambiente local → não é landing page
   if (
-    host === APP_HOSTNAME ||
+    APP_HOSTNAMES.has(host) ||
     host === "localhost" ||
     host === "127.0.0.1" ||
     host.endsWith(".vercel.app")
