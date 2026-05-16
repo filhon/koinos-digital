@@ -14,6 +14,7 @@ import { encrypt, decrypt } from "@/lib/encryption/aes";
 import { logAudit } from "@/actions/audit";
 import { requireAuth } from "@/lib/auth/session";
 import { verifyTurnstile } from "@/lib/turnstile";
+import { sendEmail } from "@/lib/email";
 
 function hashCpf(raw: string): string {
   return createHash("sha256").update(raw).digest("hex");
@@ -409,6 +410,22 @@ export async function createChurch(
     ip,
   });
 
+  // 11. Email de boas-vindas ao pastor fundador
+  try {
+    await sendEmail({
+      to: personal.email,
+      subject: `Bem-vindo ao Koinos, ${personal.name.split(" ")[0]}!`,
+      template: "welcome",
+      data: {
+        memberName: personal.name,
+        churchName: church.churchName,
+        appUrl: process.env.NEXT_PUBLIC_APP_URL ?? "https://app.koinos.app",
+      },
+    });
+  } catch (err) {
+    console.error("[onboarding] Erro ao enviar email de boas-vindas:", err);
+  }
+
   return { success: true, redirectTo: "/dashboard" };
 }
 
@@ -642,7 +659,7 @@ export async function registerMember(
   // 5. JWT custom claims (inclui parent_tenant_id se for congregação)
   const { data: tenantRow } = await admin
     .from("tenants")
-    .select("parent_tenant_id")
+    .select("parent_tenant_id, name")
     .eq("id", churchId)
     .maybeSingle();
 
@@ -670,6 +687,21 @@ export async function registerMember(
       .from("members")
       .update({ role: "pastor", updated_at: new Date().toISOString() })
       .eq("id", memberId);
+
+    await logAudit({
+      churchId,
+      userId,
+      action: "auto_elevate_role_congregation_pastor",
+      entityType: "member",
+      entityId: memberId,
+      metadata: {
+        previousRole: role,
+        newRole: "pastor",
+        inviteCode,
+        inviteType: invite.invite_type,
+      },
+      ip,
+    });
   }
 
   await supabase.auth.refreshSession();
@@ -694,6 +726,22 @@ export async function registerMember(
     metadata: { inviteCode, invitedBy, role },
     ip,
   });
+
+  // 8. Email de boas-vindas ao novo membro
+  try {
+    await sendEmail({
+      to: email,
+      subject: `Bem-vindo(a) ao Koinos, ${name.split(" ")[0]}!`,
+      template: "welcome",
+      data: {
+        memberName: name,
+        churchName: tenantRow?.name ?? "",
+        appUrl: process.env.NEXT_PUBLIC_APP_URL ?? "https://www.koinos.digital",
+      },
+    });
+  } catch (err) {
+    console.error("[onboarding] Erro ao enviar email de boas-vindas:", err);
+  }
 
   return { success: true, redirectTo: "/dashboard" };
 }

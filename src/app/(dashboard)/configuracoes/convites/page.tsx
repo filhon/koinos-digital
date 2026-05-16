@@ -1,12 +1,19 @@
 import { requireAuth } from "@/lib/auth/session";
 import { getInviteLinks } from "@/actions/onboarding";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { InviteLinksPanel } from "./invite-links-panel";
 
 export default async function ConvitesPage() {
   const user = await requireAuth();
-  const result = await getInviteLinks();
+  const admin = createAdminClient();
+
+  const [result, tenantResult] = await Promise.all([
+    getInviteLinks(),
+    admin.from("tenants").select("name").eq("id", user.church_id).maybeSingle(),
+  ]);
 
   const links = result.success ? result.data : [];
+  const churchName = tenantResult.data?.name ?? "";
   const isLeadership = [
     "pastor",
     "presbítero",
@@ -30,6 +37,7 @@ export default async function ConvitesPage() {
         initialLinks={links}
         isLeadership={isLeadership}
         userEmail={user.email ?? ""}
+        churchName={churchName}
       />
     </div>
   );

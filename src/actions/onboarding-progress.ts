@@ -2,6 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAuth } from "@/lib/auth/session";
+import { logAudit } from "@/actions/audit";
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
 
@@ -235,10 +236,30 @@ export async function checkAndUpdateProgress(): Promise<OnboardingResult> {
   ];
 
   let changed = false;
+  const newlyCompleted: OnboardingStepKey[] = [];
   for (const { key, met } of checks) {
     if (met && !completedSteps.has(key)) {
       completedSteps.add(key);
+      newlyCompleted.push(key);
       changed = true;
+    } else if (!met && completedSteps.has(key)) {
+      // Rollback: step was completed but condition no longer holds (e.g. event deleted)
+      completedSteps.delete(key);
+      changed = true;
+    }
+  }
+
+  // Analytics funnel: log each newly completed step
+  if (newlyCompleted.length > 0) {
+    for (const key of newlyCompleted) {
+      logAudit({
+        churchId: user.church_id,
+        userId: user.id,
+        action: "onboarding_step_completed",
+        entityType: "onboarding",
+        entityId: memberId,
+        metadata: { step: key },
+      }).catch(() => {});
     }
   }
 
